@@ -14,11 +14,11 @@ P_0 = [0.005 -0.0002 0; -0.0002 0.0001 0; 0 0 0.0885]  # Directly out of Guvenen
 
 # Add some prior knowledge on beta
 for i = 1:agents*bs
-    S_0_i[2, i] = 0.65*beta[i] + 0.35*S_0_i[2, i];
+    S_0_i[2, i] = 0.65*beta[i] + 0.35*S_0_i[2, i]
 end
 
 # Forecast from initial beliefs
-S_f_i[:,:,1] = S_0_i;
+S_f_i[:,:,1] = S_0_i + [zeros(1, agents*bs), zeros(1, agents*bs), 0.001*randn(1, agents*bs)]
 P_f[:, :, 1] = P_0;
 
 # Evolution of Var-Cov-Matrix
