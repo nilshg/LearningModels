@@ -2,11 +2,13 @@
 using PyPlot
 using Grid
 using Dierckx
-using ApproXD
+#using ApproXD
+
+meshgrid(x::Vector, y::Vector) = (repmat(x, 1, length(y))',
+                                  repmat(y, 1, length(x)))
 ######################################################################
 
 f(x::Float64) = -(x^(-1.0))
-meshgrid(x::Vector, y::Vector) = repmat(x, 1, length(y))'
 
 zmin = -0.1
 zmax = 1000.0
@@ -134,26 +136,47 @@ sum(abs(Err_2D_Dierckx))
 
 # Plots
 fig, ax = PyPlot.subplots(3,1)
-ax[1,1][:plot](V_1D_actual[1:50], label = "True Value")
-ax[1,1][:plot](V_1D_offgrid_Lin[1:50], label = "Linearly Interpolated Value")
-ax[1,1][:plot](Err_1D_Lin[1:50], label = "Grid Linear Interpolation Error")
-plt.legend()
-ax[2,1][:plot](V_1D_actual[1:50], label = "True Value")
-ax[2,1][:plot](V_1D_offgrid_Quad[1:50], label = "Quadratically Interpolated Value")
-ax[2,1][:plot](Err_1D_Quad[1:50], label = "Grid Quadratic Interpolation Error")
-plt.legend
-ax[3,1][:plot](V_1D_actual[1:50], label = "True Value")
-ax[3,1][:plot](V_1D_offgrid_Dierckx[1:50], label = "Quadratically Interpolated Value")
-ax[3,1][:plot](Err_1D_Dierckx[1:50], label = "Dierckx Interpolation Error")
+ax[1,1][:plot](V_1D_actual[1:20], label = "True Value")
+ax[1,1][:plot](V_1D_offgrid_Lin[1:20], label = "Linearly Interpolated Value")
+ax[1,1][:plot](Err_1D_Lin[1:20], label = "Grid Linear Interpolation Error")
+ax[1,1][:legend]()
+ax[2,1][:plot](V_1D_actual[1:20], label = "True Value")
+ax[2,1][:plot](V_1D_offgrid_Quad[1:20], label = "Quadratically Interpolated Value")
+ax[2,1][:plot](Err_1D_Quad[1:20], label = "Grid Quadratic Interpolation Error")
+ax[2,1][:legend]()
+ax[3,1][:plot](V_1D_actual[1:20], label = "True Value")
+ax[3,1][:plot](V_1D_offgrid_Dierckx[1:20], label = "Quadratically Interpolated Value")
+ax[3,1][:plot](Err_1D_Dierckx[1:20], label = "Dierckx Interpolation Error")
+ax[3,1][:legend]()
 fig[:suptitle]("Interpolation in 1D")
-plt.legend()
 plt.show()
 
-fig = figure(figsize=(10,8))
-ax = fig[:add_subplot](111, projection="3d")
-yg, zg = meshgrid(yoffgrid, zoffgrid)
-vg = V_2D_offgrid_Lin[:, :,]'
+fig = figure()
+ax = fig[:add_subplot](221, projection="3d")
+yg, zg = meshgrid(yoffgrid[1:ypoints], zoffgrid[1:zpoints])
+vg = V_2D_actual[1:ypoints, 1:zpoints, 1]'
 ax[:plot_surface](yg, zg, vg, rstride = 1, cstride = 1,
                     cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
-title("Interpolation in 2D")
+ax[:set_title]("Actual Value")
+
+ax = fig[:add_subplot](222, projection="3d")
+yg, zg = meshgrid(yoffgrid[1:ypoints], zoffgrid[1:zpoints])
+vg = V_2D_offgrid_Lin[1:ypoints, 1:zpoints, 1]'
+ax[:plot_surface](yg, zg, vg, rstride = 1, cstride = 1,
+                    cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
+ax[:set_title]("Grid Linear Interpolation")
+
+ax = fig[:add_subplot](223, projection="3d")
+yg, zg = meshgrid(yoffgrid[1:ypoints], zoffgrid[1:zpoints])
+vg = V_2D_offgrid_Quad[1:ypoints, 1:zpoints, 1]'
+ax[:plot_surface](yg, zg, vg, rstride = 1, cstride = 1,
+                    cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
+ax[:set_title]("Grid Quadratic Interpolation")
+
+ax = fig[:add_subplot](224, projection="3d")
+yg, zg = meshgrid(yoffgrid[1:ypoints], zoffgrid[1:zpoints])
+vg = V_2D_offgrid_Dierckx[1:20, 1:15, 1]'
+ax[:plot_surface](yg, zg, vg, rstride = 1, cstride = 1,
+                    cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
+ax[:set_title]("Dierckx Spline Interpolation")
 plt.show()
