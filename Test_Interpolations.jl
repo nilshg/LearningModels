@@ -10,8 +10,10 @@ meshgrid(x::Vector, y::Vector) = (repmat(x, 1, length(y))',
 
 ######################################################################
 
+# Function to interpolate 
 f(x::Float64) = -(x^(-1.0))
 
+# Grids for interpolation (regular/irregular)
 zmin = -0.1
 zmax = 1000.0
 ymin = 0.2
@@ -27,7 +29,7 @@ xgrid = linspace(xmin, xmax, xpoints)
 ygrid = linspace(ymin, ymax, ypoints)
 zgrid = linspace(zmin, zmax, zpoints)
 
-power = 3
+power = 3  # Curvature of the irregular grids
 x_irrgrid = zeros(xpoints)
 x_irrgridexp = zeros(xpoints)
 xdistexp = (xmax - xmin)^(1/power)
@@ -56,6 +58,7 @@ end
 z_irrgrid[:] = z_irrgridexp.^power + zmin
 
 ######################################################################
+# Evaluate functions on grid points
 
 V_1D = zeros(xpoints)
 V_1D_irr = zeros(xpoints)
@@ -83,8 +86,8 @@ for z = 1:zpoints
 end
 
 ######################################################################
-
 # Interpolate in 1 dimension
+
 xrange = range(xgrid[1], xgrid[2]-xgrid[1], xpoints)
 
 # Grid
@@ -95,12 +98,13 @@ V_1D_int_Quad = CoordInterpGrid(xrange, V_1D, BCnearest, InterpQuadratic)
 # ApproXD
 # V_1D_int_ApproXD = 
 
-# Dierckx
+# Dierckx (regular/irregular grid)
 V_1D_int_Dierckx = Spline1D(xgrid, V_1D)
+V_1D_int_irr_Dierckx = Spline1D(x_irrgrid, V_1D_irr)
 
 ######################################################################  
-  
 # Interpolate in 2 dimensions
+
 yrange = range(ygrid[1], ygrid[2]-ygrid[1], ypoints)
 zrange = range(zgrid[1], zgrid[2]-zgrid[1], zpoints)
 
@@ -112,23 +116,17 @@ V_2D_int_Quad = CoordInterpGrid((yrange, zrange), V_2D, BCnearest, InterpQuadrat
 # ApproXD
 # V_2D_int_ApproXD = 
 
-# Dierckx
+# Dierckx (regular/irregular grid)
 V_2D_int_Dierckx = Spline2D(ygrid, zgrid, V_2D)
+V_2D_int_irr_Dierckx = Spline2D(y_irrgrid, z_irrgrid, V_2D_irr)
 
 # NumericalMath - Piecewise cubic hermitean interpolating Polynomial
 # As in Matlab, NumericalMath doesn't separate interpolation and 
 # evaluation, there is only one call to pchip(xgrid, V_1D, x)
 
 ######################################################################
-
-# Where possible, interpolate on irregular grids
-V_1D_int_irr_Dierckx = Spline1D(x_irrgrid, V_1D_irr)
-
-V_2D_int_irr_Dierckx = Spline2D(y_irrgrid, z_irrgrid, V_2D_irr)
-
-######################################################################
-
 # Evaluate Regular and Irregular Grid Interpolants Off-Grid
+
 xoffgrid = linspace(xgrid[1], xgrid[end], 5*xpoints)
 yoffgrid = linspace(ygrid[1], ygrid[end], 5*ypoints)
 zoffgrid = linspace(zgrid[1], zgrid[end], 5*zpoints)
@@ -176,8 +174,8 @@ for y = 1:5*ypoints
 end
 
 ######################################################################
+# Calculate Errors
 
-# Errors
 Err_1D_Lin = V_1D_actual - V_1D_offgrid_Lin
 Err_1D_Quad = V_1D_actual - V_1D_offgrid_Quad
 Err_1D_Dierckx = V_1D_actual - V_1D_offgrid_Dierckx
@@ -188,16 +186,16 @@ Err_2D_Quad = V_2D_actual - V_2D_offgrid_Quad
 Err_2D_Dierckx = V_2D_actual - V_2D_offgrid_Dierckx
 Err_2D_irr_Dierckx = V_2D_actual - V_2D_irr_offgrid_Dierckx
 
-sum(abs(Err_1D_Lin))
-sum(abs(Err_1D_Quad))
-sum(abs(Err_1D_Dierckx))
-sum(abs(Err_1D_pchip))
-sum(abs(Err_1D_irr_Dierckx))
+@printf "∑(abs(ɛ)) for 1D linear interpolation with Grid is %.2f\n" sum(abs(Err_1D_Lin))
+@printf "∑(abs(ɛ)) for 1D quadratic interpolation with Grid is %.2f\n" sum(abs(Err_1D_Quad))
+@printf "∑(abs(ɛ)) for 1D spline interpolation on a regular grid with Dierckx is %.2f\n" sum(abs(Err_1D_Dierckx))
+@printf "∑(abs(ɛ)) for 1D spline interpolation on an irregular grid with Dierckx is %.2f\n" sum(abs(Err_1D_irr_Dierckx))
+@printf "∑(abs(ɛ)) for 1D pchip interpolation with NumericalMath is %.2f\n" sum(abs(Err_1D_pchip))
 
-sum(abs(Err_2D_Lin))
-sum(abs(Err_2D_Quad))
-sum(abs(Err_2D_Dierckx))
-sum(abs(Err_2D_irr_Dierckx))
+@printf "∑(abs(ɛ)) for 2D linear interpolation with grid is %.2f\n" sum(abs(Err_2D_Lin))
+@printf "∑(abs(ɛ)) for 2D quadratic interpolation with grid is %.2f\n" sum(abs(Err_2D_Quad))
+@printf "∑(abs(ɛ)) for 2D spline interpolation on a regular grid with Dierckx is %.2f\n" sum(abs(Err_2D_Dierckx))
+@printf "∑(abs(ɛ)) for 2D spline interpolation on an irregular grid with Dierckx is %.2f\n" sum(abs(Err_2D_irr_Dierckx))
 
 ######################################################################
 
