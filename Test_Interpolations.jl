@@ -127,24 +127,28 @@ V_2D_int_irr_Dierckx = Spline2D(y_irrgrid, z_irrgrid, V_2D_irr)
 ######################################################################
 # Evaluate Regular and Irregular Grid Interpolants Off-Grid
 
-xoffgrid = linspace(xgrid[1], xgrid[end], 5*xpoints)
-yoffgrid = linspace(ygrid[1], ygrid[end], 5*ypoints)
-zoffgrid = linspace(zgrid[1], zgrid[end], 5*zpoints)
+xop = 5*xpoints  # Number of off-grid points 
+yop = 5*ypoints
+zop = 5*zpoints
 
-V_1D_offgrid_Lin = zeros(5*xpoints)
-V_1D_offgrid_Quad = zeros(5*xpoints)
-V_1D_offgrid_Dierckx = zeros(5*xpoints)
-V_1D_offgrid_pchip = zeros(5*xpoints)
-V_1D_irr_offgrid_Dierckx = zeros(5*xpoints)
-V_1D_actual = zeros(5*xpoints)
+xoffgrid = linspace(xgrid[1], xgrid[end], xop)
+yoffgrid = linspace(ygrid[1], ygrid[end], yop)
+zoffgrid = linspace(zgrid[1], zgrid[end], zop)
 
-V_2D_offgrid_Lin =  zeros(5*ypoints, 5*zpoints)
-V_2D_offgrid_Quad = zeros(5*ypoints, 5*zpoints)
-V_2D_offgrid_Dierckx = zeros(5*ypoints, 5*zpoints)
-V_2D_irr_offgrid_Dierckx = zeros(5*ypoints, 5*zpoints)
-V_2D_actual = zeros(5*ypoints, 5*zpoints)
+V_1D_offgrid_Lin = zeros(xop)
+V_1D_offgrid_Quad = zeros(xop)
+V_1D_offgrid_Dierckx = zeros(xop)
+V_1D_offgrid_pchip = zeros(xop)
+V_1D_irr_offgrid_Dierckx = zeros(xop)
+V_1D_actual = zeros(xop)
 
-for x = 1:5*xpoints
+V_2D_offgrid_Lin =  zeros(yop, zop)
+V_2D_offgrid_Quad = zeros(yop, zop)
+V_2D_offgrid_Dierckx = zeros(yop, zop)
+V_2D_irr_offgrid_Dierckx = zeros(yop, zop)
+V_2D_actual = zeros(yop, zop)
+
+for x = 1:xop
   xt = xoffgrid[x]
   # Grid
   V_1D_offgrid_Lin[x] = V_1D_int_Lin[xt]
@@ -158,8 +162,8 @@ for x = 1:5*xpoints
   V_1D_actual[x] = f(xt)
 end
 
-for y = 1:5*ypoints
-  for z = 1:5*zpoints
+for y = 1:yop
+  for z = 1:zop
     yt = yoffgrid[y]
     zt = zoffgrid[z]
     # Grid
@@ -176,26 +180,26 @@ end
 ######################################################################
 # Calculate Errors
 
-Err_1D_Lin = V_1D_actual - V_1D_offgrid_Lin
-Err_1D_Quad = V_1D_actual - V_1D_offgrid_Quad
-Err_1D_Dierckx = V_1D_actual - V_1D_offgrid_Dierckx
-Err_1D_pchip = V_1D_actual - V_1D_offgrid_pchip
-Err_1D_irr_Dierckx = V_1D_actual - V_1D_irr_offgrid_Dierckx
-Err_2D_Lin = V_2D_actual - V_2D_offgrid_Lin
-Err_2D_Quad = V_2D_actual - V_2D_offgrid_Quad
-Err_2D_Dierckx = V_2D_actual - V_2D_offgrid_Dierckx
-Err_2D_irr_Dierckx = V_2D_actual - V_2D_irr_offgrid_Dierckx
+Err_1D_Lin = (V_1D_actual - V_1D_offgrid_Lin)./V_1D_actual
+Err_1D_Quad = (V_1D_actual - V_1D_offgrid_Quad)./V_1D_actual
+Err_1D_Dierckx = (V_1D_actual - V_1D_offgrid_Dierckx)./V_1D_actual
+Err_1D_pchip = (V_1D_actual - V_1D_offgrid_pchip)./V_1D_actual
+Err_1D_irr_Dierckx = (V_1D_actual - V_1D_irr_offgrid_Dierckx)./V_1D_actual
+Err_2D_Lin = (V_2D_actual - V_2D_offgrid_Lin)./V_2D_actual
+Err_2D_Quad = (V_2D_actual - V_2D_offgrid_Quad)./V_2D_actual
+Err_2D_Dierckx = (V_2D_actual - V_2D_offgrid_Dierckx)./V_2D_actual
+Err_2D_irr_Dierckx = (V_2D_actual - V_2D_irr_offgrid_Dierckx)./V_2D_actual
 
-@printf "∑(abs(ɛ)) for 1D linear interpolation with Grid is %.2f\n" sum(abs(Err_1D_Lin))
-@printf "∑(abs(ɛ)) for 1D quadratic interpolation with Grid is %.2f\n" sum(abs(Err_1D_Quad))
-@printf "∑(abs(ɛ)) for 1D spline interpolation on a regular grid with Dierckx is %.2f\n" sum(abs(Err_1D_Dierckx))
-@printf "∑(abs(ɛ)) for 1D spline interpolation on an irregular grid with Dierckx is %.2f\n" sum(abs(Err_1D_irr_Dierckx))
-@printf "∑(abs(ɛ)) for 1D pchip interpolation with NumericalMath is %.2f\n" sum(abs(Err_1D_pchip))
+@printf "∑(abs(ɛ)) for 1D linear interpolation with Grid is %.3f\n" sum(abs(Err_1D_Lin))/xop
+@printf "∑(abs(ɛ)) for 1D quadratic interpolation with Grid is %.3f\n" sum(abs(Err_1D_Quad))/xop
+@printf "∑(abs(ɛ)) for 1D spline interpolation on a regular grid with Dierckx is %.3f\n" sum(abs(Err_1D_Dierckx))/xop
+@printf "∑(abs(ɛ)) for 1D spline interpolation on an irregular grid with Dierckx is %.3f\n" sum(abs(Err_1D_irr_Dierckx))/xop
+@printf "∑(abs(ɛ)) for 1D pchip interpolation with NumericalMath is %.2f\n\n" sum(abs(Err_1D_pchip))/xop
 
-@printf "∑(abs(ɛ)) for 2D linear interpolation with grid is %.2f\n" sum(abs(Err_2D_Lin))
-@printf "∑(abs(ɛ)) for 2D quadratic interpolation with grid is %.2f\n" sum(abs(Err_2D_Quad))
-@printf "∑(abs(ɛ)) for 2D spline interpolation on a regular grid with Dierckx is %.2f\n" sum(abs(Err_2D_Dierckx))
-@printf "∑(abs(ɛ)) for 2D spline interpolation on an irregular grid with Dierckx is %.2f\n" sum(abs(Err_2D_irr_Dierckx))
+@printf "∑(abs(ɛ)) for 2D linear interpolation with Grid is %.3f\n" sum(abs(Err_2D_Lin))/(yop*zop)
+@printf "∑(abs(ɛ)) for 2D quadratic interpolation with Grid is %.3f\n" sum(abs(Err_2D_Quad))/(yop*zop)
+@printf "∑(abs(ɛ)) for 2D spline interpolation on a regular grid with Dierckx is %.3f\n" sum(abs(Err_2D_Dierckx))/(yop*zop)
+@printf "∑(abs(ɛ)) for 2D spline interpolation on an irregular grid with Dierckx is %.3f\n" sum(abs(Err_2D_irr_Dierckx))/(yop*zop)
 
 ######################################################################
 
@@ -204,23 +208,23 @@ fig, ax = PyPlot.subplots(2,3)
 ax[1,1][:plot](V_1D_actual[1:20], label = "True Value")
 ax[1,1][:plot](V_1D_offgrid_Lin[1:20], label = "Grid Linearly Interpolated Value")
 ax[1,1][:plot](Err_1D_Lin[1:20], label = "Interpolation Error")
-ax[1,1][:legend]()
+ax[1,1][:legend](loc = 0)
 ax[2,1][:plot](V_1D_actual[1:20], label = "True Value")
 ax[2,1][:plot](V_1D_offgrid_Quad[1:20], label = "Grid Quadratically Interpolated Value")
 ax[2,1][:plot](Err_1D_Quad[1:20], label = "Interpolation Error")
-ax[2,1][:legend]()
+ax[2,1][:legend](loc = 0)
 ax[1,2][:plot](V_1D_actual[1:20], label = "True Value")
 ax[1,2][:plot](V_1D_offgrid_Dierckx[1:20], label = "Dierckx Interpolated Value (regular grid)")
 ax[1,2][:plot](Err_1D_Dierckx[1:20], label = "Interpolation Error")
-ax[1,2][:legend]()
+ax[1,2][:legend](loc = 0)
 ax[2,2][:plot](V_1D_actual[1:20], label = "True Value")
 ax[2,2][:plot](V_1D_offgrid_pchip[1:20], label = "PCHIP Interpolated Value")
 ax[2,2][:plot](Err_1D_pchip[1:20], label = "Interpolation Error")
-ax[2,2][:legend]()
+ax[2,2][:legend](loc = 0)
 ax[2,3][:plot](V_1D_actual[1:20], label = "True Value")
 ax[2,3][:plot](V_1D_irr_offgrid_Dierckx[1:20], label = "Dierckx Interpolated Value (irregular grid)")
 ax[2,3][:plot](Err_1D_irr_Dierckx[1:20], label = "Interpolation Error")
-ax[2,3][:legend]()
+ax[2,3][:legend](loc = 0)
 fig[:suptitle]("Interpolation in 1D")
 plt.show()
 
