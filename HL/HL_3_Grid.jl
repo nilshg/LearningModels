@@ -1,159 +1,111 @@
-##############################################
-############ GRID CONSTRUCTION ###############
-##############################################
+################################################################################
+##########################    GRID CONSTRUCTION    #############################
+################################################################################
 
-@printf "3. Construct Grids\n"
+function Grids{T<:Int}(S_f_i::Array, stdy::Array, agents::T, bs::T, power::Float64,
+               wgridpoints::T, hgridpoints::T, agridpoints::T, bgridpoints::T,
+               zgridpoints::T, wgridpoints_R::T, hgridpoints_R::T,
+               ygridpoints_R::T, wmaxR::Float64, R::Float64, TW::T, TR::T)
 
-@printf "\t3.1 Unique Income Grid\n"
+  @printf "3. Construct Grids\n"
 
-# Belief grid
-maxalph = zeros(1, T);
-minalph = zeros(1, T);
-maxbeta = zeros(1, T);
-minbeta = zeros(1, T);
-maxzet = zeros(1, T);
-minzet = zeros(1,T);
-
-for t = 1:T
-    maxalph[1, t] = maximum(S_f_i[1, :, t])
-    maxbeta[1, t] = maximum(S_f_i[2, :, t])
-    maxzet[1, t] = maximum(S_f_i[3, :, t])
-    minalph[t] = minimum(S_f_i[1, :, t])
-    minbeta[t] = minimum(S_f_i[2, :, t])
-    minzet[t] = minimum(S_f_i[3, :, t])
-end;
-
-ALPHA = zeros(Sgridpoints-1, T)
-BETA = zeros(Sgridpoints-1, T)
-Z = zeros(Sgridpoints-1, T)
-
-for t = 1:T
-    ALPHA[:, t] = linspace(minalph[t], maxalph[t], Sgridpoints-1)';
-    BETA[:, t] = linspace(minbeta[t], maxbeta[t], Sgridpoints-1)';
-    Z[:, t] = linspace(minzet[t], maxzet[t], Sgridpoints-1)';
-end
-
-# Matrix with minimum belief triplet in all columns
-MINBELIEF = zeros(3, agents*bs, T)
-for t = 1:T
-    MINBELIEF[1, :, t] = minalph[t]
-    MINBELIEF[2, :, t] = minbeta[t]
-    MINBELIEF[3, :, t] = minzet[t]
-end
-
-# Matrix that measures how far the an agent's belief is away from the minimum
-DIST = S_f_i - MINBELIEF
-
-# Matrix that measures how large one bin is
-DIFF = zeros(3, agents*bs, T)
-for t = 1:T
-    DIFF[1, :, t] = ALPHA[2, t] - ALPHA[1, t]
-    DIFF[2, :, t] = BETA[2, t] - BETA[1, t]
-    DIFF[3, :, t] = Z[2, t] - Z[1, t]
-end
-
-BELIEFGRID = ceil(DIST./DIFF)
-BELIEFGRID = max(BELIEFGRID, 1);
-
-Qt = zeros(T, 1)
-S_f = zeros(3, 1200, 40)
-for t = 1:T
-    a = unique(BELIEFGRID[:, :, t]', 1)
-    S_f[:, 1:size(a, 1), t] = a'
-    Qt[t] = size(a, 1)
-end
-
-for t = 1:T
-    for i = 1:Qt[t]
-        S_f[1, i, t] = ALPHA[S_f[1, i, t], t]
-        S_f[2, i, t] = BETA[S_f[2, i, t], t]
-        S_f[3, i, t] = Z[S_f[3, i, t], t]
+  @printf "\t3.1 Unique Income Grid\n"
+  H = [ones(1,TW); linspace(1,TW,TW)'; ones(1,TW)]
+  Ybelief = Array(Float64, (agents*bs, TW))
+  Ymaxbelief = Array(Float64, (TW, 1))
+  Yminbelief = Array(Float64, (TW, 1))
+  for t = 1:TW
+    for i = 1:agents*bs
+      Ybelief[i, t] = exp(H[:, t]'*S_f_i[:, i, t] + 3*stdy[t])[1]
     end
-end
+    Ymaxbelief[t] = maximum(Ybelief[:, t])*exp(3*stdy[t])
+    Yminbelief[t] = minimum(Ybelief[:, t])/exp(3*stdy[t])
+  end
 
-Ybelief = zeros(ygridpoints, 1200, T)
-for t = 1:T
-    for j = 1:Qt[t]
-        ymean = H[:, t]'*S_f[:, j, t]
-        y_low = exp(ymean - 3*stdy[t])
-        y_high = exp(ymean + 3*stdy[t])
-        Ybelief[:, j, t] = linspace(y_low[1], y_high[1], ygridpoints)
-    end
-end;
+  # Habit grid
+  # Assuming that no one can build up a habit stock larger than
+  # 5 times the mean wage at age TW we can build the habit grid as:
 
-# Habit grid
-# Assuming that no one can build up a habit stock larger than
-# 5 times the mean wage at age T we can build the habit grid as:
+  @printf "\t3.2 Habit Grid\n"
+  hgrid = Array(Float64, (hgridpoints, TW))
+  for t = 1:TW
+      hgrid[:, t] = linspace(0.1, 2*Ymaxbelief[t], hgridpoints)
+  end
 
-@printf "\t3.2 Habit Grid\n"
+  # Wealth grid
+  # Maximum wealth is given by three times the highest earnings
+  # Minumum wealth is given by some ad hoc constraint
 
-hgrid = zeros(hgridpoints, T)
-for t = 1:T
-    hgrid[:, t] = linspace(0.1, 2*maximum(Ybelief[ygridpoints, :, t]), hgridpoints)
-end;
+  @printf "\t3.3 Wealth Grid\n"
+  wmin = Array(Float64, (1, TW))
+  wmax = Array(Float64, (1, TW))
+  wgrid = Array(Float64, (wgridpoints, TW))
+  wgridexp = Array(Float64, (wgridpoints, TW))
 
-
-# Wealth grid
-# Maximum wealth is given by three times the highest earnings
-# Minumum wealth is given by some ad hoc constraint
-
-@printf "\t3.3 Wealth Grid\n"
-
-power = 2
-wmin = zeros(1, T)
-wmax = zeros(1, T)
-wgrid = zeros(wgridpoints, T)
-wgridexp = zeros(wgridpoints, T)
-
-for t = 1:T
-    wmin[t] = -2*minimum(Ybelief[1, 1:Qt[t], t])
-    wmax[t] = 4*maximum(Ybelief[ygridpoints, :, t])
-
+  for t = 2:TW
+    wmin[t] = -1.2*Yminbelief[t]
+    wmax[t] = 2*Ymaxbelief[t]
     wdistexp = (wmax[t] - wmin[t])^(1/power)
     winc = wdistexp/(wgridpoints-1)
     for i = 1: wgridpoints
         wgridexp[i, t] = (i-1)*winc
     end
     wgrid[:, t] = wgridexp[:, t].^power + wmin[t]
-end
-
-@printf "\t3.4 Grids for α, β, z\n"
-
-agrid = zeros(agridpoints, T)
-bgrid = zeros(bgridpoints, T)
-zgrid = zeros(zgridpoints, T)
-
-for t = 1:T
-  agrid[:, t] = linspace(minimum(S_f[1, 1:Qt[t], t]), maximum(S_f[1, :, t]), agridpoints)
-  bgrid[:, t] = linspace(minimum(S_f[2, 1:Qt[t], t]), maximum(S_f[2, :, t]), bgridpoints)
-  zgrid[:, t] = linspace(minimum(S_f[3, 1:Qt[t], t]), maximum(S_f[3, :, t]), zgridpoints)
-end
-
-@printf "\3.5 Retirement Grids\n"
-wminR = zeros(1, TR)
-wminR[TR] = -0.1059   # Directly from Guvenen's code
-
-for t = TR:-1:2
-  wminR[t-1] = wminR[t]/R + wminR[TR]
-end
-
-wminR[1:(TR-1)] = -0.7*wminR[1:(TR-1)]
-wgrid_R = zeros(wgridpoints, TR)
-wgridexp = zeros(wgridpoints, TR)
-hgrid_R = zeros(hgridpoints, TR)
-power = 3
-
-for t = 1:TR
-  wdistexp = (wmaxR - wminR[t])^(1/power)
-  winc = wdistexp/(wgridpoints-1)
-  for i = 1:wgridpoints
-    wgridexp[i, t] = (i-1)*winc
   end
-  wgrid_R[:, t] = wgridexp[:, t].^power + wminR[t]
-  hgrid_R[:, t] = linspace(wgrid_R[1, t], 0.5*wgrid_R[end, t], hgridpoints)
-end
-hgrid_R = max(hgrid_R, 0.1)
 
-yminR = max(0.2*minimum(Ybelief[:, :, T]), 0.2)
-ymaxR = min(0.2*maximum(Ybelief[:, :, T]), 1000)
-ygrid_R = linspace(yminR, ymaxR, ygridpoints_R)
+  ##############################
+  #### ATTENTION: HACK!!!!!! ###
+  ##############################
+  wgrid[:, 1] = wgrid[:, 2]
+
+  @printf "\t3.4 Grids for α, β, z\n"
+  agrid = linspace(minimum(S_f_i[1, 2:TW, :]), maximum(S_f_i[1, :, :]), agridpoints)
+  bgrid = linspace(minimum(S_f_i[2, :, :]), maximum(S_f_i[2, :, :]), bgridpoints)
+  zgrid = linspace(minimum(S_f_i[3, :, :]), maximum(S_f_i[3, :, :]), zgridpoints)
+
+
+  @printf "\t3.5 Retirement Grids\n"
+  wminR = zeros(1, TR)
+  wminR[TR] = -0.1059/7   # Directly from Guvenen's code
+
+  for t = TR:-1:2 # This is not quite the same but gets the minimum about right
+    wminR[t-1] = wminR[t]/R + 0.1*Yminbelief[TW] - 0.02
+  end
+
+  wminR = -0.7*wminR
+
+  wgrid_R = zeros(wgridpoints_R, TR)
+  wgridexp = zeros(wgridpoints_R, TR)
+  hgrid_R = zeros(hgridpoints_R, TR)
+
+  for t = 1:TR
+    wdistexp = (wmaxR - wminR[t])^(1/power)
+    winc = wdistexp/(wgridpoints_R-1)
+    for i = 1:wgridpoints
+      wgridexp[i, t] = (i-1)*winc
+    end
+    wgrid_R[:, t] = wgridexp[:, t].^power + wminR[t]
+    hgrid_R[:, t] = linspace(wgrid_R[1, t], 0.5*wgrid_R[end, t], hgridpoints_R)
+  end
+  hgrid_R = max(hgrid_R, 0.1)
+
+  yminR = max(0.2*Yminbelief[TW], 0.2)
+  ymaxR = min(0.2*Ymaxbelief[TW], 1000)
+  ygrid_R = linspace(yminR, ymaxR, ygridpoints_R)
+
+  @printf "\t3.6 Check budget constraints for feasibility\n"
+  for t = 1:TW-1
+    wt = wgrid[1, t]
+    yt = exp(agrid[1] + bgrid[1]*t + zgrid[1])
+    wmin = wgrid[1, t+1]
+    if wt + yt - wmin/R < 0.01
+      @printf "\tError: Cash on hand is too low, at t = %d\n" t
+    end
+  end
+
+  if wgrid[1, TW] + exp(agrid[1] + bgrid[1]*TW + zgrid[1]) < wgrid_R[1, 1]/R
+    @printf "\tError: Cash on hand is too low in last period of working life\n"
+  end
+
+  return wgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R, ygrid_R
+end
