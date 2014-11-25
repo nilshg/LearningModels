@@ -1,5 +1,17 @@
 using DataFrames, Dierckx, Distributions, Grid,  Optim, PyPlot, QuantEcon
 
+include("Plots.jl")
+include("Optimizations.jl")
+include("Interpolations.jl")
+include("Parameters.jl")
+include("HL_1_Income.jl")
+include("HL_2_Learning.jl")
+include("HL_3_Grid.jl")
+include("HL_4_Retirement.jl")
+include("HL_5_Transition.jl")
+include("HL_6_Bellman.jl")
+include("HL_7_Simulate.jl")
+
 # 1. Draw Income Distribution
 (Yit, alpha, beta, ymedian) = IncomeDistribution(agents, bs, μₐ, μᵦ, var_a, var_b,
                                                    var_eps, ρ, var_eta, BR, TW)
