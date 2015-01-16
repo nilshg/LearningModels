@@ -5,7 +5,7 @@
 # CONTAINS:
 #
 # solveTransition(v_R, wgrid_R, ygrid_R, wgrid, agrid, bgrid, ymedian, r, δ, tW)
-# - solves the transition problem as in Guvenen (2007) with z=0 and expected 
+# - solves the transition problem as in Guvenen (2007) with z=0 and expected
 #   retirement value as E[V']
 #
 # solveTransition(wgrid, agrid, bgrid, zgrid, r, δ, tW)
@@ -15,14 +15,13 @@
 
 using Dierckx
 
-function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array{Float64, 2},
-                         ygrid_R::Array{Float64, 2}, wgrid::Array{Float64, 2},
-                         agrid::Array, bgrid::Array, ymedian::Float64,
-                         r::Float64, δ::Float64)
+function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array, 
+                         wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
+                         ymedian::Float64, r::Float64, δ::Float64)
 
   @printf "5. Solving the problem for the last period of work\n"
   tic()
-  tW = size(wgrid, 2)
+  tW = size(wgrid,2)
   wp = Array(Float64,
              (size(wgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))
   v = similar(wp)
@@ -78,10 +77,10 @@ end
 
 ###################################################################################
 
-function solveTransition(wgrid::Array, agrid::Array, bgrid::Array, zgrid::Array,
-                         r::Float64, δ::Float64)
+function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
+                         zgrid::Array, r::Float64, δ::Float64)
+  tw = size(wgrid,2)
   
-  tW = size(wgrid,2)
   xpoints = 200
   xmax = wgrid[end, 40]
   xmin = wgrid[1, 40]
@@ -136,38 +135,37 @@ function solveTransition(wgrid::Array, agrid::Array, bgrid::Array, zgrid::Array,
     return w′, vopt
   end
 
-  xp_1 = Array(Float64, 
+  xp_1 = Array(Float64,
                (size(wgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))
   c_1 = similar(xp_1)
   v_1 = similar(xp_1)
   c_over_x = similar(xp_1)
 
   for w = 1:size(wgrid , 1)
-      for a = 1:length(agrid)
-          for b = 1:length(bgrid)
-              for z = 1:length(zgrid)
-          
-                  size(a,2)==1 ? at = agrid[a] : at = agrid[a,t]
-                  size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,t]
-                  size(z,2)==1 ? zt = zgrid[z] : zt = zgrid[z,t]
+    for a = 1:length(agrid)
+      for b = 1:length(bgrid)
+        for z = 1:length(zgrid)
 
-                  y = exp(agrid[a] + bgrid[b]*40 + zgrid[z])
-                  yln = LogNormal(at + bt*40 + zt, 0.22)
+          size(a,2)==1 ? at = agrid[a] : at = agrid[a,t]
+          size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,t]
+          size(z,2)==1 ? zt = zgrid[z] : zt = zgrid[z,t]
 
-                  (xp_1[w, a, b, z, tW], v_1[w, a, b, z, tW]) =
-                      bellOpt(wgrid[w, 39], y, at, bt, zt, v_int, yln, r, δ, 
-                              xgrid_irr[1])
+          y = exp(agrid[a] + bgrid[b]*40 + zgrid[z])
+          yln = LogNormal(at + bt*40 + zt, 0.22)
 
-                  c_1[w, a, b, z, tW] = wgrid[w, 39] + y - xp_1[w, a, b, z, tW]
+          (xp_1[w, a, b, z, tW], v_1[w, a, b, z, tW]) =
+            bellOpt(wgrid[w, 39], y, at, bt, zt, v_int, yln, r, δ,
+                    xgrid_irr[1])
 
-                  c_over_x[w, a, b, z, tW] = 
-                    c_1[w, a, b, z, tW]/(wgrid[w, 39] - xgrid_irr[1]/r + y)
+          c_1[w, a, b, z, tW] = wgrid[w, 39] + y - xp_1[w, a, b, z, tW]
 
-                  c_1[w, a, b, z, tW] > 0 || @printf "NC @ x=%d,a=%d,b=%d,z=%d\n" w a b z
+          c_over_x[w, a, b, z, tW] =
+            c_1[w, a, b, z, tW]/(wgrid[w, 39] - xgrid_irr[1]/r + y)
 
-              end
-          end
+          c_1[w,a,b,z,tW] > 0 || @printf "NC @ x=%d,a=%d,b=%d,z=%d\n" w a b z
+        end
       end
+    end
   end
 
   return xp_1, c_1, v_1, c_over_x
