@@ -3,10 +3,11 @@
 ###################################################################################
 
 function solveRetirement(wgrid_R::Array, ygrid_R::Array, wpoints_R::Int64,
-                         ypoints_R::Int64, r::Float64, δ::Float64, tR::Int64)
+                         ypoints_R::Int64, r::Float64, δ::Float64)
 
   @printf "4. Solving the retirement problem\n"
   tic()
+  tR = size(wgrid_R, 2)
   v_R = Array(Float64, (wpoints_R, ypoints_R, tR))
   wp_R = similar(v_R)
 
