@@ -4,7 +4,7 @@
 #
 # Contains:
 #
-# (yit, alpha, beta, ymedian) = incomeDistribution(agents, bs, path):
+# (yit, alpha, beta, ymedian) = incomeDistribution(ypath, abpath):
 #   - Get yit from Guvenen's data
 #
 # (yit, alpha, beta, ymedian) = incomeDistribution(agents, μₐ, μᵦ, var_a, var_b,
@@ -17,24 +17,23 @@ using DataFrames
 
 #################################################################################
 
-function incomeDistribution(agents::Int64, bs::Int64, ypath::String,
-                            abpath::String)
+function incomeDistribution(ypath::String, abpath::String)
 
   @printf "1. Draw an Income Distribution\n"
   @printf "\tWe are working with Guvenen's data\n"
   yit = readdlm(ypath)
   alfabeta = readdlm(abpath)
   α = alfabeta[:, 1]
-  α = reshape(repmat(α, 1, agents)', agents*bs, 1)
+  α = reshape(repmat(α, 1, agents)', 100000, 1)
   β = alfabeta[:, 2]
-  β = reshape(repmat(β, 1, agents)', agents*bs, 1)
+  β = reshape(repmat(β, 1, agents)', 100000, 1)
 
   # Calculate median income in last period for calculation of retirement benefits
   ymedian = median(yit[:, end])
   @printf "\tMedian income in period 40 is %.2f\n" ymedian
 
   pension = Array(Float64, agents*bs)
-  for i = 1:agents*bs # Directly copied out of Guvenen's code
+  for i = 1:100000 # Directly copied out of Guvenen's code
     ytemp = yit[i, end]
     if (ytemp<0.3*ymedian)
       yfixed=0.9*ytemp
@@ -143,6 +142,8 @@ function incomeDistribution(α::Float64, β::Float64, var_η_RIP::Float64,
 
   epsdisc = [-(1/2)*(epsgridpoints-1)*sqrt(var_ɛ_RIP)+(i-1)*sqrt(var_ɛ_RIP)
                for i = 1:epsgridpoints]
+
+  transitionz = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Guvenen FORTRAN Code\\RIP_BASELINE_ALL\\Probz.dat")
 
   yit = Array(Float64, (zgridpoints_RIP, epsgridpoints, tW))
   for t = 1:tW
