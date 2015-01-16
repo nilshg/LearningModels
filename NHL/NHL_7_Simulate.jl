@@ -2,39 +2,65 @@
 ################################### SIMULATION #################################
 ################################################################################
 
-@printf "7. Simulate Consumption and Wealth Distribution\n"
+function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
+                  zgrid::Array, yit::Array, ymedian::Float64, s_f_i::Array,
+                  wp_R::Array, wgrid_R::Array, ygrid_R::Array, pension::Array,
+                  r::Float64, agents::Int64, bs::Int64,
+                  tW::Int64, tR::Int64)
 
-w_0 = 0
+  @printf "7. Simulate Consumption and Wealth Distribution\n"
+  w_0 = 0.0
+  c_t = Array(Float64, (agents*bs, tW+tR))
+  w_t = similar(c_t)
+  wp_t = similar(c_t)
+  w_t[:, 1] = w_0
 
-c_t = zeros(agents*bs, T)
-w_t = zeros(agents*bs, T)
-wp_t = zeros(agents*bs, T)
+  @printf "\tSimulating %d periods of working life...\n" tW
+  for t = 1:tW
+    # INTERPOLATION
+    wp_int = interpolatev(wp, wgrid, agrid, bgrid, zgrid, t)
 
-w_t[:, 1] = w_0
+    negconscounter = 0
+    # Bond Choice
+    for i = 1:agents*bs
+      wt = w_t[i, t]
+      yt = yit[i, t]
+      (at, bt, zt) = s_f_i[:, i, t]
+      xt = wt + yt
+      wp_t[i, t] = wp_int[xt, at, bt, zt]
+      c_t[i, t] = xt - wp_t[i, t]
+      w_t[i, t+1] = r*wp_t[i, t]
 
-for t = 1:T
-  @printf "     Period: %d out of %d\n" t T
-
-  # INTERPOLATION
-  tic()
-  wp_int = interpolateV(wp, wgrid, agrid, bgrid, zgrid, t)
-  @printf "\tInterpolation took %.2f seconds\n" toq()
-
-  # Bond Choice
-  @printf "\tChoosing optimal consumption and savings\n"
-  tic()
-  for i = 1:agents*bs
-    wt = w_t[i, t]
-    yt = Yit[i, t]
-    (at, bt, zt) = S_f_i[:, i, t]
-
-    xt = R*wt + yt
-
-    wp_t[i, t] = wp_int[xt, at, bt, zt]
-    c_t[i, t] = xt - wpopt
-    if t < T
-      w_t[i, t+1] = wpopt
+      if c_t[i, t] < 0.0 && negconscounter < 1
+        @printf "\tWARNING: c=%.2f at wt=%.3f, yt=%.3f, t=%d\n" c_t[i,t] wt yt t
+        negconscounter +=  1
+      end
     end
   end
-  @printf "\tConsumption choice took %.1f seconds" toq()
+
+  @printf "\tSimulating %d periods of retirement...\n" tR
+  for t = (tW+1):(tW+tR)
+    negconscounter = 0
+    wp_int = interpolatev(wp_R, wgrid_R, ygrid_R, t-tW)
+
+    for  i = 1:agents*bs
+      wt = w_t[i, t]
+      yt = pension[i]
+      xt = wt + yt
+
+      wp_t[i, t] = wp_int[xt, yt]
+      c_t[i, t] = xt - wp_t[i, t]
+
+      if c_t[i, t] < 0.0 && negconscounter < 1
+        @printf "\tWARNING: c=%.2f at wt=%.3f, yt=%.3f, t=%d\n" c_t[i,t] wt yt t
+        negconscounter +=  1
+      end
+
+      if  t < tW + tR
+        w_t[i, t+1] = r*wp_t[i, t]
+      end
+    end
+  end
+
+  return c_t, w_t, wp_t
 end
