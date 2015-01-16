@@ -22,10 +22,11 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
     for w = 1:size(wgrid,1)
       for a = 1:size(agrid,1)
         for b = 1:size(bgrid,1)
-          for z = 1:size(bgrid,1)
+          for z = 1:size(zgrid,1)
             at = agrid[a]
             bt = bgrid[b]
             zt = zgrid[z]
+            zgrid
             wt = wgrid[w, t]
             yt = exp(at + bt*t + zt)
             yln = LogNormal(at + bt*(t+1) + zt, stdy[t])
