@@ -6,13 +6,12 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
                           c_over_x::Array{Float64, 5},
                           wgrid::Array{Float64, 2}, agrid::Array{Float64, 1},
                           bgrid::Array{Float64, 1}, zgrid::Array{Float64, 1},
-                          stdy::Array, r::Float64, δ::Float64,
-                          tW::Int64)
+                          stdy::Array, r::Float64, δ::Float64)
 
   @printf "6. Recursively solve for optimal decision rules\n"
   @printf "\tSolving the problem on %d points\n" wpoints*apoints*bpoints*zpoints
 
-  for t = (tW-1):-1:1
+  for t = (size(wgrid,2)-1):-1:1
     @printf "    Period %d/%d, w = [%.2f, %.2f]\n" t tW wgrid[1,t] wgrid[end,t]
 
     # INTERPOLATION
