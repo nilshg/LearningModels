@@ -15,12 +15,14 @@
 
 using Dierckx
 
-function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array,
-                         wgrid::Array, agrid::Array, bgrid::Array, ymedian::Float64,
-                         r::Float64, δ::Float64, tW::Int64)
+function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array{Float64, 2},
+                         ygrid_R::Array{Float64, 2}, wgrid::Array{Float64, 2},
+                         agrid::Array, bgrid::Array, ymedian::Float64,
+                         r::Float64, δ::Float64)
 
   @printf "5. Solving the problem for the last period of work\n"
   tic()
+  tW = size(wgrid, 2)
   wp = Array(Float64,
              (size(wgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))
   v = similar(wp)
@@ -77,8 +79,9 @@ end
 ###################################################################################
 
 function solveTransition(wgrid::Array, agrid::Array, bgrid::Array, zgrid::Array,
-                         r::Float64, δ::Float64, tW::Int64)
-
+                         r::Float64, δ::Float64)
+  
+  tW = size(wgrid,2)
   xpoints = 200
   xmax = wgrid[end, 40]
   xmin = wgrid[1, 40]
