@@ -2,25 +2,27 @@
 ############################## BELIEF FORMATION ################################
 ################################################################################
 
-function learning(agents::Int64, bs::Int64, tW::Int64, α::Array, β::Array,
-                  yit::Array, ρ::Float64, var_η::Float64, var_ɛ::Float64,
-                  guvenen_distribution::Bool)
+function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64,
+                  var_ɛ::Float64, guvenen_distribution::Bool)
 
   @printf "2. Calculate agent's beliefs\n"
+  
   hmat = [ones(1,tW); linspace(1,tW,tW)'; ones(1,tW)]
   f = [1 0 0; 0 1 0; 0 0 ρ]
   q = [0 0 0; 0 0 0; 0 0 var_η]
-  s_f_i = Array(Float64, (3, agents*bs,tW))
+  s_f_i = Array(Float64, (3, size(yit,2),tW))
+  
   if guvenen_distribution
-      s_0_i = repmat([2.0 ; mean(β); 0], 1, agents*bs)
+      s_0_i = repmat([2.0 ; mean(β); 0], 1, size(yit,2))
   else
-      s_0_i = repmat([mean(α) ; mean(beta); 0], 1, agents*bs)
+      s_0_i = repmat([mean(α) ; mean(beta); 0], 1, size(yit,2))
   end
+  
   p_f = Array(Float64, (3, 3, tW))
   p_0 = [0.005 -0.0002 0; -0.0002 0.0001 0; 0 0 0.0885]  # Directly out of Guvenen's paper
 
   # Add some prior knowledge on beta
-  for i = 1:agents*bs
+  for i = 1:size(yit,2)
       s_0_i[2, i] = 0.65*β[i] + 0.35*s_0_i[2, i];
   end
 
@@ -48,7 +50,7 @@ function learning(agents::Int64, bs::Int64, tW::Int64, α::Array, β::Array,
   for t = 1:tW-1
     pt = p_f[:, :, t]
     ht = hmat[:, t]
-    @inbounds for i = 1:agents*bs
+    @inbounds for i = 1:size(yit,2)
       s_f_i[:, i, t+1] = f*(s_f_i[:, i, t] + pt*ht.*(ht'*pt*ht + var_ɛ).^(-1.0)
                             .*(log(yit[i, t]) - ht'*s_f_i[:, i, t]) )
     end
