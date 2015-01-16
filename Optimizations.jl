@@ -3,184 +3,170 @@
 ################################################################################
 
 # Contains:
-# BellOpt(w, h, a, b, z, wmin, V_int, Yln, u, R, lambda, \delta, t):
+# bellOpt(w, h, a, b, z, wmin, v_int, yln, r, λ, δ, t):
 #     Solve value function optimization for state (x,h,a,b,z) using
 #     Gauss-Legendre Quadrature
 #
-# BellOpt_TRANS(w, h, y, yfixed, wmin, V_int, u, R, dbeta, lambda, t):
+# bellOpt_TRANS(w, h, y, yfixed, wmin, v_int, R, dbeta, λ, t):
 #     Solve value function optimization for last period of working life
 #     with retirement income given by yfixed
 #
-# BellOpt_R(w, h, y, wmin, V_int, u, R, dbeta, lambda, t)
+# bellOpt_R(w, h, y, wmin, v_int, r, δ, λ, t)
 #     Solve retirement value function optimization with constant income
 #
-# BellOpt(w, a, b, z, wmin, V_int, Yln, u, R, dbeta, t):
+# bellOpt(w, a, b, z, wmin, v_int, yln, R, δ, t):
 #     Solve optimization problem without habits
 #
-# BellOpt_TRANS(w, y, yfixed, wmin, V_interpol, u, R, dbeta, t)
+# bellOpt_TRANS(w, y, yfixed, wmin, v_int, R, δ, t)
 #     Solve transition period optimizatoin problem without habits
 #
-# BellOpt_R(w, y, wmin, V_int, u, R, dbeta, t)
+# bellOpt_R(w, y, wmin, v_int, R, δ, t)
 #     Solve retirement optimization problem without habits
 
 ################################################################################
 
-function BellOpt{T<:Float64}(w::T, h::T, y::T, a::T, b::T, z::T, wmin::T,
-                             V_int::CoordInterpGrid, Yln::LogNormal, u::Function,
-                             R::T, λ::T, δ::T, t::Real)
+using Distributions, Grid, Optim, QuantEcon
+
+################################################################################
+
+function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
+                 z::Float64, wmin::Float64, v_int::CoordInterpGrid,
+                 yln::LogNormal, r::Float64, λ::Float64, δ::Float64)
 
    x = w + y
 
-  function EVprime_leg(w′::Real, x=x, h=h, a=a, b=b, z=z, t=t, Yln=Yln, V_int=V_int)
+  function EVprime(w′::Float64, x=x, h=h, a=a, b=b, z=z, yln=yln, v_int=v_int,
+                   r=r, λ=λ)
 
-    y_l = Yln.meanlog - 3*Yln.sdlog
-    y_h = Yln.meanlog + 3*Yln.sdlog
+    h′ = (1-λ)*h + λ*(x - w′)
 
-    h′ = (1-λ)*h + λ*(x - w′/R)
-
-    function EVp(y::Array{Float64,1}, w′=w′, h′=h′,
-                 V_int = V_int, Yln = Yln, a=a, b=b, z=z)
-      result = zeros(size(y, 1), 1)
+    function EVp(y::Array{Float64,1}, w′=w′, h′=h′, v_int = v_int, yln = yln,
+                 a=a, b=b, z=z)
+      result = similar(y)
       for i = 1:size(y, 1)
-        result[i, :] = V_int[w′ + y[i], h′, a, b, z]*pdf(Yln, y[i])
+        @inbounds result[i,:] = v_int[r*w′ + y[i], h′, a, b, z]*pdf(yln, y[i])
       end
-      return result
+      result
     end
 
-    function EVp(y::Float64, w′=w′, h′=h′,
-                 V_int = V_int, Yln =Yln, a = a, b = b, z = z)
-      return V_int[w′ + y, h′, a, b, z]*pdf(Yln, y)
+    function EVp(y::Float64, w′=w′, h′=h′, v_int = v_int, yln =yln,
+                 a=a, b=b, z=z)
+      v_int[w′ + y, h′, a, b, z]*pdf(yln, y)
     end
+
+    y_l = meanlogx(yln) - 3*varlogx(yln)
+    y_h = meanlogx(yln) + 3*varlogx(yln)
 
     quadrect(EVp, 9, exp(y_l), exp(y_h))
   end
 
-  Blmn(w′::Float64) = -(u(x-w′/R, (1-λ)*h + λ*(x-w′/R)) + δ*EVprime_leg(w′))
+  Blmn(w′::Float64) = -( u(x-w′, h) + δ*EVprime(r*w′) )
 
-  Optimum = optimize(Blmn, wmin, x - 0.01)
-  w′ = Optimum.minimum
-  Vopt = -(Optimum.f_minimum)
+  optimum = optimize(Blmn, wmin/r, x)
+  w′ = optimum.minimum
+  vopt = -(optimum.f_minimum)
 
-  return w′  , Vopt
+  return w′, vopt
 end
 
 ################################################################################
 
-function BellOpt_TRANS{T<:Float64}(w::T, h::T, y::T, yfixed::T, wmin::T,
-                                   V_int::CoordInterpGrid, u::Function,
-                                   R::T, δ::T, λ::T, t::Int64)
+function bellOpt_TRANS(w::Float64, h::Float64, y::Float64, yfixed::Float64,
+                       wmin::Float64, v_int::CoordInterpGrid,
+                       r::Float64, δ::Float64, λ::Float64)
 
   x = w + y
 
-  Blmn(w′::Float64) = -(u(x - w′/R, h) + δ*V_int[w′, (1-λ)*h + λ*(x-w′/R), yfixed])
+  Blmn(w′::Float64) = -(u(x - w′, h) +
+                          δ*v_int[r*w′, (1-λ)*h + λ*(x-w′), yfixed])
 
-  Optimum = optimize(Blmn, wmin, x - 0.01)
-  w′ = Optimum.minimum
-  Vopt = -(Optimum.f_minimum)
+  optimum = optimize(Blmn, wmin/r, x)
+  w′ = optimum.minimum
+  vopt = -(optimum.f_minimum)
 
-  return w′, Vopt
+  return w′, vopt
 end
 
 ################################################################################
 
-function BellOpt_R{T<:Float64}(w::T, h::T, y::T, wmin::T,
-                   V_int::CoordInterpGrid, u::Function,
-                   R::T, δ::T, λ::T, t::Int64)
+function bellOpt_R(w::Float64, h::Float64, y::Float64, wmin::Float64,
+                   v_int::CoordInterpGrid, r::Float64, δ::Float64, λ::Float64)
 
   x = w + y
 
-  Blmn(w′) = -(u(x - w′/R, h) + δ*V_int[w′, (1-λ)*h + λ*(x-w′/R), y])
+  Blmn(w′) = -(u(x - w′, h) + δ*v_int[r*w′, (1-λ)*h + λ*(x-w′), y])
 
-  Optimum = optimize(Blmn, wmin, x - 0.01)
-  w′ = Optimum.minimum
-  Vopt = -(Optimum.f_minimum)
+  optimum = optimize(Blmn, wmin/r, x)
+  w′ = optimum.minimum
+  vopt = -(optimum.f_minimum)
 
-  return w′, Vopt
+  return w′, vopt
 end
 
 #######################################################################################
 
-function BellOpt{T<:Float64}(wt::T, yt::T, a::T, b::T, z::T, wmin::T,
-                             V_int::CoordInterpGrid, Yln::LogNormal, u::Function,
-                             R::T, δ::T, t::Int64)
+function bellOpt(w::Float64, y::Float64, a::Float64, b::Float64, z::Float64,
+                 wmin::Float64, v_int::CoordInterpGrid, yln::LogNormal,
+                 r::Float64, δ::Float64)
 
-  x = wt + yt
+  x = w + y
 
-  function EVprime_leg(w′::Float64, a=a, b=b, z=z, t=t, Yln=Yln, V_int=V_int)
-    y_l = Yln.meanlog - 3*Yln.sdlog
-    y_h = Yln.meanlog + 3*Yln.sdlog
+  function EVprime(w′::Float64, a=a, b=b, z=z, yln=yln, v_int=v_int)
 
-    function EVp(y::Array{Float64,1}, w′=w′, V_int=V_int, Yln=Yln, a=a, b=b, z=z)
-      result = zeros(size(y, 1), 1)
+    function EVp(y::Array{Float64,1}, w′=w′, v_int=v_int, yln=yln, a=a, b=b, z=z)
+      result = similar(y)
       for i = 1:size(y, 1)
-        result[i, :] = V_int[w′ + y[i], a, b, z]*pdf(Yln, y[i])
+        @inbounds result[i, :] = v_int[w′ + y[i], a, b, z]*pdf(yln, y[i])
       end
       return result
     end
 
-    function EVp(y::Float64, w′=w′, V_int=V_int, Yln=Yln, a=a, b=b, z=z)
-      return V_int[w′ + y, a, b, z]*pdf(Yln, y)
-    end
+    y_l = meanlogx(yln) - 3*varlogx(yln)
+    y_h = meanlogx(yln) + 3*varlogx(yln)
 
     quadrect(EVp, 9, exp(y_l), exp(y_h))
   end
 
-  Blmn(w′) = -( u(x - w′/R) + δ * EVprime_leg(w′) )
+  Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u(x-w′) + δ*EVprime(r*w′) )
 
-  Optimum = optimize(Blmn, wmin, t - 0.01)
-  w′ = Optimum.minimum
-  Vopt = -(Optimum.f_minimum)
+  optimum = optimize(Blmn, wmin/r, x)
+  w′ = optimum.minimum
+  vopt = -(optimum.f_minimum)
 
-  return w′, Vopt
+  return w′, vopt
 end
 
 ################################################################################
 
-function BellOpt_TRANS{T<:Float64}(w::T, y::T, yfixed::T, wmin::T,
-                   V_int::CoordInterpGrid, u::Function,
-                   R::T, δ::T, t::Int64)
+function bellOpt_TRANS(w::Float64, y::Float64, yfixed::Float64, wmin::Float64,
+                       v_int::CoordInterpGrid, r::Float64,
+                       δ::Float64)
 
   x = w + y
 
-  Blmn(w′) = -( u(x - w′/R) + δ*V_int[w′, yfixed])
+  Blmn(w′) = -( u(x-w′) + δ*v_int[r*w′, yfixed])
 
-  Optimum = optimize(Blmn, wmin, x - 0.01)
-  w′ = Optimum.minimum
-  Vopt = -(Optimum.f_minimum)
+  optimum = optimize(Blmn, wmin/r, x)
+  w′ = optimum.minimum
+  vopt = -(optimum.f_minimum)
 
-  return w′, Vopt
+  return w′, vopt
 end
 
 ################################################################################
 
-function BellOpt_R{T<:Float64}(w::T, y::T, wmin::T,
-                   V_int::CoordInterpGrid, u::Function,
-                   R::T, δ::T, t::Int64)
+function bellOpt_R(w::Float64, y::Float64, wmin::Float64, v_int::CoordInterpGrid,
+                   r::Float64, δ::Float64)
 
   x = w + y
 
-  Blmn(w′) = -(u(x-w′/R) + δ*V_int[w′, y])
+  Blmn(w′) = -(u(x - w′) + δ*v_int[r*w′, y])
 
-  Optimum = optimize(Blmn, wmin, x - 0.01)
-  w′ = Optimum.minimum
-  Vopt = -(Optimum.f_minimum)
+  optimum = optimize(Blmn, wmin/r, x)
+  w′ = optimum.minimum
+  vopt = -(optimum.f_minimum)
 
-  return w′, Vopt
+  return w′, vopt
 end
 
 ################################################################################
-
-function BellOpt_R{T<:Float64}(w::T, y::T, wmin::T,
-                   V_int::Spline2D, u::Function,
-                   R::T, δ::T, t::Int64)
-
-  x = w + y
-
-  Blmn(w′) = -(u(x-w′/R) + δ*evaluate(V_int, w′, y))
-
-  Optimum = optimize(Blmn, wmin, x - 0.01)
-  w′ = Optimum.minimum
-  Vopt = -(Optimum.f_minimum)
-
-  return w′, Vopt
-end
