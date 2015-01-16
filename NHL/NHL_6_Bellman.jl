@@ -1,46 +1,53 @@
-###################################################################################
-#########################    TRANSITION PROBLEM      ##############################
-###################################################################################
-@printf "6. Solving the problem for the last period of work\n"
-tic()
-wp = zeros(wgridpoints, agridpoints, bgridpoints, zgridpoints, T)
-V = zeros(wgridpoints, agridpoints, bgridpoints, zgridpoints, T)
+################################################################################
+############################## BELLMAN RECURSION ###############################
+################################################################################
 
-# INTERPOLATION
-valueRETIRE = interpolateV(V_R, wgrid_R, ygrid_R, 1)
+function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
+                          c_over_x::Array{Float64, 5},
+                          wgrid::Array{Float64, 2}, agrid::Array{Float64, 1},
+                          bgrid::Array{Float64, 1}, zgrid::Array{Float64, 1},
+                          stdy::Array, r::Float64, δ::Float64,
+                          tW::Int64)
 
-# MAXIMIZATION
-wmin = wgrid_R[1, 1]
+  @printf "6. Recursively solve for optimal decision rules\n"
+  @printf "\tSolving the problem on %d points\n" wpoints*apoints*bpoints*zpoints
 
-for a = 1:agridpoints
-  for b = 1:bgridpoints
-    for z = 1:zgridpoints
-      at = agrid[a, T]
-      bt = bgrid[b, T]
-      zt = 0
+  for t = (tW-1):-1:1
+    @printf "    Period %d/%d, w = [%.2f, %.2f]\n" t tW wgrid[1,t] wgrid[end,t]
 
-      yt = exp(at + T*bt + zt)
+    # INTERPOLATION
+    v_interpol = interpolatev(v, wgrid, agrid, bgrid, zgrid, t+1)
 
-      if yt < 0.3*ymedian
-        yfixed = 0.9*yt
-      elseif yt <= 2.0*ymedian
-        yfixed = 0.27*ymedian + 0.32(yt - 0.3*ymedian)
-      elseif yt <= 4.1*ymedian
-        yfixed = 0.81*ymedian + 0.15*(yt - 2*ymedian)
-      elseif yt > 4.1*ymedian
-        yfixed = 1.1*yt
-      end
-      yfixed = 0.715*yfixed
+    # MAXIMIZATION
+    wmin = wgrid[1, t+1]
+    for w = 1:size(wgrid, 1)
+      for a = 1:size(agrid, 1)
+        for b = 1:size(bgrid, 1)
+          for z = 1:size(bgrid, 1)
+            size(agrid,2)==1 ? at = agrid[a] : at = agrid[a,t+1]
+            size(bgrid,2)==1 ? bt = bgrid[b] : bt = bgrid[b,t+1]
+            size(zgrid,2)==1 ? zt = zgrid[z] : zt = zgrid[z,t+1]
+            wt = wgrid[w, t]
+            yt = exp(at + bt*t + zt)
+            yln = LogNormal(at + bt*(t+1) + zt, stdy[t])
 
-      for w = 1: wgridpoints
-        wt = wgrid[w, T]
+            (wt + yt - wmin/r > 0.01) || error("Cash on hand is wt + yt, BC is wmin/r")
 
-        (wpopt, Vopt) = BellOpt_TRANS(wt, yt, yfixed, wmin, valueRETIRE, u, R, dbeta, T)
+            (wpopt, vopt) = bellOpt(wt, yt, at, bt, zt, wmin,
+                                    v_interpol, yln, r, δ)
 
-        V[w, a, b, z, T] = Vopt
-        wp[w, a, b, z, T] = wpopt
+            wpopt < wt + yt || @printf "\tw'>xt, w=%d,a=%d,b=%d,z=%d,t=%d\n" w a b z t
+
+            c = wgrid[w, t] + yt - wpopt
+            c_over_x[w, a, b, z, t] = c/(wgrid[w, t] + yt - wmin/r)
+
+            wp[w, a, b, z, t] = wpopt
+            v[w, a, b, z, t] = vopt
+          end
+        end
       end
     end
   end
+
+  return v, wp, c_over_x
 end
-@printf "\tTransition period problem solved in %.1f seconds.\n" toq()
