@@ -5,8 +5,7 @@
 function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
                   zgrid::Array, yit::Array, ymedian::Float64, s_f_i::Array,
                   wp_R::Array, wgrid_R::Array, ygrid_R::Array, pension::Array,
-                  r::Float64, agents::Int64, bs::Int64,
-                  tW::Int64, tR::Int64)
+                  r::Float64, tW::Int64, tR::Int64)
 
   @printf "7. Simulate Consumption and Wealth Distribution\n"
   w_0 = 0.0
@@ -22,7 +21,7 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
 
     negconscounter = 0
     # Bond Choice
-    for i = 1:agents*bs
+    for i = 1:size(yit,1)
       wt = w_t[i, t]
       yt = yit[i, t]
       (at, bt, zt) = s_f_i[:, i, t]
@@ -43,7 +42,7 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
     negconscounter = 0
     wp_int = interpolatev(wp_R, wgrid_R, ygrid_R, t-tW)
 
-    for  i = 1:agents*bs
+    for  i = 1:size(yit,1)
       wt = w_t[i, t]
       yt = pension[i]
       xt = wt + yt
