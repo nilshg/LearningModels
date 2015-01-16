@@ -12,7 +12,7 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
 
   # Value of last period of retirement
   for w = 1:size(wgrid_R,1)
-    for y = 1:size(ygrid,1)
+    for y = 1:size(ygrid_R,1)
       wp_R[w, y, tR] = 0.0
       v_R[w, y, tR] = u(wgrid_R[w, tR] + ygrid_R[y])
     end
@@ -21,7 +21,7 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
   # Compute the period tR-1 solution exactly:
   wmin = wgrid_R[1, tR]
   for w = 1:size(wgrid_R,1)
-    for y = 1:size(ygrid,1)
+    for y = 1:size(ygrid_R,1)
       wt = wgrid_R[w, tR-1]
       yt = ygrid_R[y]
       xt = wt + yt
@@ -39,7 +39,7 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
     v_R_interpol = interpolatev(v_R, wgrid_R, ygrid_R, t+1)
     wmin = wgrid_R[1, t+1]
     for w = 1:size(wgrid_R,1)
-     for y = 1:size(ygrid,1)
+     for y = 1:size(ygrid_R,1)
         (wp_R[w, y, t], v_R[w, y, t]) =
           bellOpt_R(wgrid_R[w, t], ygrid_R[y], wmin, v_R_interpol, r, δ)
       end
