@@ -6,18 +6,18 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
                   var_ɛ::Float64, guvenen_distribution::Bool)
 
   @printf "2. Calculate agent's beliefs\n"
-  
+  tW = size(yit,2)
   hmat = [ones(1,tW); linspace(1,tW,tW)'; ones(1,tW)]
   f = [1 0 0; 0 1 0; 0 0 ρ]
   q = [0 0 0; 0 0 0; 0 0 var_η]
   s_f_i = Array(Float64, (3, size(yit,2),tW))
-  
+
   if guvenen_distribution
       s_0_i = repmat([2.0 ; mean(β); 0], 1, size(yit,2))
   else
       s_0_i = repmat([mean(α) ; mean(beta); 0], 1, size(yit,2))
   end
-  
+
   p_f = Array(Float64, (3, 3, tW))
   p_0 = [0.005 -0.0002 0; -0.0002 0.0001 0; 0 0 0.0885]  # Directly out of Guvenen's paper
 
@@ -39,7 +39,7 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   end
 
   # Calculate Standard Deviation (needed later on)
-  stdy = Array(Float64, (1,tW))
+  stdy = Array(Float64, tW)
   for t = 1:tW
     ht = hmat[:, t]
     stdy[t] = [sqrt(ht'*p_f[:, 3*t-2:3*t]*ht)][1]
