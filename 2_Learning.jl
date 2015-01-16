@@ -13,9 +13,9 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   s_f_i = Array(Float64, (3, size(yit,1),tW))
 
   if guvenen_distribution
-      s_0_i = repmat([2.0 ; mean(β); 0], 1, size(yit,2))
+      s_0_i = repmat([2.0 ; mean(β); 0], 1, size(yit,1))
   else
-      s_0_i = repmat([mean(α) ; mean(beta); 0], 1, size(yit,2))
+      s_0_i = repmat([mean(α) ; mean(beta); 0], 1, size(yit,1))
   end
 
   p_f = Array(Float64, (3, 3, tW))
@@ -59,3 +59,4 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   return s_f_i, stdy
 
 end
+
