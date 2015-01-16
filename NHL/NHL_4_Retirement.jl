@@ -1,38 +1,50 @@
 ###################################################################################
 #########################    RETIREMENT PROBLEM      ##############################
 ###################################################################################
-@printf "4. Solving the retirement problem\n"
-tic()
 
-V_R = zeros(wgridpoints_R, ygridpoints_R, TR)
-wp_R = zeros(wgridpoints_R, ygridpoints_R, TR)
+function solveRetirement(wgrid_R::Array, ygrid_R::Array, wpoints_R::Int64,
+                         ypoints_R::Int64, r::Float64, δ::Float64, tR::Int64)
 
-# Value of last period of retirement
-for w = 1:wgridpoints_R
-  for y = 1:ygridpoints_R
-    wt = wgrid_R[w, TR]
-    yt = ygrid_R[y]
-    xt = wt + yt
-    V_R[w, y, TR] = u(xt)
-  end
-end
+  @printf "4. Solving the retirement problem\n"
+  tic()
+  v_R = Array(Float64, (wpoints_R, ypoints_R, tR))
+  wp_R = similar(v_R)
 
-for t = (TR-1):-1:1
-  # INTERPOLATION
-  V_R_interpol = interpolateV(V_R, wgrid_R, ygrid_R, t+1)
-
-  # MAXIMIZATION
-  wmin = wgrid_R[1, t+1]
-  for w = 1:wgridpoints_R
-    for y = 1:ygridpoints_R
-      wt = wgrid_R[w, t]
-      yt = ygrid_R[y]
-
-      (wpopt, Vopt) = BellOpt_R(wt, yt, wmin, V_R_interpol, u, R, dbeta, t)
-
-      V_R[w, y, t] = Vopt
-      wp_R[w, y, t] = wpopt
+  # Value of last period of retirement
+  for w = 1:wpoints_R
+    for y = 1:ypoints_R
+      wp_R[w, y, tR] = 0.0
+      v_R[w, y, tR] = u(wgrid_R[w, tR] + ygrid_R[y])
     end
   end
+
+  # Compute the period tR-1 solution exactly:
+  wmin = wgrid_R[1, tR]
+  for w = 1:wpoints_R
+    for y = 1:ypoints_R
+      wt = wgrid_R[w, tR-1]
+      yt = ygrid_R[y]
+      xt = wt + yt
+
+      Blmn(wp::Float64) = -(u(xt - wp) + δ*u(r*wp+yt))
+
+      optimum = optimize(Blmn, wmin/r, xt)
+
+      v_R[w, y, tR-1] = -(optimum.f_minimum)
+      wp_R[w, y, tR-1] = optimum.minimum
+    end
+  end
+
+  for t = (tR-2):-1:1
+    v_R_interpol = interpolatev(v_R, wgrid_R, ygrid_R, t+1)
+    wmin = wgrid_R[1, t+1]
+    for w = 1:wpoints_R
+     for y = 1:ypoints_R
+        (wp_R[w, y, t], v_R[w, y, t]) =
+          bellOpt_R(wgrid_R[w, t], ygrid_R[y], wmin, v_R_interpol, r, δ)
+      end
+    end
+  end
+  @printf "\tSolving retirement problem took %.1f seconds.\n" toq()
+  return v_R, wp_R
 end
-@printf "\tSolving retirement problem took %.1f seconds.\n" toq()
