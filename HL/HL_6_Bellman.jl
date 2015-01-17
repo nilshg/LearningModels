@@ -2,60 +2,59 @@
 ############################## BELLMAN RECURSION ###############################
 ################################################################################
 
-function SolveWorkingLife(V::Array, wp::Array, wgrid::Array, hgrid::Array,
-                          agrid::Array, bgrid::Array, zgrid::Array,
-                          wgridpoints::Int64, hgridpoints::Int64,
-                          agridpoints::Int64, bgridpoints::Int64,
-                          zgridpoints::Int64, stdy::Array, BellOpt::Function,
-                          interpolateV::Function, u::Function, R::Float64,
-                          δ::Float64, λ::Float64, TW::Int64)
+function solveWorkingLife(v::Array, wp::Array, wgrid::Array, hgrid::Array,
+                          agrid::Array, bgrid::Array, zgrid::Array, stdy::Array,
+                          r::Float64, δ::Float64, λ::Float64, ρ::Float64)
 
   @printf "6. Recursively solve for optimal decision rules\n"
   @printf "\ta = [%.2f, %.2f], b = [%.2f, %.2f], z = [%.2f, %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
-  @printf "\tSolving the problem on %d gridpoints\n" wgridpoints*hgridpoints*agridpoints*bgridpoints*zgridpoints
+  @printf "\tSolving the problem on %d points\n" length(v)
 
-  for t = (TW-1):-1:1
-    @printf "     Period: %d out of %d\n" t TW
+  for t = (size(wgrid,2)-1):-1:1
+    @printf "     Period: %d out of %d\n" t size(wgrid,2)
     @printf "\tw = [%.2f, %.2f], h = [%.2f, %.2f]\n" wgrid[1, t] wgrid[end, t] hgrid[1, t] hgrid[end, t]
 
-
     # INTERPOLATION
-    V_interpol = interpolateV(V, wgrid, hgrid, agrid, bgrid, zgrid, t+1)
+    v_interpol = interpolatev(v, wgrid, hgrid, agrid, bgrid, zgrid, t+1)
 
     # MAXIMIZATION
     wmin = wgrid[1, t+1]
     tic()
-    for a = 1:agridpoints
-      for b = 1:bgridpoints
-        for z = 1:zgridpoints
-          for h = 1:hgridpoints
-            for w = 1:wgridpoints
+    isnancounter = 0
+    for a = 1:size(agrid,1)
+      for b = 1:size(bgrid,1)
+        for z = 1:size(zgrid,1)
+          at = agrid[a]
+          bt = bgrid[b]
+          zt = zgrid[z]
+          yt = exp(at + bt*t + zt)
+          yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
+
+          for h = 1:hpoints
+            for w = 1:wpoints
               ht = hgrid[h, t]
               wt = wgrid[w, t]
-              at = agrid[a]
-              bt = bgrid[b]
-              zt = zgrid[z]
 
-              yt = exp(at + bt*t + zt)
-
-              Yln = LogNormal(at + b*(t+1) + zt, stdy[t])
-
-              if wt + yt - wmin/R < 0.01
-                @printf "Error: Cash on hand is too low, at w=%d, a=%d, b=%d, z=%d" w a b z
+              if wt + yt - wmin/r < 0.01
+                error("Error: Cash on hand is too low, at w, a, b, z")
               end
 
-              (wpopt, Vopt) = BellOpt(wt, ht, yt, at, bt, zt, wmin,
-                                      V_interpol, Yln, u, R, δ, λ, t)
+              (wpopt, vopt) = bellOpt(wt, ht, yt, at, bt, zt, wmin,
+                                      v_interpol, yln, r, δ, λ)
 
               wp[w, h, a, b, z, t] = wpopt
-              V[w, h, a, b, z, t] = Vopt
+              v[w, h, a, b, z, t] = vopt
+
+              wpopt < wt + yt || @printf "NC @ w=%d,h=%d,y=%d,t=%d" w h y t
             end
           end
         end
       end
     end
+    (dim1, dim2, dim3, dim4, dim5) = checkmonotonicity(v, t)
+    @printf "\tMonotonicity violations: w=%d, h=%d, a=%d, b=%d, z=%d\n" dim1 dim2 dim3 dim4 dim5
     @printf "\tMaximization took %d seconds\n" toq()
   end
 
-  return V, wp
+  return v, wp
 end
