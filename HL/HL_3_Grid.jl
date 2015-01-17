@@ -3,9 +3,10 @@
 ################################################################################
 
 function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
-               apoints::Int64, bpoints::Int64, zpoints::Int64, wpoints_R::Int64,
-               ypoints_R::Int64, wmaxR::Float64, power::Float64, r::Float64,
-               tR::Int64, guv_dist::Bool, const_beliefs::Bool)
+               hpoints::Int64, apoints::Int64, bpoints::Int64, zpoints::Int64,
+               wpoints_R::Int64, hpoints_R::Int64, ypoints_R, wmaxR::Float64,
+               power::Float64, r::Float64, tR::Int64, guv_dist::Bool,
+               const_beliefs::Bool)
 
   @printf "3. Construct Grids\n"
   @printf "\t3.1 Belief Grid\n"
@@ -109,7 +110,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
     wminR = -0.7*wminR
     wgrid_R = Array(Float64, (wpoints_R, tR))
     wgridexp_R = similar(wgrid_R)
-    hgrid_R = similar(wgrid_R)
+    hgrid_R = Array(Float64, (hpoints_R, tR))
 
     for t = 1:tR
       wdistexp = (wmaxR - wminR[t])^(1/power)
@@ -130,5 +131,5 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   @printf "Belief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
   @printf "Retirement grids: w_R [%.2f %.2f], y_R [%.2f %.2f]\n" wgrid_R[1, 5] wgrid_R[end, 5] ygrid_R[1] ygrid_R[end]
 
-  return wgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R ygrid_R
+  return wgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R, ygrid_R
 end

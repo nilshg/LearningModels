@@ -2,10 +2,8 @@
 ###############################    SIMULATION    ###############################
 ################################################################################
 
-function simulate(wp::Array, wgrid::Array, hgrid::Array, agrid::Array,
-                  bgrid::Array, zgrid::Array, yit::Array, ymedian::Float64,
-                  s_f_i::Array, wp_R::Array, wgrid_R::Array, hgrid_R::Array,
-                  ygrid_R::Array, r::Float64, λ::Float64)
+function simulate(wp::Array, hgrid::Array,yit::Array, ymedian::Float64,
+                  s_f_i::Array, wp_R::Array, r::Float64, λ::Float64)
 
   @printf "7. Simulate Consumption and Wealth Distribution\n"
 
