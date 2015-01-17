@@ -2,33 +2,31 @@
 #########################    TRANSITION PROBLEM      ##############################
 ###################################################################################
 
-function SolveTransition(V_R::Array, wgrid_R::Array, hgrid_R::Array, ygrid_R::Array,
+function solveTransition(v_R::Array, wgrid_R::Array, hgrid_R::Array, ygrid_R::Array,
                          wgrid::Array, hgrid::Array, agrid::Array, bgrid::Array,
-                         ymedian::Float64,
-                         wgridpoints::Int64, hgridpoints::Int64, agridpoints::Int64,
-                         bgridpoints::Int64, zgridpoints::Int64, interpolateV::Function,
-                         BellOpt_TRANS::Function, u::Function, R::Float64, δ::Float64,
-                         λ::Float64, TW::Int64)
+                         ymedian::Float64, r::Float64, δ::Float64, λ::Float64)
 
   @printf "5. Solving the problem for the last period of work\n"
   tic()
-  wp = zeros(wgridpoints, hgridpoints, agridpoints, bgridpoints, zgridpoints, TW)
-  V = zeros(wgridpoints, hgridpoints, agridpoints, bgridpoints, zgridpoints, TW)
+  wp = Array(Float64,
+             size(wgrid,1), size(hgrid,1), size(agrid,1), size(bgrid,1),
+             size(zgrid,1), size(wgrid,2))
+  v = simiar(wp)
 
   # INTERPOLATION
-  valueRETIRE = interpolateV(V_R, wgrid_R, hgrid_R, ygrid_R, 1)
+  valueRETIRE = interpolatev(v_R, wgrid_R, hgrid_R, ygrid_R, 1)
 
   # MAXIMIZATION
   wmin = wgrid_R[1, 1]
 
-  for a = 1:agridpoints
-    for b = 1:bgridpoints
-      for z = 1:zgridpoints
+  for a = 1:size(agrid,1)
+    for b = 1:size(bgrid,1)
+      for z = 1:size(zgrid,1)
         at = agrid[a]
         bt = bgrid[a]
         zt = 0
 
-        yt = exp(at + bt*TW + zt)
+        yt = exp(at + bt*tW + zt)
 
         if yt < 0.3*ymedian
           yfixed = 0.9*yt
@@ -41,26 +39,34 @@ function SolveTransition(V_R::Array, wgrid_R::Array, hgrid_R::Array, ygrid_R::Ar
         end
         yfixed = 0.715*yfixed
 
-        for w = 1: wgridpoints
-          for h = 1:hgridpoints
-            wt = wgrid[w, TW]
-            ht = hgrid[h, TW]
+        for w = 1: size(wgrid,1)
+          for h = 1:size(hgrid,1)
+            wt = wgrid[w, tW]
+            ht = hgrid[h, tW]
 
             if wt + yfixed < wmin
               @printf "\tWarning: Cash in hand too low at w=%d, a=%d, b=%d, z=%d\n" w a b z
             end
 
-            (wpopt, Vopt) = BellOpt_TRANS(wt, ht, yt, yfixed, wmin,
-                                          valueRETIRE, u, R, δ, λ, TW)
+            (wpopt, vopt) = bellOpt_TRANS(wt, ht, yt, yfixed, wmin, valueRETIRE, u, r, δ, λ)
 
-            V[w, h, a, b, z, TW] = Vopt
-            wp[w, h, a, b, z, TW] = wpopt
+            v[w, h, a, b, z, tW] = vopt
+            wp[w, h, a, b, z, tW] = wpopt
+
+            if isnan(vopt)
+            @printf "Warning: V is NaN at w=%d, h=%d, y=%d, t=%d" w h y t
+            end
+            if wpopt > wt + yt
+              @printf "Warning: Negative c at w=%d, h=%d, y=%d, t=%d" w h y t
+            end
           end
         end
       end
     end
   end
+  (dim1, dim2, dim3, dim4, dim5) = checkmonotonicity(v, tW)
+  @printf "\tMonotonicity violations: w=%d, h=%d, a=%d, b=%d, z=%d\n" dim1 dim2 dim3 dim4 dim5
   @printf "\tTransition period problem solved in %.1f seconds.\n" toq()
 
-  return V, wp
+  return v, wp
 end
