@@ -44,7 +44,7 @@ function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
                  a=a, b=b, z=z)
       result = similar(y)
       for i = 1:size(y, 1)
-        @inbounds result[i,:] = v_int[r*w′ + y[i], h′, a, b, z]*pdf(yln, y[i])
+        @inbounds result[i,:] = v_int[w′ + y[i], h′, a, b, z]*pdf(yln, y[i])
       end
       result
     end

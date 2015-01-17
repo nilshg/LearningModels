@@ -11,7 +11,7 @@ function solveTransition(v_R::Array, wgrid_R::Array, hgrid_R::Array, ygrid_R::Ar
   wp = Array(Float64,
              size(wgrid,1), size(hgrid,1), size(agrid,1), size(bgrid,1),
              size(zgrid,1), size(wgrid,2))
-  v = simiar(wp)
+  v = similar(wp)
 
   # INTERPOLATION
   valueRETIRE = interpolatev(v_R, wgrid_R, hgrid_R, ygrid_R, 1)
@@ -48,7 +48,7 @@ function solveTransition(v_R::Array, wgrid_R::Array, hgrid_R::Array, ygrid_R::Ar
               @printf "\tWarning: Cash in hand too low at w=%d, a=%d, b=%d, z=%d\n" w a b z
             end
 
-            (wpopt, vopt) = bellOpt_TRANS(wt, ht, yt, yfixed, wmin, valueRETIRE, u, r, δ, λ)
+            (wpopt, vopt) = bellOpt_TRANS(wt, ht, yt, yfixed, wmin, valueRETIRE, r, δ, λ)
 
             v[w, h, a, b, z, tW] = vopt
             wp[w, h, a, b, z, tW] = wpopt

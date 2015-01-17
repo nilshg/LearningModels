@@ -62,7 +62,7 @@ function solveRetirement(wgrid_R::Array, hgrid_R::Array, ygrid_R::Array,
           ht = hgrid_R[h, t]
           yt = ygrid_R[y]
 
-          (wpopt, vopt) = bellOpt_R(wt, ht, yt, wmin, v_R_interpol, u, r, δ, λ)
+          (wpopt, vopt) = bellOpt_R(wt, ht, yt, wmin, v_R_interpol, r, δ, λ)
 
           v_R[w, h, y, t] = vopt
           wp_R[w, h, y, t] = wpopt
