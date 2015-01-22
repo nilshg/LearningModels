@@ -1,5 +1,5 @@
 include("../Plots.jl")
-include("../Check_Monotonicity.jl")
+include("../Chk_Monot.jl")
 include("../Optimizations.jl")
 include("../Interpolations.jl")
 include("../Parameters.jl")
@@ -16,7 +16,7 @@ guvenen_distribution = true
 
 if guvenen_distribution
   (yit, α, β, ymedian, pension) =
-    incomeDistribution(agents, bs,
+    incomeDistribution(
       "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/LaborReal.dat",
       "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/alfabeta.dat")
 else
@@ -26,16 +26,15 @@ else
 end
 
 # 2. Construct individual specific belief histories
-(s_f_i, stdy) = learning(agents, bs, tW, α, β, yit, ρ,
-                         var_η, var_ɛ, guvenen_distribution)
+(s_f_i, stdy) = learning(α, β, yit, ρ, var_η, var_ɛ, guvenen_distribution)
+
 # 3. Construct Grids
 (wgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
   grids(s_f_i, stdy, wpoints, apoints, bpoints, zpoints,
         wpoints_R, ypoints_R, wmaxR, power, r, tR, false, true)
 
 # 4. Solve Retirement Problem
-(v_R, wp_R) =
-  solveRetirement(wgrid_R, ygrid_R, wpoints_R, ypoints_R, r, δ)
+(v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ)
 
 # 5. Solve Transition Problem
 #(v, wp, constrained) =
