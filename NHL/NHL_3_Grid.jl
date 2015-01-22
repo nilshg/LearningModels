@@ -2,22 +2,20 @@
 ############################# GRID CONStRUCTION ################################
 ################################################################################
 
-function grids(s_f_i::Array, stdy::Array, agents::Int64, bs::Int64, power::Float64,
-               wpoints::Int64, apoints::Int64, bpoints::Int64,
-               zpoints::Int64, wpoints_R::Int64, ypoints_R::Int64,
-               wmaxR::Float64, r::Float64, tW::Int64, tR::Int64, guv_dist::Bool,
-               const_beliefs::Bool)
+function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
+               apoints::Int64, bpoints::Int64, zpoints::Int64, wpoints_R::Int64,
+               ypoints_R::Int64, wmaxR::Float64, power::Float64, r::Float64,
+               tR::Int64, guv_dist::Bool, const_beliefs::Bool)
 
   @printf "3. Construct Grids\n"
-  @printf "\t3.1 Belief Grid\n"
 
-  @printf "\t3.1 Unique Income Grid\n"
+  tW = size(s_f_i,3)
   hmat = [ones(1,tW); linspace(1,tW,tW)'; ones(1,tW)]
   ybelief = Array(Float64, (agents*bs, tW))
   ymaxbelief = Array(Float64, (tW, 1))
   yminbelief = similar(ymaxbelief)
   for t = 1:tW
-    for i = 1:agents*bs
+    for i = 1:size(s_f_i,2)
       ybelief[i, t] = exp(hmat[:, t]'*s_f_i[:, i, t] + 3*stdy[t])[1]
     end
     ymaxbelief[t] = maximum(ybelief[:, t])*exp(3*stdy[t])
@@ -28,22 +26,28 @@ function grids(s_f_i::Array, stdy::Array, agents::Int64, bs::Int64, power::Float
   # Maximum wealth is given by three times the highest earnings
   # Minimum wealth is given by some ad hoc constraint
 
-  @printf "\t3.2 Wealth Grid\n"
+  @printf "\t3.1 Wealth Grid\n"
   if guv_dist
     guvgrid = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealth.dat")'
-    wgrid = Array(Float64, (wpoints, tW))
-    for t = 1:tW
+    wgrid = Array(Float64, (wpoints, size(s_f_i,3)))
+    for t = 1:size(s_f_i,3)
       wgrid[:, t] = linspace(guvgrid[1, t], guvgrid[end, t], wpoints)
     end
   else
-    wmin = Array(Float64, (1, tW))
-    wmax = Array(Float64, (1, tW))
-    wgrid = Array(Float64, (wpoints, tW))
-    wgridexp = Array(Float64, (wpoints, tW))
-    for t = 1:tW
-      wmin[t] = -yminbelief[t]
-      wmax[t] = 2*ymaxbelief[t]
+    wmin = Array(Float64, tW)
+    wmax = similar(wmin)
 
+    wmin[tW] = -0.7*yminbelief[tW]
+    wmax[tW] = 2*ymaxbelief[tW]
+    for t = (tW-1):-1:1
+      wmin[t] = wmin[t+1]/r - 0.7*yminbelief[t]
+      wmax[t] = 2*ymaxbelief[t]
+    end
+
+    wgrid = Array(Float64, (wpoints, tW))
+    wgridexp = similar(wgrid)
+
+    for t = tW:-1:1
       wdistexp = (wmax[t] - wmin[t])^(1/power)
       winc = wdistexp/(wpoints-1)
       for i = 1: wpoints
@@ -56,13 +60,13 @@ function grids(s_f_i::Array, stdy::Array, agents::Int64, bs::Int64, power::Float
   wgrid[:, 1] = linspace(wgrid[1, 2], wgrid[end, 1], wpoints)
   ###############################################
 
-  @printf "\t3.5 Grids for α, β, z\n"
+  @printf "\t3.2 Grids for α, β, z\n"
   if const_beliefs
     agrid = linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints)
     bgrid = linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints)
     zgrid = linspace(minimum(s_f_i[3, :, :]), maximum(s_f_i[3, :, :]), zpoints)
   else
-    for t = 1:tW
+    for t = 1:size(s_f_i,3)
       agrid[:, t] = linspace(minimum(s_f_i[1, :, t]), maximum(s_f_i[1, :, t]), apoints)
       bgrid[:, t] = linspace(minimum(s_f_i[2, :, t]), maximum(s_f_i[2, :, t]), bpoints)
       zgrid[:, t] = linspace(minimum(s_f_i[3, :, t]), maximum(s_f_i[3, :, t]), zpoints)
@@ -71,7 +75,7 @@ function grids(s_f_i::Array, stdy::Array, agents::Int64, bs::Int64, power::Float
 
   # Adjust borrowing constraints such that lowest belief does not have an empty
   # choice set in any period:
-  for t = (tW-1):-1:1
+  for t = (size(s_f_i,3)-1):-1:1
     if const_beliefs
       ymin = exp(agrid[1] + t*bgrid[1] + zgrid[1])
     else
@@ -84,13 +88,13 @@ function grids(s_f_i::Array, stdy::Array, agents::Int64, bs::Int64, power::Float
     end
   end
 
-  @printf "\t3.5 Retirement Grids\n"
+  @printf "\t3.3 Retirement Grids\n"
   if guv_dist # Use Guvenen's retirement grid
     guvgrid_R_org = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealthR.dat")'
     guvgrid_R = reshape(guvgrid_R_org, 1, 7200)
     guvgrid_R = unique(reshape(guvgrid_R_org, 12, 600), 2)
     wgrid_R = Array(Float64, (wpoints_R, tR))
-    for t = 1:tR
+    for t = 1:30
       wgrid_R[:, t] = linspace(guvgrid_R[1, t], guvgrid_R[end, t], wpoints_R)
     end
   else
