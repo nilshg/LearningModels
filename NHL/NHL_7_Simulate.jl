@@ -9,12 +9,12 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
 
   @printf "7. Simulate Consumption and Wealth Distribution\n"
   w_0 = 0.0
-  c_t = Array(Float64, (agents*bs, tW+tR))
+  tW = size(yit,2)
+  tR = size(wgrid_R,2)
+  c_t = Array(Float64, (size(yit,1), tW+tR))
   w_t = similar(c_t)
   wp_t = similar(c_t)
   w_t[:, 1] = w_0
-  tW = size(yit,2)
-  tR = size(wgrid_R,2)
 
   @printf "\tSimulating %d periods of working life...\n" tW
   for t = 1:tW
