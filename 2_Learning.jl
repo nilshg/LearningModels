@@ -42,7 +42,7 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   stdy = Array(Float64, tW)
   for t = 1:tW
     ht = hmat[:, t]
-    stdy[t] = [sqrt(ht'*p_f[:, 3*t-2:3*t]*ht + var_ɛ)][1]
+    stdy[t] = [sqrt(ht'*p_f[:, :, t]*ht + var_ɛ)][1]
   end
 
   # Calculate Beliefs
