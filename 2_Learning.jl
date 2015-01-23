@@ -42,15 +42,15 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   stdy = Array(Float64, tW)
   for t = 1:tW
     ht = hmat[:, t]
-    stdy[t] = [sqrt(ht'*p_f[:, 3*t-2:3*t]*ht)][1]
+    stdy[t] = [sqrt(ht'*p_f[:, 3*t-2:3*t]*ht + var_ɛ)][1]
   end
 
   # Calculate Beliefs
   tic()
-  for t = 1:tW-1
+   @inbounds for t = 1:tW-1
     pt = p_f[:, :, t]
     ht = hmat[:, t]
-    @inbounds for i = 1:size(yit,1)
+    for i = 1:size(yit,1)
       s_f_i[:, i, t+1] = f*(s_f_i[:, i, t] + pt*ht.*(ht'*pt*ht + var_ɛ).^(-1.0)
                             .*(log(yit[i, t]) - ht'*s_f_i[:, i, t]) )
     end
@@ -59,4 +59,3 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   return s_f_i, stdy
 
 end
-
