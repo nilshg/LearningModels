@@ -10,6 +10,7 @@ include("NHL_4_Retirement.jl")
 include("NHL_5_Transition.jl")
 include("NHL_6_Bellman.jl")
 include("NHL_7_Simulate.jl")
+include("NHL_Diagnostics.jl")
 
 # 1. Draw Income Distribution
 guvenen_distribution = true
@@ -38,11 +39,10 @@ end
 
 # 5. Solve Transition Problem
 #(v, wp, constrained) =
-#  solveTransition(v_R, wgrid_R, ygrid_R, wgrid, agrid, bgrid, ymedian, r, δ, tW)
+#  solveTransition(v_R, wgrid_R, ygrid_R, wgrid, agrid, bgrid, ymedian, r, δ)
 
 # 5.1 Solve Terminal Period Problem instead of 4. and 5.
-(wp, c, v, c_over_x) =
-  solveTransition(wgrid, agrid, bgrid, zgrid, r, δ)
+(wp, c, v, c_over_x) = solveTransition(wgrid, agrid, bgrid, zgrid, r, δ)
 
 # 6. Solve Working Life Problem
 (v, wp, c_over_x) =
@@ -52,3 +52,6 @@ end
 (c_t, w_t, wp_t) =
   simulate(wp, wgrid, agrid, bgrid,  zgrid, yit, ymedian, s_f_i, wp_R, wgrid_R,
            ygrid_R, pension, r)
+
+w_baseline = w_t
+(constr_baseline, neg_baseline) = constrained_negative(wp_t, wgrid, wgrid_R)
