@@ -22,11 +22,12 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
     yminbelief[t] = minimum(ybelief[:, t])/exp(3*stdy[t])
   end
 
-  # Wealth grid
+  ###############################################################
+                         # WEALTH GRID #
+  ###############################################################
   # Maximum wealth is given by three times the highest earnings
   # Minimum wealth is given by some ad hoc constraint
 
-  @printf "\t3.1 Wealth Grid\n"
   if guv_dist
     guvgrid = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealth.dat")'
     wgrid = Array(Float64, (wpoints, size(s_f_i,3)))
@@ -59,8 +60,9 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   ################## HACK!! ####################
   wgrid[:, 1] = linspace(wgrid[1, 2], wgrid[end, 1], wpoints)
   ###############################################
-
-  @printf "\t3.2 Grids for α, β, z\n"
+  ###############################################################
+                       # BELIEF GRIDS #
+  ###############################################################
   if const_beliefs
     agrid = linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints)
     bgrid = linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints)
@@ -87,8 +89,9 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
       wgrid[:, t] = linspace(wgrid[1, t]+0.1, wgrid[end, t], wpoints)
     end
   end
-
-  @printf "\t3.3 Retirement Grids\n"
+  ###############################################################
+                    # RETIREMENT GRIDS #
+  ###############################################################
   if guv_dist # Use Guvenen's retirement grid
     guvgrid_R_org = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealthR.dat")'
     guvgrid_R = reshape(guvgrid_R_org, 1, 7200)
@@ -123,9 +126,9 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   ymaxR = min(0.2*ymaxbelief[tW], 1000)
   ygrid_R = linspace(yminR, ymaxR, ypoints_R)
 
-  @printf "Wealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
-  @printf "Belief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
-  @printf "Retirement grids: w_R [%.2f %.2f], y_R [%.2f %.2f]\n" wgrid_R[1, 5] wgrid_R[end, 5] ygrid_R[1] ygrid_R[end]
+  @printf "\tWealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
+  @printf "\tBelief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
+  @printf "\tRetirement grids: w_R [%.2f %.2f], y_R [%.2f %.2f]\n" wgrid_R[1, 5] wgrid_R[end, 5] ygrid_R[1] ygrid_R[end]
 
   return wgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R
 end

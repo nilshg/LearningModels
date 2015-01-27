@@ -7,7 +7,6 @@ function solveWorkingLife(v::Array, wp::Array, wgrid::Array, hgrid::Array,
                           r::Float64, δ::Float64, λ::Float64, ρ::Float64)
 
   @printf "6. Recursively solve for optimal decision rules\n"
-  @printf "\ta = [%.2f, %.2f], b = [%.2f, %.2f], z = [%.2f, %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
   @printf "\tSolving the problem on %d points\n" length(v)/size(wgrid,2)
 
   for t = (size(wgrid,2)-1):-1:1

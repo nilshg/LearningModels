@@ -17,11 +17,10 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
   w_t[:, 1] = w_0
 
   @printf "\tSimulating %d periods of working life...\n" tW
+  negconscounter = 0
   for t = 1:tW
     # INTERPOLATION
     wp_int = interpolatev(wp, wgrid, agrid, bgrid, zgrid, t)
-
-    negconscounter = 0
     # Bond Choice
     for i = 1:size(yit,1)
       wt = w_t[i, t]
@@ -32,16 +31,16 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
       c_t[i, t] = xt - wp_t[i, t]
       w_t[i, t+1] = r*wp_t[i, t]
 
-      if c_t[i, t] < 0.0 && negconscounter < 1
-        @printf "\tWARNING: c=%.2f at wt=%.3f, yt=%.3f, t=%d\n" c_t[i,t] wt yt t
+      if c_t[i, t] < 0.0
         negconscounter +=  1
       end
     end
   end
+  negconscounter == 0 || @printf "\t%d negative consumption choices!\n" negconscounter
 
   @printf "\tSimulating %d periods of retirement...\n" tR
+  negconscounter = 0
   for t = (tW+1):(tW+tR)
-    negconscounter = 0
     wp_int = interpolatev(wp_R, wgrid_R, ygrid_R, t-tW)
 
     for  i = 1:size(yit,1)
@@ -52,16 +51,11 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
       wp_t[i, t] = wp_int[xt, yt]
       c_t[i, t] = xt - wp_t[i, t]
 
-      if c_t[i, t] < 0.0 && negconscounter < 1
-        @printf "\tWARNING: c=%.2f at wt=%.3f, yt=%.3f, t=%d\n" c_t[i,t] wt yt t
-        negconscounter +=  1
-      end
-
       if  t < tW + tR
         w_t[i, t+1] = r*wp_t[i, t]
       end
     end
   end
-
+  negconscounter == 0 || @printf "\t%d negative consumption choices!\n" negconscounter
   return c_t, w_t, wp_t
 end

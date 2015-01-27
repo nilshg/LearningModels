@@ -5,7 +5,7 @@
 function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64)
 
   @printf "4. Solving the retirement problem\n"
-  tic()
+
   tR = size(wgrid_R,2)
   v_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), tR))
   wp_R = similar(v_R)
@@ -45,6 +45,6 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
       end
     end
   end
-  @printf "\tSolving retirement problem took %.1f seconds.\n" toq()
+
   return v_R, wp_R
 end

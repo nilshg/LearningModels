@@ -35,7 +35,7 @@ function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
 
    x = w + y
 
-  function EVprime(w′::Float64, x=x, h=h, a=a, b=b, z=z, yln=yln, v_int=v_int,
+  function EVprime(w′::Float64, h=h, a=a, b=b, z=z, yln=yln, v_int=v_int,
                    r=r, λ=λ)
 
     h′ = (1-λ)*h + λ*(x - w′)
@@ -49,18 +49,13 @@ function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
       result
     end
 
-    function EVp(y::Float64, w′=w′, h′=h′, v_int = v_int, yln =yln,
-                 a=a, b=b, z=z)
-      v_int[w′ + y, h′, a, b, z]*pdf(yln, y)
-    end
-
     y_l = meanlogx(yln) - 3*varlogx(yln)
     y_h = meanlogx(yln) + 3*varlogx(yln)
 
     quadrect(EVp, 9, exp(y_l), exp(y_h))
   end
 
-  Blmn(w′::Float64) = -( u(x-w′, h) + δ*EVprime(r*w′) )
+  Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u(x - w′, h) + δ*EVprime(r*w′) )
 
   optimum = optimize(Blmn, wmin/r, x)
   w′ = optimum.minimum
