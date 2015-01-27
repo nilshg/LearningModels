@@ -89,7 +89,6 @@ function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Flo
       end
   end
 
-  # Reshape α into 100,000x1 vector with each of the 1,000 unique values repeated 100 times
   α = reshape(repmat(α,1,100)', agents*bs, 1)
 
   # Draw the income distribution:
@@ -104,7 +103,7 @@ function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Flo
           end
       end
   end
-  @printf "\tβ is between %.2f and %.2f, β_2 is between %.2f and %.2f\n" minimum(β_1)  maximum(β_1) minimum(β_2) maximum(β_2)
+  @printf "\tβ=[%.2f, %.2f], β_2=[%.2f, %.2f]\n" minimum(β_1) maximum(β_1) minimum(β_2) maximum(β_2)
 
   # Calculate median income in last period for calculation of retirement benefits
   ymedian = median(yit[:, end])
@@ -142,8 +141,6 @@ function incomeDistribution(α::Float64, β::Float64, var_η_RIP::Float64,
 
   epsdisc = [-(1/2)*(epsgridpoints-1)*sqrt(var_ɛ_RIP)+(i-1)*sqrt(var_ɛ_RIP)
                for i = 1:epsgridpoints]
-
-  transitionz = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Guvenen FORTRAN Code\\RIP_BASELINE_ALL\\Probz.dat")
 
   yit = Array(Float64, (zgridpoints_RIP, epsgridpoints, tW))
   for t = 1:tW

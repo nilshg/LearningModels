@@ -7,7 +7,6 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
 
   @printf "2. Calculate agent's beliefs\n"
   tW = size(yit,2)
-  hmat = [ones(1,tW); linspace(1,tW,tW)'; ones(1,tW)]
   f = [1 0 0; 0 1 0; 0 0 ρ]
   q = [0 0 0; 0 0 0; 0 0 var_η]
   s_f_i = Array(Float64, (3, size(yit,1),tW))
@@ -32,8 +31,7 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
 
   # Evolution of Var-Cov-Matrix
   @inbounds for t = 1:tW-1
-      ht = hmat[:, t]
-      [1, 1, 1]
+      ht = [1; t; 1]
       pt = p_f[:, :, t]
       p_f[:, :, t+1] = f*(pt-pt*ht.*(ht'*pt*ht+var_ɛ).^(-1.0)*ht'*pt)*f' + q
   end
@@ -41,21 +39,19 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   # Calculate Standard Deviation (needed later on)
   stdy = Array(Float64, tW)
   for t = 1:tW
-    ht = hmat[:, t]
+    ht = [1; t; 1]
     stdy[t] = [sqrt(ht'*p_f[:, :, t]*ht + var_ɛ)][1]
   end
 
   # Calculate Beliefs
-  tic()
-   @inbounds for t = 1:tW-1
+  @inbounds for t = 1:tW-1
     pt = p_f[:, :, t]
-    ht = hmat[:, t]
+    ht = [1; t; 1]
     for i = 1:size(yit,1)
       s_f_i[:, i, t+1] = f*(s_f_i[:, i, t] + pt*ht.*(ht'*pt*ht + var_ɛ).^(-1.0)
                             .*(log(yit[i, t]) - ht'*s_f_i[:, i, t]) )
     end
   end
-  @printf "\tBelief calculation took %d seconds.\n" toq()
-  return s_f_i, stdy
 
+  return s_f_i, stdy
 end
