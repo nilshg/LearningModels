@@ -67,7 +67,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
       hgrid[:, t] = linspace(0.1, 2*ymaxbelief[t], hpoints)
   end
 
-  @printf "\t3.2 Grids for α, β, z\n"
+  @printf "\t3.3 Grids for α, β, z\n"
   if const_beliefs
     agrid = linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints)
     bgrid = linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints)
@@ -100,7 +100,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   end
   @printf "\t%d adjustments made to borrowing constraint\n" adjustments
 
-  @printf "\t3.5 Retirement Grids\n"
+  @printf "\t3.4 Retirement Grids\n"
   if guv_dist # Use Guvenen's retirement grid
     guvgrid_R_org =
       readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealthR.dat")'

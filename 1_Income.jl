@@ -72,12 +72,12 @@ function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Flo
       if i < length(β_2)/2
           β_2[i] = β_1[i] + sqrt(var_b)*randn()
       else
-          β_2[i] = β_1[i] + sqrt(var_b)*randn()+0.03
+          β_2[i] = β_1[i] + sqrt(var_b)*randn()+0.015
       end
   end
 
   # Create one beta matrix that holds each agents beta for each year
-  β = zeros(agents*bs, tW)
+  β = Array(Float64, agents*bs, tW)
 
   for t = 1:tW
       for i = 1:bs
