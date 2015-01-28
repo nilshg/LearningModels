@@ -54,7 +54,7 @@ end
 
 function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Float64,
                             var_a::Float64, var_b::Float64, var_ɛ::Float64,
-                            ρ::Float64, var_η::Float64, br::Int64, tW::Int64)
+                            var_η::Float64, ρ::Float64, br::Int64, tW::Int64)
 
   # Draw some alphas and betas
   α = Array(Float64, bs)

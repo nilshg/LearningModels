@@ -22,7 +22,7 @@ if guvenen_distribution
       "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/alfabeta.dat")
 else
   (yit, α, β, ymedian, pension) =
-    incomeDistribution(agents, bs, μₐ, μᵦ, var_a, var_b, var_ɛ, ρ, var_η,
+    incomeDistribution(agents, bs, μₐ, μᵦ, var_a, var_b, var_ɛ, var_η, ρ,
                        br, tW)
 end
 
@@ -32,13 +32,13 @@ end
 # 3. Construct Grids
 (wgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
   grids(s_f_i, stdy, wpoints, apoints, bpoints, zpoints,
-        wpoints_R, ypoints_R, wmaxR, power, r, tR, false, true)
+        wpoints_R, ypoints_R, wmaxR, power, r, tR, guvenen_distribution, true)
 
 # 4. Solve Retirement Problem
 (v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ)
 
 # 5. Solve Transition Problem
-#(v, wp, constrained) =
+#(v, wp) =
 #  solveTransition(v_R, wgrid_R, ygrid_R, wgrid, agrid, bgrid, ymedian, r, δ)
 
 # 5.1 Solve Terminal Period Problem instead of 4. and 5.
@@ -52,6 +52,3 @@ end
 (c_t, w_t, wp_t) =
   simulate(wp, wgrid, agrid, bgrid,  zgrid, yit, ymedian, s_f_i, wp_R, wgrid_R,
            ygrid_R, pension, r)
-
-w_baseline = w_t
-(constr_baseline, neg_baseline) = constrained_negative(wp_t, wgrid, wgrid_R)
