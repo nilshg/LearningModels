@@ -12,21 +12,26 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   s_f_i = Array(Float64, (3, size(yit,1),tW))
 
   if guvenen_distribution
-      s_0_i = repmat([2.0 ; mean(β); 0], 1, size(yit,1))
+    s_f_guv_org =
+      readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Guvenen FORTRAN code\\SNext_in.dat")
+
+    s_f_guv = Array(Float64, (3, 100000, 40))
+    for t = 1:40
+      for i = 1:100000
+        s_f_guv[:, i, t] = s_f_guv_org[i, 3*t-2:3*t]
+      end
+    end
+    s_f_i[:,:,1] = s_f_guv[:, :, 1]
   else
-      s_0_i = repmat([mean(α) ; mean(β); 0], 1, size(yit,1))
+    s_0_i = repmat([mean(α) ; mean(β); 0], 1, size(yit,1))
+    s_0_i[2, i] = 0.65*β[i] + 0.35*s_0_i[2, i];
+    s_f_i[:,:,1] = s_0_i
   end
 
   p_f = Array(Float64, (3, 3, tW))
   p_0 = [0.005 -0.0002 0; -0.0002 0.0001 0; 0 0 0.0885]  # Directly out of Guvenen's paper
 
-  # Add some prior knowledge on beta
-  for i = 1:size(yit,1)
-      s_0_i[2, i] = 0.65*β[i] + 0.35*s_0_i[2, i];
-  end
-
   # Forecast from initial beliefs
-  s_f_i[:,:,1] = s_0_i
   p_f[:, :, 1] = p_0;
 
   # Evolution of Var-Cov-Matrix
