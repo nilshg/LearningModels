@@ -1,4 +1,4 @@
-################################################################################
+﻿################################################################################
 ########################### INCOME DISTRIBUTION ################################
 ################################################################################
 #
@@ -28,7 +28,7 @@ function incomeDistribution(ypath::String, abpath::String)
   β = alfabeta[:, 2]
   β = reshape(repmat(β, 1, agents)', 100000, 1)
 
-  # Calculate median income in last period for calculation of retirement benefits
+  # Median income in last period for calculation of retirement benefits
   ymedian = median(yit[:, end])
   @printf "\tMedian income in period 40 is %.2f\n" ymedian
 
