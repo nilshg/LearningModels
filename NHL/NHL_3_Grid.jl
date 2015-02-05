@@ -1,4 +1,4 @@
-################################################################################
+﻿################################################################################
 ############################# GRID CONStRUCTION ################################
 ################################################################################
 
@@ -123,7 +123,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   end
 
   yminR = max(0.2*yminbelief[tW], 0.2)
-  ymaxR = min(0.2*ymaxbelief[tW], 1000)
+  ymaxR = min(0.05*ymaxbelief[tW], 1000)
   ygrid_R = linspace(yminR, ymaxR, ypoints_R)
 
   @printf "\tWealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
