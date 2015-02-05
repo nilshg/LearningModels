@@ -9,10 +9,10 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
                           stdy::Vector{Float64}, r::Float64, δ::Float64)
 
   @printf "6. Recursively solve for optimal decision rules\n"
-  @printf "\tSolving the problem on %d points\n" wpoints*apoints*bpoints*zpoints
+  @printf "\tSolving on %d points..." length(v[:, :, :, :, end])
 
   for t = (size(wgrid,2)-1):-1:1
-    mod(t,10) != 0 || @printf "    Period %d/%d" t size(wgrid,2)
+    mod(t,10) != 0 || @printf "%d/%d, " t size(wgrid,2)
 
     # INTERPOLATION
     v_interpol = interpolatev(v, wgrid, agrid, bgrid, zgrid, t+1)
@@ -61,10 +61,10 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
                           stdy::Vector{Float64}, r::Float64, δ::Float64)
 
   @printf "6. Recursively solve for optimal decision rules\n"
-  @printf "\tSolving the problem on %d points\n" wpoints*apoints*bpoints*zpoints
+  @printf "\tSolving on %d points..." length(v[:, :, :, :, end])
 
   for t = (size(wgrid,2)-1):-1:1
-    mod(t,10) != 0 || @printf "    Period %d/%d" t size(wgrid,2)
+    mod(t,10) != 0 || @printf "%d/%d, " t size(wgrid,2)
 
     # INTERPOLATION
     v_interpol = interpolatev(v, wgrid, agrid, bgrid, zgrid, t+1)
