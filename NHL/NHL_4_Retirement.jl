@@ -5,16 +5,18 @@
 function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64)
 
   @printf "4. Solving the retirement problem\n"
-  tic()
+
   tR = size(wgrid_R,2)
   v_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), tR))
   wp_R = similar(v_R)
+  c_over_x = similar(v_R)
 
   # Value of last period of retirement
   for w = 1:size(wgrid_R,1)
     for y = 1:size(ygrid_R,1)
       wp_R[w, y, tR] = 0.0
       v_R[w, y, tR] = u(wgrid_R[w, tR] + ygrid_R[y])
+      c_over_x[w, y, tR] = 1.0
     end
   end
 
@@ -32,6 +34,9 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
 
       v_R[w, y, tR-1] = -(optimum.f_minimum)
       wp_R[w, y, tR-1] = optimum.minimum
+
+      c = xt - wp_R[w, y, tR-1]
+      c_over_x[w, y, tR-1] = c/(xt - wmin/r)
     end
   end
 
@@ -42,9 +47,13 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
      for y = 1:size(ygrid_R,1)
         (wp_R[w, y, t], v_R[w, y, t]) =
           bellOpt_R(wgrid_R[w, t], ygrid_R[y], wmin, v_R_interpol, r, δ)
+
+        xt = wgrid_R[w, t] + ygrid_R[y]
+        c = xt - wp_R[w, y, t]
+        c_over_x[w, y, t] = c/(xt - wmin/r)
       end
     end
   end
-  @printf "\tSolving retirement problem took %.1f seconds.\n" toq()
-  return v_R, wp_R
+
+  return v_R, wp_R, c_over_x
 end

@@ -15,7 +15,7 @@
 
 using Dierckx
 
-function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array, 
+function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array,
                          wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
                          ymedian::Float64, r::Float64, δ::Float64)
 
@@ -25,6 +25,7 @@ function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array,
   wp = Array(Float64,
              (size(wgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))
   v = similar(wp)
+  c_over_x = similar(wp)
 
   # INTERPOLATION
   valueRETIRE = interpolatev(v_R, wgrid_R, ygrid_R, 1)
@@ -60,10 +61,13 @@ function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array,
 
           wpopt < wt + yt || @printf "NC @ w=%d,a=%d,b=%d,z=%d" w a b z
 
-          abs(wpopt - wmin/r) > 0.0001 || (constrained[tW] += 1)
-
           v[w, a, b, z, tW] = vopt
           wp[w, a, b, z, tW] = wpopt
+
+          c = wgrid[w, tW] + yt - wp[w, a, b, z, tW]
+
+          c_over_x[w, a, b, z, tW] =
+            c/(wgrid[w, tW] - wmin/r + yt)
         end
       end
     end
@@ -72,7 +76,7 @@ function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array,
   dim1 + dim2 + dim3 + dim4 == 0 || @printf "\tMonot. violated, t=%d\n" t
   @printf "\tTransition period problem solved in %.1f seconds.\n" toq()
 
-  return v, wp, constrained
+  return v, wp, c_over_x
 end
 
 ###################################################################################
@@ -80,7 +84,7 @@ end
 function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
                          zgrid::Array, r::Float64, δ::Float64)
   tw = size(wgrid,2)
-  
+
   xpoints = 200
   xmax = wgrid[end, 40]
   xmin = wgrid[1, 40]
@@ -137,7 +141,6 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
 
   xp_1 = Array(Float64,
                (size(wgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))
-  c_1 = similar(xp_1)
   v_1 = similar(xp_1)
   c_over_x = similar(xp_1)
 
@@ -154,15 +157,15 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
           yln = LogNormal(at + bt*40 + zt, 0.22)
 
           (xp_1[w, a, b, z, tW], v_1[w, a, b, z, tW]) =
-            bellOpt(wgrid[w, 39], y, at, bt, zt, v_int, yln, r, δ,
+            bellOpt(wgrid[w, 40], y, at, bt, zt, v_int, yln, r, δ,
                     xgrid_irr[1])
 
-          c_1[w, a, b, z, tW] = wgrid[w, 39] + y - xp_1[w, a, b, z, tW]
+          c = wgrid[w, 40] + y - xp_1[w, a, b, z, tW]
 
-          c_over_x[w, a, b, z, tW] =
-            c_1[w, a, b, z, tW]/(wgrid[w, 39] - xgrid_irr[1]/r + y)
+          c_over_x[w, a, b, z, 40] =
+            c/(wgrid[w, 40] - xgrid_irr[1]/r + y)
 
-          c_1[w,a,b,z,tW] > 0 || @printf "NC @ x=%d,a=%d,b=%d,z=%d\n" w a b z
+          c > 0 || @printf "NC @ x=%d,a=%d,b=%d,z=%d\n" w a b z
         end
       end
     end

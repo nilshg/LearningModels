@@ -37,13 +37,13 @@ init_var_β = 0.01      # Initial belief about variance of beta
 init_var_z = 0.01      # Initial belief about ariance of z
 
 # Parameters for grid construction
-wpoints = 20           # Wealth grid points (working life)
+wpoints = 40           # Wealth grid points (working life)
 wpoints_R = 30         # Wealth grid points (retirement)
 hpoints = 6            # Habit grid points (working life)
 hpoints_R = 29         # Habit grid points (retirement)
 ypoints_R = 20         # Pension points
 wmaxR = 1000.0         # Maximum retirement wealth
-apoints = 4            # Grid points for beliefs about α
+apoints = 3            # Grid points for beliefs about α
 bpoints = 8            # Grid points for beliefs about β
 zpoints = 7            # Grid points for beliefs about z
 zpoints_RIP = 32       # Grid points for RIP persistent shock

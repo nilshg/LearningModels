@@ -8,10 +8,9 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
                power::Float64, r::Float64, tR::Int64, guv_dist::Bool,
                const_beliefs::Bool)
 
-  @printf "3. Construct Grids\n"
-  @printf "\t3.1 Belief Grid\n"
+   @printf "3. Construct Grids\n"
+
   tW = size(s_f_i,3)
-  @printf "\t3.1 Unique Income Grid\n"
   hmat = [ones(1,tW); linspace(1,tW,tW)'; ones(1,tW)]
   ybelief = Array(Float64, (agents*bs, tW))
   ymaxbelief = Array(Float64, (tW, 1))
@@ -24,17 +23,11 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
     yminbelief[t] = minimum(ybelief[:, t])/exp(3*stdy[t])
   end
 
-  @printf "\t3.2 Habit Grid\n"
-  hgrid = Array(Float64, (hpoints, tW))
-  for t = 1:tW
-      hgrid[:, t] = linspace(0.1, 2*ymaxbelief[t], hpoints)
-  end
-
   # Wealth grid
   # Maximum wealth is given by three times the highest earnings
   # Minimum wealth is given by some ad hoc constraint
 
-  @printf "\t3.2 Wealth Grid\n"
+  @printf "\t3.1 Wealth Grid\n"
   if guv_dist
     guvgrid = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealth.dat")'
     wgrid = Array(Float64, (wpoints, size(s_f_i,3)))
@@ -43,13 +36,19 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
     end
   else
     wmin = Array(Float64, tW)
-    wmax = Array(Float64, tW)
-    wgrid = Array(Float64, (wpoints, tW))
-    wgridexp = Array(Float64, (wpoints, tW))
-    for t = 1:tW
-      wmin[t] = -yminbelief[t]
-      wmax[t] = 2*ymaxbelief[t]
+    wmax = similar(wmin)
 
+    wmin[tW] = -0.7*yminbelief[tW]
+    wmax[tW] = 2*ymaxbelief[tW]
+    for t = (tW-1):-1:1
+      wmin[t] = wmin[t+1]/r - 0.7*yminbelief[t]
+      wmax[t] = 2*ymaxbelief[t]
+    end
+
+    wgrid = Array(Float64, (wpoints, tW))
+    wgridexp = similar(wgrid)
+
+    for t = tW:-1:1
       wdistexp = (wmax[t] - wmin[t])^(1/power)
       winc = wdistexp/(wpoints-1)
       for i = 1: wpoints
@@ -62,7 +61,13 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   wgrid[:, 1] = linspace(wgrid[1, 2], wgrid[end, 1], wpoints)
   ###############################################
 
-  @printf "\t3.5 Grids for α, β, z\n"
+  @printf "\t3.2 Habit Grid\n"
+  hgrid = Array(Float64, (hpoints, tW))
+  for t = 1:tW
+      hgrid[:, t] = linspace(0.1, 2*ymaxbelief[t], hpoints)
+  end
+
+  @printf "\t3.3 Grids for α, β, z\n"
   if const_beliefs
     agrid = linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints)
     bgrid = linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints)
@@ -77,6 +82,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
 
   # Adjust borrowing constraints such that lowest belief does not have an empty
   # choice set in any period:
+  adjustments = 0
   for t = (size(s_f_i,3)-1):-1:1
     if const_beliefs
       ymin = exp(agrid[1] + t*bgrid[1] + zgrid[1])
@@ -84,15 +90,20 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
       ymin = exp(agrid[1,t] + t*bgrid[1,t] + zgrid[1,t])
     end
     tightening = wgrid[1, t] - wgrid[1, t+1]/r
+    if tightening > ymin
+      adjustments += 1
+    end
     while ymin + tightening < 0.01
       tightening = wgrid[1, t] - wgrid[1, t+1]/r
       wgrid[:, t] = linspace(wgrid[1, t]+0.1, wgrid[end, t], wpoints)
     end
   end
+  @printf "\t%d adjustments made to borrowing constraint\n" adjustments
 
-  @printf "\t3.5 Retirement Grids\n"
+  @printf "\t3.4 Retirement Grids\n"
   if guv_dist # Use Guvenen's retirement grid
-    guvgrid_R_org = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealthR.dat")'
+    guvgrid_R_org =
+      readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealthR.dat")'
     guvgrid_R = reshape(guvgrid_R_org, 1, 7200)
     guvgrid_R = unique(reshape(guvgrid_R_org, 12, 600), 2)
     wgrid_R = Array(Float64, (wpoints_R, tR))
@@ -127,7 +138,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   ymaxR = min(0.2*ymaxbelief[tW], 1000)
   ygrid_R = linspace(yminR, ymaxR, ypoints_R)
 
-  @printf "Wealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
+  @printf "Asset grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
   @printf "Belief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
   @printf "Retirement grids: w_R [%.2f %.2f], y_R [%.2f %.2f]\n" wgrid_R[1, 5] wgrid_R[end, 5] ygrid_R[1] ygrid_R[end]
 

@@ -1,5 +1,5 @@
 include("../Plots.jl")
-include("../Check_Monotonicity.jl")
+include("../Chk_Monot.jl")
 include("../Optimizations.jl")
 include("../Interpolations.jl")
 include("../Parameters.jl")
@@ -10,40 +10,39 @@ include("NHL_4_Retirement.jl")
 include("NHL_5_Transition.jl")
 include("NHL_6_Bellman.jl")
 include("NHL_7_Simulate.jl")
+include("NHL_Diagnostics.jl")
 
 # 1. Draw Income Distribution
 guvenen_distribution = true
 
 if guvenen_distribution
   (yit, α, β, ymedian, pension) =
-    incomeDistribution(agents, bs,
+    incomeDistribution(
       "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/LaborReal.dat",
       "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/alfabeta.dat")
 else
   (yit, α, β, ymedian, pension) =
-    incomeDistribution(agents, bs, μₐ, μᵦ, var_a, var_b, var_ɛ, ρ, var_η,
+    incomeDistribution(agents, bs, μₐ, μᵦ, var_a, var_b, var_ɛ, var_η, ρ,
                        br, tW)
 end
 
 # 2. Construct individual specific belief histories
-(s_f_i, stdy) = learning(agents, bs, tW, α, β, yit, ρ,
-                         var_η, var_ɛ, guvenen_distribution)
+(s_f_i, stdy) = learning(α, β, yit, ρ, var_η, var_ɛ, guvenen_distribution)
+
 # 3. Construct Grids
 (wgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
   grids(s_f_i, stdy, wpoints, apoints, bpoints, zpoints,
-        wpoints_R, ypoints_R, wmaxR, power, r, tR, false, true)
+        wpoints_R, ypoints_R, wmaxR, power, r, tR, guvenen_distribution, true)
 
 # 4. Solve Retirement Problem
-(v_R, wp_R) =
-  solveRetirement(wgrid_R, ygrid_R, wpoints_R, ypoints_R, r, δ)
+(v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ)
 
 # 5. Solve Transition Problem
-#(v, wp, constrained) =
-#  solveTransition(v_R, wgrid_R, ygrid_R, wgrid, agrid, bgrid, ymedian, r, δ, tW)
+#(v, wp) =
+#  solveTransition(v_R, wgrid_R, ygrid_R, wgrid, agrid, bgrid, ymedian, r, δ)
 
 # 5.1 Solve Terminal Period Problem instead of 4. and 5.
-(wp, c, v, c_over_x) =
-  solveTransition(wgrid, agrid, bgrid, zgrid, r, δ)
+(wp, c, v, c_over_x) = solveTransition(wgrid, agrid, bgrid, zgrid, r, δ)
 
 # 6. Solve Working Life Problem
 (v, wp, c_over_x) =
