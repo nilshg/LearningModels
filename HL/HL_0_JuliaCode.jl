@@ -1,10 +1,11 @@
-#include("../Plots.jl")
-include("../Chk_Monot.jl")
-include("../Optimizations.jl")
-include("../Interpolations.jl")
-include("../Parameters.jl")
-include("../1_Income.jl")
-include("../2_Learning.jl")
+using DataFrames, Dierckx, Distributions, Grid,  Optim, PyPlot, QuantEcon
+
+include("Plots.jl")
+include("Optimizations.jl")
+include("Interpolations.jl")
+include("Parameters.jl")
+include("HL_1_Income.jl")
+include("HL_2_Learning.jl")
 include("HL_3_Grid.jl")
 include("HL_4_Retirement.jl")
 include("HL_5_Transition.jl")
@@ -12,37 +13,32 @@ include("HL_6_Bellman.jl")
 include("HL_7_Simulate.jl")
 
 # 1. Draw Income Distribution
-guvenen_distribution = true
-
-if guvenen_distribution
-  (yit, α, β, ymedian, pension) =
-    incomeDistribution(
-      "C:/Users/nils/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/LaborReal.dat",
-      "C:/Users/nils/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/alfabeta.dat")
-else
-  (yit, α, β, ymedian, pension) =
-    incomeDistribution(agents, bs, μₐ, μᵦ, var_a, var_b, var_ɛ, ρ, var_η,
-                       br, tW)
-end
+(Yit, alpha, beta, ymedian) = IncomeDistribution(agents, bs, μₐ, μᵦ, var_a, var_b,
+                                                   var_eps, ρ, var_eta, BR, TW)
 
 # 2. Construct individual specific belief histories
-(s_f_i, stdy) = learning(α, β, yit, ρ,
-                         var_η, var_ɛ, guvenen_distribution)
+(S_f_i, P_f, stdy) = Learning(agents, bs, TW, alpha, beta, Yit, ρ, var_eta, var_eps, init_z)
+
 # 3. Construct Grids
 (wgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R, ygrid_R) =
-    grids(s_f_i, stdy, wpoints, hpoints, apoints, bpoints, zpoints,
-          wpoints_R, hpoints_R, ypoints_R, wmaxR, power, r, tR, false, true)
+    Grids(S_f_i, stdy, agents, bs, power, wgridpoints, hgridpoints, agridpoints,
+          bgridpoints, zgridpoints, wgridpoints_R, hgridpoints_R, ygridpoints_R,
+          wmaxR, R, TW, TR)
 
 # 4. Solve Retirement Problem
-(v_R, wp_R) = solveRetirement(wgrid_R, hgrid_R, ygrid_R, r, δ, λ)
+(V_R, wp_R) = SolveRetirement(wgrid_R, hgrid_R, ygrid_R, wgridpoints_R, hgridpoints_R,
+                              ygridpoints_R, u, R, δ, λ, TR, interpolateV, BellOpt_R)
 
 # 5. Solve Transition Problem
-(v, wp) = solveTransition(v_R, wgrid_R, hgrid_R, ygrid_R, wgrid, hgrid, agrid,
-                          bgrid, ymedian, r, δ, λ)
+(V, wp) = SolveTransition(V_R, wgrid_R, hgrid_R, ygrid_R, wgrid, hgrid, agrid, bgrid,
+                          ymedian, wgridpoints, hgridpoints, agridpoints,
+                          bgridpoints, zgridpoints, interpolateV, BellOpt_TRANS, u, R, δ, λ, TW)
 
 # 6. Solve Working Life Problem
-(v, wp) = solveWorkingLife(v, wp, wgrid, hgrid, agrid, bgrid, zgrid, stdy,
-                           r, δ, λ, ρ)
+(V, wp) = SolveWorkingLife(V, wp, wgrid, hgrid, agrid, bgrid, zgrid,
+                          wgridpoints, hgridpoints, agridpoints, bgridpoints,
+                          zgridpoints, stdy, BellOpt, interpolateV, u, R, δ, λ, TW)
 
 # 7. Simulate Economy
-(c_t, h_t, w_t, wp_t) = simulate(wp, hgrid,yit, ymedian, s_f_i, wp_R, r, λ)
+(c_t, h_t, w_t, wp_t) = Simulate(wp, wgrid, hgrid, agrid, bgrid, zgrid,
+                                 Yit, S_f_i, R, interpolateV, λ, agents, bs, TW)
