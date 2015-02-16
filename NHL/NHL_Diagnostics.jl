@@ -45,7 +45,8 @@ end
 
 # Variance of consumption and asset series
 function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2},
-                            y::Array{Float64,2}, pension::Array)
+                            y::Array{Float64,2}, pension::Array,
+                        plot::Bool)
 
   med_c = Array(Float64, size(c,2))
   med_w = similar(med_c)
@@ -67,6 +68,22 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2},
       var_y[t] = var(pension)
     end
   end
+
+  if plot
+    fig, ax = PyPlot.subplots(2,1)
+    ax[1,1][:plot](med_c, label = "Median Consumption")
+    ax[1,1][:plot](med_w, label = "Median Wealth")
+    ax[1,1][:plot](mean_w, label = "Mean Wealth")
+    ax[2,1][:plot](var_c, label = "Consumption variance")
+    ax[2,1][:plot](var_w, label = "Asset variance")
+    ax[2,1][:plot](var_y, label = "Income/Pension variance")
+    ax[1,1][:legend](loc = "best")
+    ax[2,1][:legend](loc = "best")
+    ax[1,1][:set_title]("Means and Medians")
+    ax[1,1][:set_title]("Variances")
+    plt.show()
+  end
+
   return med_c, med_w, mean_w, var_c, var_w, var_y
 end
 
