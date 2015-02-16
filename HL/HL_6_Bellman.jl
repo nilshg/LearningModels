@@ -29,8 +29,8 @@ function solveWorkingLife(v::Array, wp::Array, wgrid::Array, hgrid::Array,
           yt = exp(at + bt*t + zt)
           yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
 
-          for h = 1:hpoints
-            for w = 1:wpoints
+          for h = 1:size(hgrid,1)
+            for w = 1:size(wgrid,1)
               ht = hgrid[h, t]
               wt = wgrid[w, t]
 
@@ -44,7 +44,7 @@ function solveWorkingLife(v::Array, wp::Array, wgrid::Array, hgrid::Array,
               wp[w, h, a, b, z, t] = wpopt
               v[w, h, a, b, z, t] = vopt
 
-              wpopt < wt + yt || @printf "NC @ w=%d,h=%d,y=%d,t=%d" w h y t
+              wpopt < wt + yt || @printf "NC @ w=%d,h=%d,y=%d,t=%d" w h yt t
             end
           end
         end

@@ -36,7 +36,7 @@ function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
    x = w + y
 
   function EVprime(w′::Float64, h=h, a=a, b=b, z=z, yln=yln, v_int=v_int,
-                   r=r, λ=λ)
+                   λ=λ)
 
     h′ = (1-λ)*h + λ*(x - w′)
 

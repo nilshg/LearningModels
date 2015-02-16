@@ -4,13 +4,15 @@
 
 function solveTransition(v_R::Array, wgrid_R::Array, hgrid_R::Array, ygrid_R::Array,
                          wgrid::Array, hgrid::Array, agrid::Array, bgrid::Array,
-                         ymedian::Float64, r::Float64, δ::Float64, λ::Float64)
+                         zgrid::Array, ymedian::Float64, r::Float64, δ::Float64,
+                         λ::Float64)
 
   @printf "5. Solving the problem for the last period of work\n"
   tic()
+  tW = size(wgrid,2)
   wp = Array(Float64,
              size(wgrid,1), size(hgrid,1), size(agrid,1), size(bgrid,1),
-             size(zgrid,1), size(wgrid,2))
+             size(zgrid,1), tW)
   v = similar(wp)
 
   # INTERPOLATION
@@ -54,10 +56,10 @@ function solveTransition(v_R::Array, wgrid_R::Array, hgrid_R::Array, ygrid_R::Ar
             wp[w, h, a, b, z, tW] = wpopt
 
             if isnan(vopt)
-            @printf "Warning: V is NaN at w=%d, h=%d, y=%d, t=%d" w h y t
+            @printf "Warning: V is NaN at w=%d, h=%d, y=%d" wt ht yt
             end
             if wpopt > wt + yt
-              @printf "Warning: Negative c at w=%d, h=%d, y=%d, t=%d" w h y t
+              @printf "Warning: Negative c at w=%d, h=%d, y=%d" wt ht yt
             end
           end
         end

@@ -46,3 +46,17 @@ end
 
 # 7. Simulate Economy
 (c_t, h_t, w_t, wp_t) = simulate(wp, hgrid,yit, ymedian, s_f_i, wp_R, r, λ)
+
+using Lint
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\Plots.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\Chk_Monot.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\Optimizations.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\Interpolations.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\Parameters.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\1_Income.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\2_Learning.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\HL\\HL_3_Grid.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\HL\\HL_4_Retirement.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\HL\\HL_5_Transition.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\HL\\HL_6_Bellman.jl")
+lintfile("C:\\Users\\tew207\\My Documents\\GitHub\\LearningModels\\HL\\HL_7_Simulate.jl")

@@ -191,7 +191,7 @@ end
 
 #######################################################################################
 
-function plot2Dconfunc(t::Int64)
+function plot2Dconfunc(c_over_x::Array{Float64, 5}, t::Int64)
   fig, ax = PyPlot.subplots(2, 2)
   ax[1,1][:plot](c_over_x[:, 1, 4, 4, t], label = L"\alpha=1")
   ax[1,1][:plot](c_over_x[:, 2, 4, 4, t], label = L"\alpha=2")

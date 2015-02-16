@@ -2,13 +2,18 @@
 ###############################    SIMULATION    ###############################
 ################################################################################
 
-function simulate(wp::Array, hgrid::Array,yit::Array, ymedian::Float64,
-                  s_f_i::Array, wp_R::Array, r::Float64, λ::Float64)
+function simulate(wp::Array{Float64, 6}, wgrid::Array{Float64},
+                  hgrid::Array{Float64}, agrid::Array{Float64},
+                  bgrid::Array{Float64}, zgrid::Array{Float64},
+                  wgrid_R::Array{Float64}, hgrid_R::Array{Float64},
+                  ygrid_R::Array{Float64}, yit::Array{Float64, 2},
+                  ymedian::Float64, s_f_i::Array{Float64, 3},
+                  wp_R::Array, r::Float64, λ::Float64)
 
   @printf "7. Simulate Consumption and Wealth Distribution\n"
 
   tW = size(yit,2)
-  tR = size(wgrid_R,2)
+  tR = size(wp_R,4)
 
   w_0 = 0
   h_0 = mean(hgrid[:, 1]) + w_0/10 + rand(size(yit,1))
@@ -70,7 +75,7 @@ function simulate(wp::Array, hgrid::Array,yit::Array, ymedian::Float64,
     for  i = 1:size(yit,1)
       wt = w_t[i, t]
       ht = h_t[i, t]
-      yt = pension[i]
+      yt = pension[i][1]
       xt = wt + yt
 
       wp_t[i, t] = wp_int[xt, ht, yt]

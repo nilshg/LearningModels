@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 ########################### INCOME DISTRIBUTION ################################
 ################################################################################
 #
@@ -8,7 +8,7 @@
 #   - Get yit from Guvenen's data
 #
 # (yit, alpha, beta, ymedian) = incomeDistribution(agents, μₐ, μᵦ, var_a, var_b,
-#                                                  var_eps, ρ, var_eta, br, tW)
+#                                                  var_ϵ, ρ, var_η, br, tW)
 #   - Draw a new income distribution yit with break parameters br
 #
 #################################################################################
@@ -24,15 +24,15 @@ function incomeDistribution(ypath::String, abpath::String)
   yit = readdlm(ypath)
   alfabeta = readdlm(abpath)
   α = alfabeta[:, 1]
-  α = reshape(repmat(α, 1, agents)', 100000, 1)
+  α = reshape(repmat(α, 1, 100)', 100000, 1)
   β = alfabeta[:, 2]
-  β = reshape(repmat(β, 1, agents)', 100000, 1)
+  β = reshape(repmat(β, 1, 100)', 100000, 1)
 
   # Median income in last period for calculation of retirement benefits
   ymedian = median(yit[:, end])
   @printf "\tMedian income in period 40 is %.2f\n" ymedian
 
-  pension = Array(Float64, agents*bs)
+  pension = Array(Float64, 100000)
   for i = 1:100000 # Directly copied out of Guvenen's code
     ytemp = yit[i, end]
     if (ytemp<0.3*ymedian)
