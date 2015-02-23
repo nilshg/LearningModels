@@ -3,9 +3,9 @@
 #######################################################################################
 
 # Contains:
-# interpolatev(v::Array{Float64, 6}, wgrid, ygrid, hgrid, agrid, bgrid, zgrid, t):
+# interpolatev_G(v::Array{Float64, 6}, wgrid, ygrid, hgrid, agrid, bgrid, zgrid, t):
 #     Interpolate value function with habits using Grid.jl's CoordInterpGrid function
-# interpolatev(v::Array{Float64, 4}, wgrid, hgrid, ygrid, t):
+# interpolatev_G(v::Array{Float64, 4}, wgrid, hgrid, ygrid, t):
 #     Interpolate retirement value function with habits using CoordInterpGrid
 # interpolateV(V::Array{Float64, 5}, wgrid, ygrid, agrid, bgrid, zgrid, t):
 #     Interpolate value function w/o habits using CoordInterpGrid
@@ -18,7 +18,7 @@ using Grid
 
 #######################################################################################
 
-function interpolatev(v::Array{Float64, 6},     wgrid::Array{Float64, 2},
+function interpolatev_G(v::Array{Float64, 6},     wgrid::Array{Float64, 2},
                       hgrid::Array{Float64, 2}, agrid::Array{Float64, 1},
                       bgrid::Array{Float64, 1}, zgrid::Array{Float64, 1}, t::Int64)
 
@@ -34,7 +34,7 @@ end
 
 #######################################################################################
 
-function interpolatev(v::Array{Float64, 4}, wgrid::Array{Float64, 2},
+function interpolatev_G(v::Array{Float64, 4}, wgrid::Array{Float64, 2},
                       hgrid::Array{Float64, 2}, ygrid::Array{Float64, 1}, t::Int64)
 
   wrange = range(wgrid[1, t], wgrid[2, t] - wgrid[1, t], size(wgrid, 1))
@@ -46,7 +46,7 @@ end
 
 #######################################################################################
 
-function interpolatev(v::Array{Float64, 5}, wgrid::Array{Float64, 2},
+function interpolatev_G(v::Array{Float64, 5}, wgrid::Array{Float64, 2},
                       agrid::Array{Float64, 1}, bgrid::Array{Float64, 1},
                       zgrid::Array{Float64, 1}, t::Int64)
 
@@ -61,7 +61,7 @@ end
 
 #######################################################################################
 
-function interpolatev(v::Array{Float64,3}, wgrid::Array{Float64,2},
+function interpolatev_G(v::Array{Float64,3}, wgrid::Array{Float64,2},
                         ygrid::Array{Float64,1}, t::Int64)
 
   wrange = range(wgrid[1, t], wgrid[2, t] - wgrid[1, t], size(wgrid, 1))
@@ -72,9 +72,34 @@ end
 
 #######################################################################################
 
-function interpolatev(v::Array{Float64, 2}, xgrid::Array{Float64, 2}, t::Int64)
+function interpolatev_G(v::Array{Float64, 2}, xgrid::Array{Float64, 2}, t::Int64)
 
   xrange = range(xgrid[1, t], xgrid[2, t] - xgrid[1, t], size(xgrid, 1))
 
   CoordInterpGrid(xrange, v[:, t], BCnearest, InterpLinear)
+end
+
+#######################################################################################
+
+function interpolatev_A(v::Array{Float64, 4}, xgrid::Array{Float64, 1},
+                        agrid::Array{Float64, 1}, bgrid::Array{Float64, 1},
+                        zgrid::Array{Float64, 1})
+
+  xabz = Array{Float64, 1}[]
+  push!(xabz, xgrid)
+  push!(xabz, agrid)
+  push!(xabz, bgrid)
+  push!(xabz, zgrid)
+  return lininterp(v, xabz)
+end
+
+#######################################################################################
+
+function interpolatev_A(v::Array{Float64, 2}, xgrid::Array{Float64, 1},
+                        ygrid::Array{Float64, 1})
+
+  xy = Array{Float64, 1}[]
+  push!(xy, xgrid)
+  push!(xy, ygrid)
+  return lininterp(v, xy)
 end
