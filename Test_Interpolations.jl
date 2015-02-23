@@ -99,7 +99,7 @@ push!(xs, xgrid)
 V_1D_int_ApproXD = lininterp(V_1D, xs)
 xsirr = Array{Float64, 1}[]
 push!(xsirr, x_irrgrid)
-V_1D_int_irr_ApproXD = lininterp(V_1D, xsirr)
+V_1D_int_irr_ApproXD = lininterp(V_1D_irr, xsirr)
 
 # Dierckx (regular/irregular grid)
 V_1D_int_Dierckx = Spline1D(xgrid, V_1D)
@@ -130,7 +130,7 @@ V_2D_int_ApproXD = lininterp(V_2D, yz)
 yz_irr = Array{Float64, 1}[]
 push!(yz_irr, y_irrgrid)
 push!(yz_irr, z_irrgrid)
-V_2D_int_irr_ApproXD = lininterp(V_2D, yz_irr)
+V_2D_int_irr_ApproXD = lininterp(V_2D_irr, yz_irr)
 
 # Dierckx (regular/irregular grid)
 V_2D_int_Dierckx = Spline2D(ygrid, zgrid, V_2D)
@@ -208,10 +208,10 @@ end
 # Plot 1D results
 fig, ax = PyPlot.subplots(2,1, figsize = (12,10))
 for i = 1:7
-  ax[1,1][:plot](V_1D_offgrid[i, 1:end/10]', label = methods_1D[i])
-  ax[2,1][:plot](Error_1D[i, 1:end/10]')
+  ax[1,1][:plot](V_1D_offgrid[i, 1:end/20]', label = methods_1D[i])
+  ax[2,1][:plot](Error_1D[i, 1:end/20]')
 end
-ax[1,1][:plot](V_1D_actual[1, 1:end/10]', label = "True Value",
+ax[1,1][:plot](V_1D_actual[1, 1:end/20]', label = "True Value",
                linestyle = ":", color = "black")
 ax[1,1][:set_title]("True Value vs. Interpolated Values")
 ax[1,1][:legend](loc = "best")
