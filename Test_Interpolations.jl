@@ -195,14 +195,14 @@ Error_2D = (V_2D_actual - V_2D_offgrid)./V_2D_actual
 
 ######################################################################
 # Print results
-@printf "∑|f(x)-f(x_int)/f(x)|/n in 1 dimension\n"
+@printf "\n∑|f(x)-f(x_int)/f(x)|/n in 1 dimension\n"
 for i = 1:length(methods_1D)
-  @printf "\t%s: %.3f\n" methods_1D[i] sum(abs(Error_1D[i, :]))/xop
+  @printf "\t%s: %.4f\n" methods_1D[i] sum(abs(Error_1D[i, :]))/xop
 end
 
 @printf "\n∑|f(x)-f(x_int)/f(x)|/n in 2 dimensions\n"
 for i = 1:length(methods_2D)
-  @printf "\t%s: %.3f\n" methods_2D[i] sum(abs(Error_2D[i, :, :]))/(yop*zop)
+  @printf "\t%s: %.4f\n" methods_2D[i] sum(abs(Error_2D[i, :, :]))/(yop*zop)
 end
 
 # Plot 1D results
