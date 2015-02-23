@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 ############################# GRID CONStRUCTION ################################
 ################################################################################
 
@@ -11,7 +11,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
 
   tW = size(s_f_i,3)
   hmat = [ones(1,tW); linspace(1,tW,tW)'; ones(1,tW)]
-  ybelief = Array(Float64, (agents*bs, tW))
+  ybelief = Array(Float64, (size(s_f_i,2), tW))
   ymaxbelief = Array(Float64, (tW, 1))
   yminbelief = similar(ymaxbelief)
   for t = 1:tW
@@ -58,7 +58,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
     end
   end
   ################## HACK!! ####################
-  wgrid[:, 1] = linspace(wgrid[1, 2], wgrid[end, 1], wpoints)
+  wgrid[:, 1] = wgrid[:, 2]
   ###############################################
   ###############################################################
                        # BELIEF GRIDS #
