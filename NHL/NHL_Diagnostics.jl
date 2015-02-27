@@ -42,10 +42,10 @@ function constrained_negative(w::Array{Float64,2}, wgrid::Array{Float64,2},
 
   return constrained, neg_cons
 end
-
+################################################################################
 # Variance of consumption and asset series
-function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2},
-                            y::Array{Float64,2}, pension::Array,
+function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
+                        pension::Array, wgrid::Array, wgrid_R::Array,
                         plot::Bool)
 
   med_c = Array(Float64, size(c,2))
@@ -70,10 +70,12 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2},
   end
 
   if plot
+    bc = [wgrid[1, :] wgrid_R[1, :]]'
     fig, ax = PyPlot.subplots(2,1)
     ax[1,1][:plot](med_c, label = "Median Consumption")
     ax[1,1][:plot](med_w, label = "Median Wealth")
     ax[1,1][:plot](mean_w, label = "Mean Wealth")
+    ax[1,1][:plot](bc, linestyle = ":", color = "black", label = "Borrowing Constraint")
     ax[2,1][:plot](var_c, label = "Consumption variance")
     ax[2,1][:plot](var_w, label = "Asset variance")
     ax[2,1][:plot](var_y, label = "Income/Pension variance")
@@ -138,7 +140,7 @@ function plot_beliefs_realizations()
   plt.show()
 end
 
-function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64,
+function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array,
                        figtext::String)
   α_mid = convert(Int64, round(size(c_x,2)/2))
   β_mid = convert(Int64, round(size(c_x,3)/2))
