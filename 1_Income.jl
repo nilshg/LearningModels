@@ -32,19 +32,30 @@ function incomeDistribution(ypath::String, abpath::String)
   ymedian = median(yit[:, end])
   @printf "\tMedian income in period 40 is %.2f\n" ymedian
 
-  pension = Array(Float64, 100000)
-  for i = 1:100000 # Directly copied out of Guvenen's code
-    ytemp = yit[i, end]
-    if (ytemp<0.3*ymedian)
-      yfixed=0.9*ytemp
-    elseif (ytemp<=2.0*ymedian)
-      yfixed=0.27*ymedian+0.32*(ytemp-0.3*ymedian)
-    elseif (ytemp<4.1*ymedian)
-      yfixed = 0.81*ymedian+0.15*(ytemp-2.0*ymedian)
-    else
-      yfixed = 1.1*ymedian
-    end
-    pension[i] = 0.715*yfixed
+  ybari = mean(yit, 2)[:]
+  (k_0, k_1) = linreg(yit[:, 40], ybari)
+  avgy = mean(yit)
+
+  function get_pension{T<:Float64}(y::T, k_0::T, k_1::T, avgy::T)
+      ytilde = (k_0 + k_1*y)/avgy
+      rratio = 0.0
+
+      if ytilde < 0.3
+          rratio = 0.9*ytilde
+      elseif ytilde <= 2.0
+          rratio = 0.27 + 0.32*(ytilde - 0.3)
+      elseif ytilde <= 4.1
+          rratio = 0.814 + 0.15*(ytilde - 2.0)
+      else
+          rratio = 1.129
+      end
+
+      return rratio*avgy
+  end
+
+  pension = Array(Float64, size(yit,1))
+  for i = 1:size(yit, 1)
+    pension[i] = get_pension(yit[i, 40], k_0, k_1, avgy)
   end
 
   return yit, α, β, ymedian, pension
