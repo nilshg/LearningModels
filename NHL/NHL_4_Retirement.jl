@@ -109,5 +109,5 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
         simulate(xt, yt, δ, σ, r, tR)
     end
   end
-  return wp_R, v_R
+  return v_R, wp_R
 end
