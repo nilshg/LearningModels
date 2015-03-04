@@ -35,10 +35,14 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
   p_f[:, :, 1] = p_0;
 
   # Evolution of Var-Cov-Matrix
+  k = Array(Float64, (3, tW))
   @inbounds for t = 1:tW-1
       ht = [1; t; 1]
       pt = p_f[:, :, t]
-      p_f[:, :, t+1] = f*(pt-pt*ht.*(ht'*pt*ht+var_ɛ).^(-1.0)*ht'*pt)*f' + q
+      k[:, t] = pt*ht.*(ht'*pt*ht + var_ɛ).^(-1.0)
+    if t < tW
+        p_f[:, :, t+1] = f*(pt-pt*ht.*(ht'*pt*ht+var_ɛ).^(-1.0)*ht'*pt)*f' + q
+    end
   end
 
   # Calculate Standard Deviation (needed later on)
@@ -53,10 +57,10 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
     pt = p_f[:, :, t]
     ht = [1; t; 1]
     for i = 1:size(yit,1)
-      s_f_i[:, i, t+1] = f*(s_f_i[:, i, t] + pt*ht.*(ht'*pt*ht + var_ɛ).^(-1.0)
-                            .*(log(yit[i, t]) - ht'*s_f_i[:, i, t]) )
+      s_f_i[:, i, t+1] = f*(s_f_i[:, i, t]
+                            + k[:,t].*(log(yit[i, t]) - ht'*s_f_i[:, i, t]))
     end
   end
 
-  return s_f_i, stdy
+  return s_f_i, stdy, k
 end
