@@ -15,9 +15,9 @@
 
 using Dierckx
 
-function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array,
+function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array, ygrid_R::Array,
                          wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
-                         ymedian::Float64, r::Float64, δ::Float64)
+                         zgrid::Array, yit::Array, r::Float64, δ::Float64)
 
   @printf "5. Solving the problem for the last period of work\n"
   tic()
@@ -28,32 +28,42 @@ function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array,
   c_over_x = similar(wp)
 
   # INTERPOLATION
-  valueRETIRE = interpolatev(v_R, wgrid_R, ygrid_R, 1)
+  valueRETIRE = interpolatev_A(v_R[:, :, 1], wgrid_R[:, 1], ygrid_R)
 
   # MAXIMIZATION
   wmin = wgrid_R[1, 1]
 
-  for a = 1:length(agrid)
-    for b = 1:length(bgrid)
-      for z = 1:length(zgrid)
-        size(a,2)==1 ? at = agrid[a] : at = agrid[a,t]
-        size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,t]
+  for a = 1:size(agrid,1)
+    for b = 1:size(bgrid,1)
+      for z = 1:size(zgrid,1)
+        size(a,2)==1 ? at = agrid[a] : at = agrid[a,end]
+        size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
         zt = 0.0
 
         yt = exp(at + bt*tW + zt)
 
-        if (yt<0.3*ymedian)
-          yfixed=0.9*yt
-        elseif (yt<=2.0*ymedian)
-          yfixed=0.27*ymedian+0.32*(yt-0.3*ymedian)
-        elseif (yt<4.1*ymedian)
-          yfixed = 0.81*ymedian+0.15*(yt-2.0*ymedian)
-        else
-          yfixed = 1.1*ymedian
-        end
-        pension = 0.715*yfixed
+        ybari = mean(yit, 2)[:]
+        (k_0, k_1) = linreg(yit[:, 40], ybari)
+        avgy = mean(yit)
 
-        for w = 1:wpoints
+        function get_pension(y::Float64, k_0::Float64, k_1::Float64, avgy::Float64)
+            ytilde = (k_0 + k_1*y)/avgy
+            rratio = 0.0
+
+            if ytilde < 0.3
+                rratio = 0.9*ytilde
+            elseif ytilde <= 2.0
+                rratio = 0.27 + 0.32*(ytilde - 0.3)
+            elseif ytilde <= 4.1
+                rratio = 0.814 + 0.15*(ytilde - 2.0)
+            else
+                rratio = 1.129
+            end
+            return rratio*avgy
+        end
+        pension = get_pension(yt, k_0, k_1, avgy)
+
+        for w = 1:size(wgrid,1)
           wt = wgrid[w, tW]
 
           (wpopt, vopt) =
@@ -73,7 +83,7 @@ function solveTransition(v_R::Array, wgrid_R::Array, ygrid_R::Array,
     end
   end
   (dim1, dim2, dim3, dim4) = checkmonotonicity(v, tW)
-  dim1 + dim2 + dim3 + dim4 == 0 || @printf "\tMonot. violated, t=%d\n" t
+  dim1 + dim2 + dim3 + dim4 == 0 || @printf "\tMonotonicity violated in transition"
   @printf "\tTransition period problem solved in %.1f seconds.\n" toq()
 
   return v, wp, c_over_x
@@ -88,7 +98,7 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
   xpoints = 200
   xmax = wgrid[end, 40]
   xmin = wgrid[1, 40]
-  power = 3.0
+  power = 2.0
 
   xgrid_irr = Array(Float64, xpoints)
   xgrid_exp = similar(xgrid_irr)
@@ -106,20 +116,21 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
     v_T[x] = u(xgrid_irr[x] - xgrid_irr[1] + 0.01)
   end
 
-  v_int = Spline1D(xgrid_irr, v_T)
+  xg = Array{Float64, 1}[]
+  push!(xg, xgrid_irr)
+  v_int = lininterp(v_T, xg)
 
-  function bellOpt(w::Float64, y::Float64, a::Float64, b::Float64,
-                   z::Float64, v_int::Spline1D, yln::LogNormal,
-                   r::Float64, δ::Float64, wmin::Float64)
+  function bellOpt(w::Float64, y::Float64, v_int::lininterp,
+                   yln::LogNormal, r::Float64, δ::Float64, wmin::Float64)
 
     x = w + y
 
-    function EVprime(w′::Float64, a=a, b=b, z=z, yln=yln, v_int=v_int)
+    function EVprime(w′::Float64, yln=yln, v_int=v_int)
 
-      function EVp(y::Array{Float64,1}, w′=w′, v_int=v_int, yln=yln, a=a, b=b, z=z)
-        result = Array(Float64, size(y, 1))
+      function EVp(y::Array{Float64,1}, w′=w′, v_int=v_int, yln=yln)
+        result = similar(y)
         for i = 1:size(y, 1)
-          result[i, :] = evaluate(v_int, r*w′ + y[i])*pdf(yln, y[i])
+          result[i, :] = getValue(v_int, [r*w′ + y[i]])*pdf(yln, y[i])
         end
         return result
       end
@@ -140,7 +151,7 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
   end
 
   xp_1 = Array(Float64,
-               (size(wgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))
+               (size(wgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), 40))
   v_1 = similar(xp_1)
   c_over_x = similar(xp_1)
 
@@ -149,21 +160,20 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
       for b = 1:length(bgrid)
         for z = 1:length(zgrid)
 
-          size(a,2)==1 ? at = agrid[a] : at = agrid[a,t]
-          size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,t]
-          size(z,2)==1 ? zt = zgrid[z] : zt = zgrid[z,t]
+          size(a,2)==1 ? at = agrid[a] : at = agrid[a,end]
+          size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
+          size(z,2)==1 ? zt = zgrid[z] : zt = zgrid[z,end]
 
           y = exp(agrid[a] + bgrid[b]*40 + zgrid[z])
           yln = LogNormal(at + bt*40 + zt, 0.22)
 
-          (xp_1[w, a, b, z, tW], v_1[w, a, b, z, tW]) =
-            bellOpt(wgrid[w, 40], y, at, bt, zt, v_int, yln, r, δ,
-                    xgrid_irr[1])
+          (xp_1[w, a, b, z, end], v_1[w, a, b, z, end]) =
+            bellOpt(wgrid[w, end], y, v_int, yln, r, δ, xgrid_irr[1])
 
-          c = wgrid[w, 40] + y - xp_1[w, a, b, z, tW]
+          c = wgrid[w, end] + y - xp_1[w, a, b, z, end]
 
-          c_over_x[w, a, b, z, 40] =
-            c/(wgrid[w, 40] - xgrid_irr[1]/r + y)
+          c_over_x[w, a, b, z, end] =
+            c/(wgrid[w, end] - xgrid_irr[1]/r + y)
 
           c > 0 || @printf "NC @ x=%d,a=%d,b=%d,z=%d\n" w a b z
         end
@@ -171,5 +181,5 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
     end
   end
 
-  return xp_1, c_1, v_1, c_over_x
+  return xp_1, v_1, c_over_x
 end
