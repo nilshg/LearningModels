@@ -24,7 +24,9 @@ function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_η::Float64
     s_f_i[:,:,1] = s_f_guv[:, :, 1]
   else
     s_0_i = repmat([mean(α) ; mean(β); 0], 1, size(yit,1))
-    s_0_i[2, i] = 0.65*β[i] + 0.35*s_0_i[2, i];
+    for i = 1:size(yit,1)
+      s_0_i[2, i] = 0.65*β[i] + 0.35*s_0_i[2, i]
+    end
     s_f_i[:,:,1] = s_0_i
   end
 
