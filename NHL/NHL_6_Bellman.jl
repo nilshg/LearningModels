@@ -19,9 +19,13 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
     v_interpol =
       interpolatev_A(v[:, :, :, :, t+1], wgrid[:, t+1], agrid, bgrid, zgrid)
 
+    wpnow = SharedArray(Float64, (size(v[:, :, :, :, 1])), pids=procs())
+    cxnow = similar(wpnow)
+    vnow = similar(wpnow)
+
     # MAXIMIZATION
     wmin = wgrid[1, t+1]
-    @inbounds for w = 1:size(wgrid,1)
+    @inbounds @sync @parallel for w = 1:size(wgrid,1)
       for a = 1:size(agrid,1)
         for b = 1:size(bgrid,1)
           for z = 1:size(zgrid,1)
@@ -41,14 +45,17 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
             wpopt < wt + yt || @printf "\tw'>xt, w=%d,a=%d,b=%d,z=%d,t=%d\n" w a b z t
 
             c = wgrid[w, t] + yt - wpopt
-            c_over_x[w, a, b, z, t] = c/(wgrid[w, t] + yt - wmin/r)
+            cxnow[w, a, b, z] = c/(wgrid[w, t] + yt - wmin/r)
 
-            wp[w, a, b, z, t] = wpopt
-            v[w, a, b, z, t] = vopt
+            wpnow[w, a, b, z] = wpopt
+            vnow[w, a, b, z] = vopt
           end
         end
       end
     end
+    wp[:, :, :, :, t] = sdata(wpnow)
+    v[:, :, :, :, t] = sdata(vnow)
+    c_over_x[:, :, :, :, t] = sdata(cxnow)
   end
 
   return v, wp, c_over_x
