@@ -1,7 +1,7 @@
 ################################################################################
 
 using  ApproXD, Dierckx, Grid, NumericalMath, PyPlot, PyCall
-@pyimport seaborn as sns
+@pyimport seaborn as sns # remove if Python package seaborn is not installed
 
 ################################################################################
 # Interpolation schemes to consider:
@@ -218,3 +218,5 @@ ax[1,1][:legend](loc = "best")
 ax[2,1][:set_title]("Relative Error")
 ax[2,1][:legend](loc = "best")
 fig[:suptitle]("Interpolation in One Dimension", fontsize = 16)
+plt.show()
+
