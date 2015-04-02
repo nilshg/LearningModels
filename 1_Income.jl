@@ -58,7 +58,7 @@ function incomeDistribution(ypath::String, abpath::String)
     pension[i] = get_pension(yit[i, 40], k_0, k_1, avgy)
   end
 
-  return yit, ymedian, pension
+  return yit, α, β, ymedian, pension
 end
 
 #################################################################################
