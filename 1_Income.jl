@@ -19,8 +19,7 @@ using DataFrames
 
 function incomeDistribution(ypath::String, abpath::String)
 
-  @printf "1. Draw an Income Distribution\n"
-  @printf "\tWe are working with Guvenen's data\n"
+  @printf "1. Import Guvenen's income distribution\n"
   yit = readdlm(ypath)
   alfabeta = readdlm(abpath)
   α = alfabeta[:, 1]
@@ -67,6 +66,7 @@ function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Flo
                             var_a::Float64, var_b::Float64, var_ɛ::Float64,
                             var_η::Float64, ρ::Float64, br::Int64, tW::Int64)
 
+  @printf "1. Draw an income distribution\n"
   # Draw some alphas and betas
   α = Array(Float64, bs)
   β_1 = Array(Float64, bs)
