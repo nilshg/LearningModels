@@ -116,7 +116,18 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
   @printf "3. Construct Grids (using Guvenen's data)\n"
 
   # WEALTH GRID #
-  wgrid = readdlm(wpath)'
+  wgrid_org = readdlm(wpath)'
+  wgrid = Array(Float64, (wpoints, tW))
+  wgridexp = similar(wgrid)
+
+  for t = tW:-1:1
+    wdistexp = (wgrid_org[end, t] - wgrid_org[1, t])^(1/power)
+    winc = wdistexp/(wpoints-1)
+    for i = 1: wpoints
+      wgridexp[i, t] = (i-1)*winc
+    end
+    wgrid[:, t] = wgridexp[:, t].^power + wgrid_org[1, t]
+  end
 
   # BELIEF GRIDS #
   if const_bel
@@ -133,7 +144,7 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
 
   # Adjust borrowing constraints such that lowest belief does not have an empty
   # choice set in any period:
-  #=
+
   for t = 39:-1:1
     if const_bel
       ymin = exp(agrid[1] + t*bgrid[1] + zgrid[1])
@@ -143,10 +154,10 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
     tightening = wgrid[1, t] - wgrid[1, t+1]/r
     while ymin + tightening < 0.01
       tightening = wgrid[1, t] - wgrid[1, t+1]/r
-      wgrid[1, t] += 0.1
+      wgrid[:, t] += 0.1
     end
   end
-  =#
+
 
   # RETIREMENT GRIDS #
   guvgrid_R_org = readdlm(wRpath)'
@@ -157,9 +168,7 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
     wgrid_R[:, t] = linspace(guvgrid_R[1, t], guvgrid_R[end, t], wpoints_R)
   end
 
-  yminR = max(0.2*yminbelief[tW], 0.2)
-  ymaxR = min(0.05*ymaxbelief[tW], 1000)
-  ygrid_R = linspace(yminR, ymaxR, ypoints_R)
+  ygrid_R = linspace(0.24, 1000, ypoints_R)
 
   @printf "\tWealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
   @printf "\tBelief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
