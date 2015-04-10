@@ -2,6 +2,53 @@
 ################################  DIAGNOSTICS  #################################
 ################################################################################
 
+using PyCall, PyPlot, QuantEcon
+@pyimport seaborn as sns
+
+
+function plotv(v::Array{Float64, 4}, wg::Array, hg::Array, yg::Array, ydim::String,
+               h::Int64, y::Int64, t::Int64, heading::String)
+
+  fig = figure(figsize=(10,8))
+  ax = fig[:add_subplot](111, projection="3d")
+
+  if ydim == "h"
+    x1g, x2g = meshgrid(wg[:, t], hg[:, t])
+    x3g = v[:, :, y, t]'
+    ax[:set_ylabel]("Habit Level", fontsize=14)
+  elseif ydim == "y"
+    x1g, x2g = meshgrid(wg[:, t], yg[:, t])
+    x3g = reshape(v[:, h, :, t]', size(v, 1), size(v, 3))
+    ax[:set_ylabel]("Pension Level", fontsize=14)
+  end
+
+  ax[:plot_surface](x1g, x2g, x3g, rstride = 1, cstride = 1,
+                    cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
+  ax[:set_xlabel]("Wealth Level", fontsize=14)
+  ax[:set_zlabel]("Value", fontsize=14)
+  title(heading)
+  plt.show()
+end
+
+function plotv(v::Array{Float64, 3}, wg::Array{Float64, 2}, yg::Array{Float64, 1},
+               t::Int64, heading::String)
+
+  xg, yg = meshgrid(wg[:, t], yg[:])
+
+  fig = figure(figsize=(10,8))
+  ax = fig[:add_subplot](111, projection="3d")
+
+  ax[:plot_surface](xg, yg, v[:, :, t]', rstride = 1, cstride = 1,
+                    alpha=0.5, linewidth=0.25)
+  ax[:set_xlabel]("Wealth Level", fontsize=14)
+  ax[:set_ylabel]("Pension Level", fontsize=14)
+  ax[:set_zlabel]("Value", fontsize=14)
+  title(heading)
+  plt.show()
+end
+
+
+
 # Plot value and policy functions
 function plot_value_policy(tw::Int64, tr::Int64)
   plotv(v, wgrid, agrid, bgrid, zgrid, "b", 3, 7, 1, tw,
@@ -13,6 +60,64 @@ function plot_value_policy(tw::Int64, tr::Int64)
   plotv(wp_R, wgrid_R, ygrid_R, tr,
       "Retirement policy function, period "*string(tr))
 end
+
+function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
+
+  @assert length(periods) == 4
+
+  fig, ax = PyPlot.subplots(2, 2, sharex=true, sharey=true)
+  ax[1,1][:hist](w_t[:, periods[1]], bins = 100)
+  ax[1,1][:set_title]("Period "*string(periods[1]))
+  ax[1,2][:hist](w_t[:, periods[2]], bins = 100)
+  ax[1,2][:set_title]("Period "*string(periods[2]))
+  ax[2,1][:hist](w_t[:, periods[3]], bins = 100)
+  ax[2,1][:set_title]("Period "*string(periods[3]))
+  ax[2,2][:hist](w_t[:, periods[4]], bins = 100)
+  ax[2,2][:set_title]("Period "*string(periods[4]))
+  fig[:suptitle](L"Wealth Distributions, $\delta$="*string(δ))
+  plt.show()
+end
+
+#######################################################################################
+
+function plotdistributions(yit::Array{Float64, 2}, pension::Array, periods::Array)
+
+  @assert length(periods) == 3
+
+  fig, ax = PyPlot.subplots(2, 2, sharex=true, sharey=true)
+  ax[1,1][:hist](yit[:, periods[1]], bins = 100)
+  ax[1,1][:set_title]("Period "*string(periods[1]))
+  ax[1,2][:hist](yit[:, periods[2]], bins = 100)
+  ax[1,2][:set_title]("Period "*string(periods[2]))
+  ax[2,1][:hist](yit[:, periods[3]], bins = 100)
+  ax[2,1][:set_title]("Period "*string(periods[3]))
+  ax[2,2][:hist](pension, bins = 100)
+  ax[2,2][:set_title]("Pension Income")
+  fig[:suptitle]("Income Distributions")
+  plt.show()
+end
+
+#######################################################################################
+
+function plothistory(i::Int64, c_t::Array{Float64, 2}, w_t::Array{Float64, 2},
+                     yit::Array{Float64, 2}, pension::Array, s_f_i::Array{Float64, 3},
+                     wgrid::Array, wgrid_R::Array, tW::Int64, tR::Int64)
+
+  ybelief = [exp([[1 t 1]*s_f_i[:, 1, t]][1]) for t in 1:40]
+  fig, ax = PyPlot.subplots()
+  ax[:plot](c_t[i, :]', label = "Consumption")
+  ax[:plot](w_t[i, :]', label = "Assets")
+  ax[:plot]([yit[i, :] pension[i]*ones(tR, 1)']', label = "Income")
+  ax[:plot]([ybelief' pension[i]*ones(tR, 1)']', label = "Belief")
+  ax[:plot]([wgrid[1, :] wgrid_R[1, :]]', linestyle=":", label = "Borrowing Constraint")
+  ax[:axvline](tW, linestyle = "--", color = "black")
+  fig[:suptitle]("Simulation History for Agent "*string(i))
+  plt.legend()
+  plt.show()
+end
+
+
+
 
 ## Simulation Results ##
 
@@ -82,7 +187,7 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
     ax[1,1][:legend](loc = "best")
     ax[2,1][:legend](loc = "best")
     ax[1,1][:set_title]("Means and Medians")
-    ax[1,1][:set_title]("Variances")
+    ax[2,1][:set_title]("Variances")
     plt.show()
   end
 
