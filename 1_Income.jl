@@ -154,19 +154,16 @@ function incomeDistribution(α::Float64, β::Float64, var_η_RIP::Float64,
                for i = 1:epsgridpoints]
 
   yit = Array(Float64, (zgridpoints_RIP, epsgridpoints, tW))
-  for t = 1:tW
-    for z = 1:zgridpoints_RIP
-      for ɛ = 1:epsgridpoints
-        if t < 2
-          yit[:, ɛ, t] = exp(α + β*t + 0.8*zdisc[z] + 0.6*epsdisc[ɛ])
-        elseif t < 3
-          yit[:, ɛ, t] = exp(α + β*t + zdisc[z] + epsdisc[ɛ])
-        elseif t < 5
-          yit[:, ɛ, t] = exp(α + β*t + zdisc[z] + epsdisc[ɛ])
-        else
-          yit[:, ɛ, t] = exp(α + β*t + zdisc[z] + epsdisc[ɛ])
-        end
-      end
+
+  for t = 1:tW, z = 1:zgridpoints_RIP, ɛ = 1:epsgridpoints
+    if t < 2
+      yit[:, ɛ, t] = exp(α + β*t + 0.8*zdisc[z] + 0.6*epsdisc[ɛ])
+    elseif t < 3
+      yit[:, ɛ, t] = exp(α + β*t + zdisc[z] + epsdisc[ɛ])
+    elseif t < 5
+      yit[:, ɛ, t] = exp(α + β*t + zdisc[z] + epsdisc[ɛ])
+    else
+      yit[:, ɛ, t] = exp(α + β*t + zdisc[z] + epsdisc[ɛ])
     end
   end
 

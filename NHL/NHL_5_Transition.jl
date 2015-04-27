@@ -33,53 +33,49 @@ function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array, ygrid_R::Array,
   # MAXIMIZATION
   wmin = wgrid_R[1, 1]
 
-  for a = 1:size(agrid,1)
-    for b = 1:size(bgrid,1)
-      for z = 1:size(zgrid,1)
-        size(a,2)==1 ? at = agrid[a] : at = agrid[a,end]
-        size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
-        zt = 0.0
+  for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
+    size(a,2)==1 ? at = agrid[a] : at = agrid[a,end]
+    size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
+    zt = 0.0
 
-        yt = exp(at + bt*tW + zt)
+    yt = exp(at + bt*tW + zt)
 
-        ybari = mean(yit, 2)[:]
-        (k_0, k_1) = linreg(yit[:, 40], ybari)
-        avgy = mean(yit)
+    ybari = mean(yit, 2)[:]
+    (k_0, k_1) = linreg(yit[:, 40], ybari)
+    avgy = mean(yit)
 
-        function get_pension(y::Float64, k_0::Float64, k_1::Float64, avgy::Float64)
-            ytilde = (k_0 + k_1*y)/avgy
-            rratio = 0.0
+    function get_pension(y::Float64, k_0::Float64, k_1::Float64, avgy::Float64)
+      ytilde = (k_0 + k_1*y)/avgy
+      rratio = 0.0
 
-            if ytilde < 0.3
-                rratio = 0.9*ytilde
-            elseif ytilde <= 2.0
-                rratio = 0.27 + 0.32*(ytilde - 0.3)
-            elseif ytilde <= 4.1
-                rratio = 0.814 + 0.15*(ytilde - 2.0)
-            else
-                rratio = 1.129
-            end
-            return rratio*avgy
-        end
-        pension = get_pension(yt, k_0, k_1, avgy)
-
-        for w = 1:size(wgrid,1)
-          wt = wgrid[w, tW]
-
-          (wpopt, vopt) =
-            bellOpt_TRANS(wt, yt, pension, wmin, valueRETIRE, r, δ)
-
-          wpopt < wt + yt || @printf "NC @ w=%d,a=%d,b=%d,z=%d" w a b z
-
-          v[w, a, b, z, tW] = vopt
-          wp[w, a, b, z, tW] = wpopt
-
-          c = wgrid[w, tW] + yt - wp[w, a, b, z, tW]
-
-          c_over_x[w, a, b, z, tW] =
-            c/(wgrid[w, tW] - wmin/r + yt)
-        end
+      if ytilde < 0.3
+        rratio = 0.9*ytilde
+      elseif ytilde <= 2.0
+        rratio = 0.27 + 0.32*(ytilde - 0.3)
+      elseif ytilde <= 4.1
+        rratio = 0.814 + 0.15*(ytilde - 2.0)
+      else
+        rratio = 1.129
       end
+      return rratio*avgy
+    end
+    pension = get_pension(yt, k_0, k_1, avgy)
+
+    for w = 1:size(wgrid,1)
+      wt = wgrid[w, tW]
+
+      (wpopt, vopt) =
+        bellOpt_TRANS(wt, yt, pension, wmin, valueRETIRE, r, δ)
+
+      wpopt < wt + yt || @printf "NC @ w=%d,a=%d,b=%d,z=%d" w a b z
+
+      v[w, a, b, z, tW] = vopt
+      wp[w, a, b, z, tW] = wpopt
+
+      c = wgrid[w, tW] + yt - wp[w, a, b, z, tW]
+
+      c_over_x[w, a, b, z, tW] =
+        c/(wgrid[w, tW] - wmin/r + yt)
     end
   end
   (dim1, dim2, dim3, dim4) = checkmonotonicity(v, tW)
@@ -155,30 +151,23 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
   v_1 = similar(xp_1)
   c_over_x = similar(xp_1)
 
-  for w = 1:size(wgrid , 1)
-    for a = 1:length(agrid)
-      for b = 1:length(bgrid)
-        for z = 1:length(zgrid)
+  for w = 1:size(wgrid, 1), a = 1:length(agrid), b = 1:length(bgrid), z = 1:length(zgrid)
+    size(a,2)==1 ? at = agrid[a] : at = agrid[a,end]
+    size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
+    size(z,2)==1 ? zt = zgrid[z] : zt = zgrid[z,end]
 
-          size(a,2)==1 ? at = agrid[a] : at = agrid[a,end]
-          size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
-          size(z,2)==1 ? zt = zgrid[z] : zt = zgrid[z,end]
+    y = exp(agrid[a] + bgrid[b]*40 + zgrid[z])
+    yln = LogNormal(at + bt*40 + zt, 0.22)
 
-          y = exp(agrid[a] + bgrid[b]*40 + zgrid[z])
-          yln = LogNormal(at + bt*40 + zt, 0.22)
+    (xp_1[w, a, b, z, end], v_1[w, a, b, z, end]) =
+      bellOpt(wgrid[w, end], y, v_int, yln, r, δ, xgrid_irr[1])
 
-          (xp_1[w, a, b, z, end], v_1[w, a, b, z, end]) =
-            bellOpt(wgrid[w, end], y, v_int, yln, r, δ, xgrid_irr[1])
+    c = wgrid[w, end] + y - xp_1[w, a, b, z, end]
 
-          c = wgrid[w, end] + y - xp_1[w, a, b, z, end]
+    c_over_x[w, a, b, z, end] =
+      c/(wgrid[w, end] - xgrid_irr[1]/r + y)
 
-          c_over_x[w, a, b, z, end] =
-            c/(wgrid[w, end] - xgrid_irr[1]/r + y)
-
-          c > 0 || @printf "NC @ x=%d,a=%d,b=%d,z=%d\n" w a b z
-        end
-      end
-    end
+    c > 0 || @printf "NC @ x=%d,a=%d,b=%d,z=%d\n" w a b z
   end
 
   return xp_1, v_1, c_over_x

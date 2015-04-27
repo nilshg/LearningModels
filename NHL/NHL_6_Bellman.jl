@@ -26,31 +26,26 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
     # MAXIMIZATION
     wmin = wgrid[1, t+1]
     @inbounds @sync @parallel for w = 1:size(wgrid,1)
-      for a = 1:size(agrid,1)
-        for b = 1:size(bgrid,1)
-          for z = 1:size(zgrid,1)
-            at = agrid[a]
-            bt = bgrid[b]
-            zt = zgrid[z]
+      for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
+        at = agrid[a]
+        bt = bgrid[b]
+        zt = zgrid[z]
+        wt = wgrid[w, t]
+        yt = exp(at + bt*t + zt)
+        yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
 
-            wt = wgrid[w, t]
-            yt = exp(at + bt*t + zt)
-            yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
+        (wt + yt - wmin/r > 0.01) || error("Cash on hand is $wt + $yt, BC is $wmin/r")
 
-            (wt + yt - wmin/r > 0.01) || error("Cash on hand is $wt + $yt, BC is $wmin/r")
+        (wpopt, vopt) =
+          bellOpt(wt, yt, at, bt, zt, wmin, v_interpol, yln, k[:, t], ρ, r, δ)
 
-            (wpopt, vopt) =
-              bellOpt(wt, yt, at, bt, zt, wmin, v_interpol, yln, k[:, t], ρ, r, δ)
+        wpopt < wt + yt || @printf "\tw'>xt, w=%d,a=%d,b=%d,z=%d,t=%d\n" w a b z t
 
-            wpopt < wt + yt || @printf "\tw'>xt, w=%d,a=%d,b=%d,z=%d,t=%d\n" w a b z t
+        c = wgrid[w, t] + yt - wpopt
+        cxnow[w, a, b, z] = c/(wgrid[w, t] + yt - wmin/r)
 
-            c = wgrid[w, t] + yt - wpopt
-            cxnow[w, a, b, z] = c/(wgrid[w, t] + yt - wmin/r)
-
-            wpnow[w, a, b, z] = wpopt
-            vnow[w, a, b, z] = vopt
-          end
-        end
+        wpnow[w, a, b, z] = wpopt
+        vnow[w, a, b, z] = vopt
       end
     end
     wp[:, :, :, :, t] = sdata(wpnow)
@@ -64,7 +59,6 @@ end
 ################################################################################
 
 function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
-                          c_over_x::Array{Float64, 5},
                           wgrid::Array{Float64, 2}, agrid::Vector{Float64},
                           bgrid::Vector{Float64}, zgrid::Vector{Float64},
                           stdy::Vector{Float64}, r::Float64,
@@ -82,37 +76,26 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
 
     # MAXIMIZATION
     wmin = wgrid[1, t+1]
-    @inbounds for w = 1:size(wgrid,1)
-      for a = 1:size(agrid,1)
-        for b = 1:size(bgrid,1)
-          for z = 1:size(zgrid,1)
-            at = agrid[a]
-            bt = bgrid[b]
-            zt = zgrid[z]
-            zgrid
-            wt = wgrid[w, t]
-            yt = exp(at + bt*t + zt)
-            yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
+    @inbounds @sync @parallel for w = 1:size(wgrid,1)
+      for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
+        at = agrid[a]
+        bt = bgrid[b]
+        zt = zgrid[z]
 
-            (wt + yt - wmin/r > 0.01) || error("Cash on hand is $wt + $yt, BC is $wmin/r")
+        wt = wgrid[w, t]
+        yt = exp(at + bt*t + zt)
+        yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
 
-            (wpopt, vopt) =
-              bellOpt(wt, yt, at, bt, zt, wmin, v_interpol, yln, r, δ)
+        (wpopt, vopt) =
+          bellOpt(wt, yt, at, bt, zt, wmin, v_interpol, yln, r, δ)
 
-            wpopt < wt + yt || @printf "\tw'>xt, w=%d,a=%d,b=%d,z=%d,t=%d\n" w a b z t
-
-            c = wgrid[w, t] + yt - wpopt
-            c_over_x[w, a, b, z, t] = c/(wgrid[w, t] + yt - wmin/r)
-
-            wp[w, a, b, z, t] = wpopt
-            v[w, a, b, z, t] = vopt
-          end
-        end
+        wp[w, a, b, z, t] = wpopt
+        v[w, a, b, z, t] = vopt
       end
     end
   end
 
-  return v, wp, c_over_x
+  return v, wp
 end
 
 ################################################################################
@@ -136,31 +119,28 @@ function solveWorkingLife(v::Array{Float64, 5}, wp::Array{Float64, 5},
 
     # MAXIMIZATION
     wmin = wgrid[1, t+1]
-    @inbounds for w = 1:size(wgrid,1)
-      for a = 1:size(agrid,1)
-        for b = 1:size(bgrid,1)
-          for z = 1:size(zgrid,1)
-            at = agrid[a, t]
-            bt = bgrid[b, t]
-            zt = zgrid[z, t]
-            wt = wgrid[w, t]
-            yt = exp(at + bt*t + zt)
-            yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
 
-            (wt + yt - wmin/r > 0.01) || error("Cash on hand is $wt + $yt, BC is $wmin/r")
+    @inbounds @sync @parallel for w = 1:size(wgrid,1)
+      for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
+        at = agrid[a, t]
+        bt = bgrid[b, t]
+        zt = zgrid[z, t]
+        wt = wgrid[w, t]
+        yt = exp(at + bt*t + zt)
+        yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
 
-            (wpopt, vopt) =
-              bellOpt(wt, yt, at, bt, zt, wmin, v_interpol, yln, k, r, δ)
+        (wt + yt - wmin/r > 0.01) || error("Cash on hand is $wt + $yt, BC is $wmin/r")
 
-            wpopt < wt + yt || @printf "\tw'>xt, w=%d,a=%d,b=%d,z=%d,t=%d\n" w a b z t
+        (wpopt, vopt) =
+          bellOpt(wt, yt, at, bt, zt, wmin, v_interpol, yln, k, r, δ)
 
-            c = wgrid[w, t] + yt - wpopt
-            c_over_x[w, a, b, z, t] = c/(wgrid[w, t] + yt - wmin/r)
+        wpopt < wt + yt || @printf "\tw'>xt, w=%d,a=%d,b=%d,z=%d,t=%d\n" w a b z t
 
-            wp[w, a, b, z, t] = wpopt
-            v[w, a, b, z, t] = vopt
-          end
-        end
+        c = wgrid[w, t] + yt - wpopt
+        c_over_x[w, a, b, z, t] = c/(wgrid[w, t] + yt - wmin/r)
+
+        wp[w, a, b, z, t] = wpopt
+        v[w, a, b, z, t] = vopt
       end
     end
   end

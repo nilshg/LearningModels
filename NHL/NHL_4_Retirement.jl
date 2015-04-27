@@ -12,46 +12,40 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
   c_over_x = similar(v_R)
 
   # Value of last period of retirement
-  for w = 1:size(wgrid_R,1)
-    for y = 1:size(ygrid_R,1)
-      wp_R[w, y, tR] = 0.0
-      v_R[w, y, tR] = u(wgrid_R[w, tR] + ygrid_R[y])
-      c_over_x[w, y, tR] = 1.0
-    end
+  for w = 1:size(wgrid_R,1), y = 1:size(ygrid_R,1)
+    wp_R[w, y, tR] = 0.0
+    v_R[w, y, tR] = u(wgrid_R[w, tR] + ygrid_R[y])
+    c_over_x[w, y, tR] = 1.0
   end
 
   # Compute the period tR-1 solution exactly:
   wmin = wgrid_R[1, tR]
-  for w = 1:size(wgrid_R,1)
-    for y = 1:size(ygrid_R,1)
-      wt = wgrid_R[w, tR-1]
-      yt = ygrid_R[y]
-      xt = wt + yt
+  for w = 1:size(wgrid_R,1), y = 1:size(ygrid_R,1)
+    wt = wgrid_R[w, tR-1]
+    yt = ygrid_R[y]
+    xt = wt + yt
 
-      Blmn(wp::Float64) = -(u(xt - wp) + δ*u(r*wp+yt))
+    Blmn(wp::Float64) = -(u(xt - wp) + δ*u(r*wp+yt))
 
-      optimum = optimize(Blmn, wmin/r, xt)
+    optimum = optimize(Blmn, wmin/r, xt)
 
-      v_R[w, y, tR-1] = -(optimum.f_minimum)
-      wp_R[w, y, tR-1] = optimum.minimum
+    v_R[w, y, tR-1] = -(optimum.f_minimum)
+    wp_R[w, y, tR-1] = optimum.minimum
 
-      c = xt - wp_R[w, y, tR-1]
-      c_over_x[w, y, tR-1] = c/(xt - wmin/r)
-    end
+    c = xt - wp_R[w, y, tR-1]
+    c_over_x[w, y, tR-1] = c/(xt - wmin/r)
   end
 
   for t = (tR-2):-1:1
     v_R_interpol = interpolatev(v_R, wgrid_R, ygrid_R, t+1)
     wmin = wgrid_R[1, t+1]
-    for w = 1:size(wgrid_R,1)
-     for y = 1:size(ygrid_R,1)
-        (wp_R[w, y, t], v_R[w, y, t]) =
-          bellOpt_R(wgrid_R[w, t], ygrid_R[y], wmin, v_R_interpol, r, δ)
+    for w = 1:size(wgrid_R,1), y = 1:size(ygrid_R,1)
+      (wp_R[w, y, t], v_R[w, y, t]) =
+        bellOpt_R(wgrid_R[w, t], ygrid_R[y], wmin, v_R_interpol, r, δ)
 
-        xt = wgrid_R[w, t] + ygrid_R[y]
-        c = xt - wp_R[w, y, t]
-        c_over_x[w, y, t] = c/(xt - wmin/r)
-      end
+      xt = wgrid_R[w, t] + ygrid_R[y]
+      c = xt - wp_R[w, y, t]
+      c_over_x[w, y, t] = c/(xt - wmin/r)
     end
   end
 
@@ -100,14 +94,12 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
   wp_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), size(wgrid_R,2)))
   v_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), 1))
 
-  for w = 1:size(wgrid_R,1)
-    for y = 1:size(ygrid_R,1)
-      xt = wgrid_R[w]
-      yt = ygrid_R[y]
+  for w = 1:size(wgrid_R,1), y = 1:size(ygrid_R,1)
+    xt = wgrid_R[w]
+    yt = ygrid_R[y]
 
-      (wp_R[w, y, :], v_R[w, y]) =
-        simulate(xt, yt, δ, σ, r, tR)
-    end
+    (wp_R[w, y, :], v_R[w, y]) =
+      simulate(xt, yt, δ, σ, r, tR)
   end
   return v_R, wp_R
 end
