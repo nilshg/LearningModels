@@ -16,12 +16,12 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
   wp_t = similar(c_t)
   w_t[:, 1] = w_0
 
-  @printf "\tSimulating %d periods of working life...\n" tW
   negconscounter = 0
   for t = 1:tW
     # INTERPOLATION
     wp_int =
       interpolatev_A(wp[:, :, :, :, t], wgrid[:, t], agrid, bgrid, zgrid)
+
     # Bond Choice
     for i = 1:size(yit,1)
       wt = w_t[i, t]
@@ -37,9 +37,8 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
       end
     end
   end
-  negconscounter == 0 || @printf "\t%d negative consumption choices!\n" negconscounter
+  negconscounter == 0 || @printf "\t%d neg. c choices!\n" negconscounter
 
-  @printf "\tSimulating %d periods of retirement...\n" tR
   function get_c_1(r::Float64, δ::Float64, x::Float64, y::Float64,
                    σ::Float64, tR::Int64)
     Rinv = 1/r
