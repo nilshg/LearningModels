@@ -15,50 +15,50 @@
 
 using Dierckx
 
+function get_pension(y::Float64, k_0::Float64, k_1::Float64, avgy::Float64)
+  ytilde = (k_0 + k_1*y)/avgy
+  rratio = 0.0
+
+  if ytilde < 0.3
+    rratio = 0.9*ytilde
+  elseif ytilde <= 2.0
+    rratio = 0.27 + 0.32*(ytilde - 0.3)
+  elseif ytilde <= 4.1
+    rratio = 0.814 + 0.15*(ytilde - 2.0)
+  else
+    rratio = 1.129
+  end
+  return rratio*avgy
+end
+
 function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array, ygrid_R::Array,
                          wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
                          zgrid::Array, yit::Array, r::Float64, δ::Float64)
 
   @printf "5. Solving the problem for the last period of work\n"
-  tic()
   tW = size(wgrid,2)
   wp = Array(Float64,
              (size(wgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))
   v = similar(wp)
   c_over_x = similar(wp)
 
+  # Predicting pension from last period income
+  ybari = mean(yit, 2)[:]
+  (k_0, k_1) = linreg(yit[:, 40], ybari)
+  avgy = mean(yit)
+
   # INTERPOLATION
-  valueRETIRE = interpolatev_A(v_R[:, :, 1], wgrid_R[:, 1], ygrid_R)
+  valueRETIRE = interpolateV(v_R[:, :, 1], wgrid_R[:, 1], ygrid_R)
 
   # MAXIMIZATION
   wmin = wgrid_R[1, 1]
 
   for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
-    size(a,2)==1 ? at = agrid[a] : at = agrid[a,end]
-    size(b,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
+    size(agrid,2)==1 ? at = agrid[a] : at = agrid[a,end]
+    size(bgrid,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
     zt = 0.0
 
     yt = exp(at + bt*tW + zt)
-
-    ybari = mean(yit, 2)[:]
-    (k_0, k_1) = linreg(yit[:, 40], ybari)
-    avgy = mean(yit)
-
-    function get_pension(y::Float64, k_0::Float64, k_1::Float64, avgy::Float64)
-      ytilde = (k_0 + k_1*y)/avgy
-      rratio = 0.0
-
-      if ytilde < 0.3
-        rratio = 0.9*ytilde
-      elseif ytilde <= 2.0
-        rratio = 0.27 + 0.32*(ytilde - 0.3)
-      elseif ytilde <= 4.1
-        rratio = 0.814 + 0.15*(ytilde - 2.0)
-      else
-        rratio = 1.129
-      end
-      return rratio*avgy
-    end
     pension = get_pension(yt, k_0, k_1, avgy)
 
     for w = 1:size(wgrid,1)
@@ -78,9 +78,6 @@ function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array, ygrid_R::Array,
         c/(wgrid[w, tW] - wmin/r + yt)
     end
   end
-  (dim1, dim2, dim3, dim4) = checkmonotonicity(v, tW)
-  dim1 + dim2 + dim3 + dim4 == 0 || @printf "\tMonotonicity violated in transition"
-  @printf "\tTransition period problem solved in %.1f seconds.\n" toq()
 
   return v, wp, c_over_x
 end
@@ -88,7 +85,7 @@ end
 ###################################################################################
 
 function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
-                         zgrid::Array, r::Float64, δ::Float64)
+                         zgrid::Array, r::Float64, δ::Float64, scale::Float64)
   tw = size(wgrid,2)
 
   xpoints = 200
@@ -111,6 +108,8 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
   for x = 1:xpoints
     v_T[x] = u(xgrid_irr[x] - xgrid_irr[1] + 0.01)
   end
+
+  v_T *= scale
 
   xg = Array{Float64, 1}[]
   push!(xg, xgrid_irr)
