@@ -25,8 +25,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   # Maximum wealth is given by three times the highest earnings
   # Minimum wealth is given by some ad hoc constraint
 
-  wmin = Array(Float64, tW)
-  wmax = similar(wmin)
+  wmin = Array(Float64, tW); wmax = similar(wmin)
 
   wmin[tW] = -0.7*yminbelief[tW]
   wmax[tW] = 1.5*ymaxbelief[tW]
@@ -117,8 +116,7 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
 
   # WEALTH GRID #
   wgrid_org = readdlm(wpath)'
-  wgrid = Array(Float64, (wpoints, tW))
-  wgridexp = similar(wgrid)
+  wgrid = Array(Float64, (wpoints, tW)); wgridexp = similar(wgrid)
 
   for t = tW:-1:1
     wdistexp = (wgrid_org[end, t] - wgrid_org[1, t])^(1/power)
@@ -163,9 +161,15 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
   guvgrid_R_org = readdlm(wRpath)'
   guvgrid_R = reshape(guvgrid_R_org, 1, 7200)
   guvgrid_R = unique(reshape(guvgrid_R_org, 12, 600), 2)
-  wgrid_R = Array(Float64, (wpoints_R, tR))
+  wgrid_R = Array(Float64, (wpoints_R, tR)); wgridexp = similar(wgrid_R)
+
   for t = 1:30
-    wgrid_R[:, t] = linspace(guvgrid_R[1, t], guvgrid_R[end, t], wpoints_R)
+    wdistexp = sqrt(guvgrid_R[end, t] - guvgrid_R[1, t])
+    winc = wdistexp/(wpoints_R-1)
+    for i = 1:wpoints_R
+      wgridexp[i,t] = (i-1)*winc
+    end
+    wgrid_R[:, t] = wgridexp[:, t].^2 + guvgrid_R[1,t]
   end
 
   ygrid_R = linspace(0.24, 1000, ypoints_R)
