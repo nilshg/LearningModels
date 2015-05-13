@@ -22,7 +22,7 @@ var_β = 0.00037        # Cross-sectional variance of beta (std = 0.019)
 var_η = 0.029          # Variance of persistent shock (std = 0.17)
 var_ɛ = 0.047          # Variance of transitory shock (std = 0.22)
 ρ = 0.82               # Persistence of AR(1) component of income
-br = 30                # Period of structural break (has to be <T)
+br = 40                # Period of structural break (has to be <T)
 
 # Parameters of income process (RIP)
 var_η_RIP = 0.015      # σ²(η) (std = 0.122)
@@ -37,15 +37,15 @@ init_var_β = 0.01      # Initial belief about variance of beta
 init_var_z = 0.01      # Initial belief about ariance of z
 
 # Parameters for grid construction
-wpoints = 30           # Wealth grid points (working life)
-wpoints_R = 60         # Wealth grid points (retirement)
+wpoints = 25           # Wealth grid points (working life)
+wpoints_R = 160         # Wealth grid points (retirement)
 hpoints = 6            # Habit grid points (working life)
 hpoints_R = 29         # Habit grid points (retirement)
-ypoints_R = 50         # Pension points
+ypoints_R = 150         # Pension points
 wmaxR = 1000.0         # Maximum retirement wealth
 apoints = 3            # Grid points for beliefs about α
-bpoints = 8            # Grid points for beliefs about β
-zpoints = 7            # Grid points for beliefs about z
+bpoints = 11           # Grid points for beliefs about β
+zpoints = 8            # Grid points for beliefs about z
 zpoints_RIP = 32       # Grid points for RIP persistent shock
 epspoints = 2          # Grid points for RIP transitory shock
 power = 2.0            # Wealth Grid Curvature

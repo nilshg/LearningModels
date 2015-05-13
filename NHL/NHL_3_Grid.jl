@@ -11,8 +11,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   tW = size(s_f_i,3)
 
   ybelief = Array(Float64, (size(s_f_i,2), tW))
-  ymaxbelief = Array(Float64, (tW, 1))
-  yminbelief = similar(ymaxbelief)
+  ymaxbelief = Array(Float64, (tW, 1)); yminbelief = similar(ymaxbelief)
   for t = 1:tW
     for i = 1:size(s_f_i,2)
       ybelief[i, t] = exp([1.0, t, 1]'*s_f_i[:, i, t] + 3*stdy[t])[1]
@@ -34,8 +33,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
     wmax[t] = 2*ymaxbelief[t]
   end
 
-  wgrid = Array(Float64, (wpoints, tW))
-  wgridexp = similar(wgrid)
+  wgrid = Array(Float64, (wpoints, tW)); wgridexp = similar(wgrid)
 
   for t = tW:-1:1
     wdistexp = (wmax[t] - wmin[t])^(1/power)
@@ -155,7 +153,6 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
       wgrid[:, t] += 0.1
     end
   end
-
 
   # RETIREMENT GRIDS #
   guvgrid_R_org = readdlm(wRpath)'
