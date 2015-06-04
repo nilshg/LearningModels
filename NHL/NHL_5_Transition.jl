@@ -113,9 +113,9 @@ function solveTransition(wgrid::Array{Float64, 2}, agrid::Array, bgrid::Array,
 
   xg = Array{Float64, 1}[]
   push!(xg, xgrid_irr)
-  v_int = lininterp(v_T, xg)
+  v_int = Lininterp(v_T, xg)
 
-  function bellOpt(w::Float64, y::Float64, v_int::lininterp,
+  function bellOpt(w::Float64, y::Float64, v_int::Lininterp,
                    yln::LogNormal, r::Float64, δ::Float64, wmin::Float64)
 
     x = w + y

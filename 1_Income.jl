@@ -34,7 +34,8 @@ function incomeDistribution(ypath::String, abpath::String)
   ybari = mean(yit, 2)[:]
   (k_0, k_1) = linreg(yit[:, 40], ybari)
   avgy = mean(yit)
-
+  k_0
+  k_1
   function get_pension{T<:Float64}(y::T, k_0::T, k_1::T, avgy::T)
       ytilde = (k_0 + k_1*y)/avgy
       rratio = 0.0

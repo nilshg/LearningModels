@@ -117,8 +117,6 @@ function plothistory(i::Int64, c_t::Array{Float64, 2}, w_t::Array{Float64, 2},
 end
 
 
-
-
 ## Simulation Results ##
 
 function constrained_negative(w::Array{Float64,2}, wgrid::Array{Float64,2},
@@ -127,21 +125,17 @@ function constrained_negative(w::Array{Float64,2}, wgrid::Array{Float64,2},
   constrained = zeros(Float64, size(w,2))
   wmin = [wgrid[1, :] wgrid_R[1, :]]
 
-  for t = 1:size(wgrid,2)
-    for i = 1:size(wp,1)
+  for t = 1:size(wgrid,2), i = 1:size(wp,1)
       if abs(w[i, t] - wmin[t]) < 1e-3
         constrained[t] += 1/1000
       end
-    end
   end
 
   neg_cons = similar(constrained)
-  for t = 1:70
-    for i = 1:size(w,1)
+  for t = 1:70, i = 1:size(w,1)
       if c_t[i, t] < 0
         neg_cons[t] += 1
       end
-    end
   end
   neg_cons = neg_cons/1000
 

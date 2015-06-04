@@ -20,7 +20,7 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
   for t = 1:tW
     # INTERPOLATION
     wp_int =
-      interpolatev_A(wp[:, :, :, :, t], wgrid[:, t], agrid, bgrid, zgrid)
+      interpolateV(wp[:, :, :, :, t], wgrid[:, t], agrid, bgrid, zgrid)
 
     # Bond Choice
     for i = 1:size(yit,1)
