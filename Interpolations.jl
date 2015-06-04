@@ -23,7 +23,7 @@ function interpolateV(v::Array{Float64, 4}, xgrid::Array{Float64, 1},
   push!(xabz, agrid)
   push!(xabz, bgrid)
   push!(xabz, zgrid)
-  return lininterp(v, xabz)
+  return Lininterp(v, xabz)
 end
 
 #######################################################################################
@@ -34,5 +34,5 @@ function interpolateV(v::Array{Float64, 2}, xgrid::Array{Float64, 1},
   xy = Array{Float64, 1}[]
   push!(xy, xgrid)
   push!(xy, ygrid)
-  return lininterp(v, xy)
+  return Lininterp(v, xy)
 end

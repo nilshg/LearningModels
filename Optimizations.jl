@@ -106,7 +106,7 @@ end
 ################################################################################
 
 function bellOpt(w::Float64, y::Float64, a::Float64, b::Float64, z::Float64,
-                 wmin::Float64, v_int::lininterp, yln::LogNormal, k::Array,
+                 wmin::Float64, v_int::Lininterp, yln::LogNormal, k::Array,
                  ρ::Float64, r::Float64, δ::Float64)
 
   x = w + y
@@ -144,7 +144,7 @@ end
 ################################################################################
 
 function bellOpt_TRANS(w::Float64, y::Float64, pension::Float64, wmin::Float64,
-                       v_int::lininterp, r::Float64, δ::Float64)
+                       v_int::Lininterp, r::Float64, δ::Float64)
 
   x = w + y
 
