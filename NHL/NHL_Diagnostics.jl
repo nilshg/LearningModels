@@ -31,7 +31,7 @@ function plotv(v::Array{Float64, 4}, wg::Array, hg::Array, yg::Array, ydim::Stri
 end
 
 function plotv(v::Array{Float64, 3}, wg::Array{Float64, 2}, yg::Array{Float64, 1},
-               t::Int64, heading::String)
+               t::Int64; heading::String = "")
 
   xg, yg = meshgrid(wg[:, t], yg[:])
 
@@ -145,7 +145,7 @@ end
 # Variance of consumption and asset series
 function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
                         pension::Array, wgrid::Array, wgrid_R::Array,
-                        plot::Bool)
+                        plot::Bool = true)
 
   med_c = Array(Float64, size(c,2))
   med_w = similar(med_c)
@@ -239,8 +239,8 @@ function plot_beliefs_realizations()
   plt.show()
 end
 
-function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array,
-                       figtext::String)
+function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array;
+                       figtext::String = "")
   α_mid = convert(Int64, round(size(c_x,2)/2))
   β_mid = convert(Int64, round(size(c_x,3)/2))
   z_mid = convert(Int64, round(size(c_x,4)/2))
