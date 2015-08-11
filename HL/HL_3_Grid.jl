@@ -64,7 +64,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   @printf "\t3.2 Habit Grid\n"
   hgrid = Array(Float64, (hpoints, tW))
   for t = 1:tW
-      hgrid[:, t] = linspace(0.1, 2*ymaxbelief[t], hpoints)
+      hgrid[:, t] = linspace(0.1, 1.5*ymaxbelief[t], hpoints)
   end
 
   @printf "\t3.3 Grids for α, β, z\n"
@@ -107,8 +107,10 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
     guvgrid_R = reshape(guvgrid_R_org, 1, 7200)
     guvgrid_R = unique(reshape(guvgrid_R_org, 12, 600), 2)
     wgrid_R = Array(Float64, (wpoints_R, tR))
+    hgrid_R = Array(Float64, (hpoints_R, tR))
     for t = 1:30
       wgrid_R[:, t] = linspace(guvgrid_R[1, t], guvgrid_R[end, t], wpoints_R)
+      hgrid_R[:, t] = linspace(0.1, 0.5*wgrid_R[end, t], hpoints_R)
     end
   else
     wminR = Array(Float64, (1, tR))

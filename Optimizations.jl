@@ -31,17 +31,18 @@ using ApproXD, Distributions, Grid, Optim, QuantEcon
 
 function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
                  z::Float64, wmin::Float64, v_int::CoordInterpGrid,
-                 yln::LogNormal, k::Array, r::Float64, λ::Float64, δ::Float64)
+                 yln::LogNormal, k::Array, ρ::Float64, r::Float64, λ::Float64,
+                 δ::Float64)
 
    x = w + y
 
   function EVprime(w′::Float64, h=h, a=a, b=b, z=z, yln=yln, k=k, v_int=v_int,
-                   λ=λ)
+                   λ=λ, ρ=ρ)
 
     h′ = (1-λ)*h + λ*(x - w′)
 
     function EVp(y::Array{Float64,1}, w′=w′, h′=h′, v_int = v_int, yln = yln,
-                 k=k, a=a, b=b, z=z)
+                 k=k, a=a, b=b, z=z, ρ=ρ)
       ey = meanlogx(yln)
       result = similar(y)
       @inbounds for i = 1:size(y, 1)
@@ -49,7 +50,7 @@ function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
           v_int[w′ + y[i], h′,
                 a + k[1]*(y[i]- ey),
                 b + k[2]*(y[i]- ey),
-                z + k[3]*(y[i]- ey)]*pdf(yln, y[i])
+                ρ*z + k[3]*(y[i]- ey)]*pdf(yln, y[i])
       end
       result
     end
@@ -72,13 +73,13 @@ end
 ################################################################################
 
 function bellOpt_TRANS(w::Float64, h::Float64, y::Float64, pension::Float64,
-                       wmin::Float64, v_int::CoordInterpGrid,
+                       wmin::Float64, v_int::Lininterp,
                        r::Float64, δ::Float64, λ::Float64)
 
   x = w + y
 
   Blmn(w′::Float64) = -(u(x - w′, h) +
-                          δ*v_int[r*w′, (1-λ)*h + λ*(x-w′), pension])
+                      δ*getValue(v_int, [r*w′, (1-λ)*h + λ*(x-w′), pension])[1])
 
   optimum = optimize(Blmn, wmin/r, x)
   w′ = optimum.minimum
@@ -90,11 +91,12 @@ end
 ################################################################################
 
 function bellOpt_R(w::Float64, h::Float64, y::Float64, wmin::Float64,
-                   v_int::CoordInterpGrid, r::Float64, δ::Float64, λ::Float64)
+                   v_int::Lininterp, r::Float64, δ::Float64, λ::Float64)
 
   x = w + y
 
-  Blmn(w′) = -(u(x - w′, h) + δ*v_int[r*w′, (1-λ)*h + λ*(x-w′), y])
+  Blmn(w′) = -(u(x - w′, h)
+             + δ*getValue(v_int, [r*w′, (1-λ)*h + λ*(x-w′), y])[1])
 
   optimum = optimize(Blmn, wmin/r, x)
   w′ = optimum.minimum
@@ -111,9 +113,10 @@ function bellOpt(w::Float64, y::Float64, a::Float64, b::Float64, z::Float64,
 
   x = w + y
 
-  function EVprime(w′::Float64, a=a, b=b, z=z, yln=yln, k=k, v_int=v_int)
+  function EVprime(w′::Float64, a=a, b=b, z=z, yln=yln, k=k, v_int=v_int, ρ=ρ)
 
-    function EVp(y::Array{Float64,1}, w′=w′, v_int=v_int, yln=yln, a=a, b=b, z=z)
+    function EVp(y::Array{Float64,1}, w′=w′, v_int=v_int, yln=yln,
+                 a=a, b=b, z=z, ρ=ρ)
       ey = meanlogx(yln)
       result = similar(y)
       for i = 1:size(y, 1)
@@ -149,23 +152,6 @@ function bellOpt_TRANS(w::Float64, y::Float64, pension::Float64, wmin::Float64,
   x = w + y
 
   Blmn(w′) = -( u(x-w′) + δ*(getValue(v_int, [r*w′ + pension, pension])[1]) )
-
-  optimum = optimize(Blmn, wmin/r, x)
-  w′ = optimum.minimum
-  vopt = -(optimum.f_minimum)
-
-  return w′, vopt
-end
-
-################################################################################
-
-
-function bellOpt_R(w::Float64, y::Float64, wmin::Float64, v_int::CoordInterpGrid,
-                   r::Float64, δ::Float64)
-
-  x = w + y
-
-  Blmn(w′) = -(u(x - w′) + δ*v_int[r*w′, y])
 
   optimum = optimize(Blmn, wmin/r, x)
   w′ = optimum.minimum

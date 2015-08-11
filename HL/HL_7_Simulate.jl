@@ -29,7 +29,8 @@ function simulate(wp::Array{Float64, 6}, wgrid::Array{Float64},
   @printf "\tSimulating %d periods of working life...\n" tW
   for t = 1:tW
     # INTERPOLATION
-    wp_int = interpolatev(wp, wgrid, hgrid, agrid, bgrid, zgrid, t)
+    wp_int = interpolateV(wp[:,:,:,:,:,t], wgrid[:,t], hgrid[:,t],
+                          agrid, bgrid, zgrid)
 
     # Bond Choice
     for i = 1:size(yit,1)
@@ -44,7 +45,7 @@ function simulate(wp::Array{Float64, 6}, wgrid::Array{Float64},
 
       if t < tW
         w_t[i, t+1] = r*wp_t[i, t]
-        h_t[i, t+1] = (1-λ)*ht + λ*c_t[i, t]
+        h_t[i, t+1] = min((1-λ)*ht + λ*c_t[i, t], 0.005)
       end
     end
   end
@@ -70,7 +71,8 @@ function simulate(wp::Array{Float64, 6}, wgrid::Array{Float64},
 
   for t = (tW+1):(tW+tR)
     negconscounter = 0
-    wp_int = interpolatev(wp_R, wgrid_R, hgrid_R, ygrid_R, t-tW)
+    wp_int =
+      interpolateV(wp_R[:,:,:,t-tW], wgrid_R[:,t-tW], hgrid_R[:,t-tW], ygrid_R)
 
     for  i = 1:size(yit,1)
       wt = w_t[i, t]
@@ -78,17 +80,12 @@ function simulate(wp::Array{Float64, 6}, wgrid::Array{Float64},
       yt = pension[i][1]
       xt = wt + yt
 
-      wp_t[i, t] = wp_int[xt, ht, yt]
+      wp_t[i, t] = getValue(wp_int, [xt, ht, yt])[1]
       c_t[i, t] = xt - wp_t[i, t]
-
-      if c_t[i, t] < 0.0 && negconscounter < 5
-        @printf "Warning, neg cons at wt=%.3f, ht=%.3f, yt=%.3f, t=%d\n" wt ht yt t
-        negconscounter +=  1
-      end
 
       if t < tW + tR
         w_t[i, t+1] = r*wp_t[i, t]
-        h_t[i, t+1] = (1-λ)*ht + λ*c_t[i, t]
+        h_t[i, t+1] = min((1-λ)*ht + λ*c_t[i, t], 0.005)
       end
     end
   end
