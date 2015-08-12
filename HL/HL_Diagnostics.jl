@@ -2,23 +2,8 @@
 ############################## PLOTS - plotting functions #############################
 #######################################################################################
 
-# Contains:
-# plotyhist(agent, yit):
-#     Plots the income realizations and beliefs of one agent
-# plotv(v::Array{Float64, 6}, wg, hg, ag, bg, zg, ydim, a, b, z, t):
-#     Plots 3D Value function with wealth on x-axis and habits, or belief about one
-#     of the components of the belief vector on y-axis (ydim can be "h", "a", "b" or "z")
-# plotv(v::Array{Float64, 4}, wg, hg, yg, h, y, ydim, t):
-#     Plots 3D retirement Value function with habits, wealth on x-axis and habit or
-#     pension income on y axis
-# plotv(v::Array{Float64, 5}, wg, ag, bg, zg, ydim, t)
-#     Plots 3D value function w/o habits with wealth on x-axis and belief on y-axis
-# plotv(v::Array{Float64, 3}, wgrid, ygrid, t):
-#     Plots 3D retirement value function w/o habits
-# plotwd(w_t, periods, δ)
-#     Plots
-
-#######################################################################################
+using PyPlot, PyCall
+@pyimport seaborn as sns
 
 function plotv(v::Array{Float64, 6}, wg::Array, hg::Array, ag::Array, bg::Array, zg::Array,
                ydim::String, h::Int64, a::Int64, b::Int64, z::Int64, t::Int64, heading::String)
@@ -83,3 +68,20 @@ function plotv(v::Array{Float64, 5}, wg::Array, ag::Array, bg::Array, zg::Array,
 end
 
 #######################################################################################
+
+function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
+
+  @assert length(periods) == 4
+
+  fig, ax = PyPlot.subplots(2, 2, sharex=true, sharey=true)
+  ax[1,1][:hist](w_t[:, periods[1]], bins = 100)
+  ax[1,1][:set_title]("Period "*string(periods[1]))
+  ax[1,2][:hist](w_t[:, periods[2]], bins = 100)
+  ax[1,2][:set_title]("Period "*string(periods[2]))
+  ax[2,1][:hist](w_t[:, periods[3]], bins = 100)
+  ax[2,1][:set_title]("Period "*string(periods[3]))
+  ax[2,2][:hist](w_t[:, periods[4]], bins = 100)
+  ax[2,2][:set_title]("Period "*string(periods[4]))
+  fig[:suptitle](L"Wealth Distributions, $\delta$="*string(δ))
+  plt.show()
+end

@@ -1,7 +1,6 @@
-using DataFrames, PyPlot
-include("../Plots.jl")
 include("../1_Income.jl")
 include("../2_Learning.jl")
+include("HL_Diagnostics.jl")
 include("HL_3_Grid.jl")
 include("HL_4_Retirement.jl")
 include("HL_5_Transition.jl")
@@ -9,7 +8,6 @@ include("HL_7_Simulate.jl")
 
 nprocs() == CPU_CORES || addprocs(CPU_CORES-1)
 @everywhere begin
-  using Distributions, Grid, Optim, QuantEcon
   path=("C:/Users/tew207/Documents/GitHub/LearningModels/")
   include(path*"Optimizations.jl")
   include(path*"Interpolations.jl")

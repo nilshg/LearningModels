@@ -2,6 +2,8 @@
 ############################## BELLMAN RECURSION ###############################
 ################################################################################
 
+using Distributions
+
 function solveWorkingLife(v::Array, wp::Array, wgrid::Array, hgrid::Array,
                           agrid::Array, bgrid::Array, zgrid::Array,
                           stdy::Array, r::Float64, k::Array, δ::Float64,
@@ -9,20 +11,17 @@ function solveWorkingLife(v::Array, wp::Array, wgrid::Array, hgrid::Array,
 
   @printf "6. Recursively solve for optimal decision rules\n"
   @printf "\tSolving the problem on %d points\n" length(v)/size(wgrid,2)
-
+  tic()
   for t = (size(wgrid,2)-1):-1:1
-    @printf "     Period: %d out of %d\n" t size(wgrid,2)
-
     # INTERPOLATION
     v_interpol = interpolateV(v[:,:,:,:,:,t+1],
                               wgrid[:,t+1], hgrid[:,t+1], agrid, bgrid, zgrid)
 
+    # MAXIMIZATION
     wpnow = SharedArray(Float64, (size(v[:,:,:,:,:,1])), pids=procs())
     vnow = similar(wpnow)
-
-    # MAXIMIZATION
     wmin = wgrid[1, t+1]
-    tic()
+
     @inbounds @sync @parallel for w = 1:size(wgrid,1)
       wt = wgrid[w, t]
       for h = 1:size(hgrid,1), a = 1:size(agrid,1), b = 1:size(bgrid,1)
@@ -52,7 +51,7 @@ function solveWorkingLife(v::Array, wp::Array, wgrid::Array, hgrid::Array,
     wp[:,:,:,:,:,t] = sdata(wpnow)
 
     mv = checkmonotonicity(v[:,:,:,:,:,t])
-    @printf "\tMonotonicity violations: w=%d, h=%d, a=%d, b=%d, z=%d\n" mv[1] mv[2] mv[3] mv[4] mv[5]
+    @printf "\tMonotonicity violations: w=%d, h=%d, a=%d, b=%d, z=%d, t=%d\n" mv[1] mv[2] mv[3] mv[4] mv[5] t
   end
   @printf "\tMaximization took %d seconds\n" toq()
 

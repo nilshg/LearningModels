@@ -47,7 +47,7 @@ function plotv(v::Array{Float64, 3}, wg::Array{Float64, 2}, yg::Array{Float64, 1
   plt.show()
 end
 
-
+#######################################################################################
 
 # Plot value and policy functions
 function plot_value_policy(tw::Int64, tr::Int64)
@@ -60,6 +60,8 @@ function plot_value_policy(tw::Int64, tr::Int64)
   plotv(wp_R, wgrid_R, ygrid_R, tr,
       "Retirement policy function, period "*string(tr))
 end
+
+#######################################################################################
 
 function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
 
