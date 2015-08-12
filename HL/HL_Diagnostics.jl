@@ -76,8 +76,8 @@ function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
 
   @assert size(periods,1) == 4
 
-  fig, axes = PyPlot.subplots(2, 2, sharex=true, sharey=true)
-  for (i,ax) in enumerate(reshape(axes,4,1))
+  fig, axs = PyPlot.subplots(2, 2, sharex=true, sharey=true)
+  for (i,ax) in enumerate(reshape(axs,4,1))
     ax[:hist](w_t[:, periods[i]], bins = 100)
     ax[:set_title]("Period "*string(periods[i]))
   end
