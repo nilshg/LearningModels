@@ -5,30 +5,39 @@
 using PyCall, PyPlot, QuantEcon
 @pyimport seaborn as sns
 
+#######################################################################################
 
-function plotv(v::Array{Float64, 4}, wg::Array, hg::Array, yg::Array, ydim::String,
-               h::Int64, y::Int64, t::Int64, heading::String)
+function plotv(v::Array{Float64, 5}, wg::Array, ag::Array, bg::Array, zg::Array,
+               ydim::String, a::Int64, b::Int64, z::Int64, t::Int64)
 
   fig = figure(figsize=(10,8))
   ax = fig[:add_subplot](111, projection="3d")
 
-  if ydim == "h"
-    x1g, x2g = meshgrid(wg[:, t], hg[:, t])
-    x3g = v[:, :, y, t]'
-    ax[:set_ylabel]("Habit Level", fontsize=14)
-  elseif ydim == "y"
-    x1g, x2g = meshgrid(wg[:, t], yg[:, t])
-    x3g = reshape(v[:, h, :, t]', size(v, 1), size(v, 3))
-    ax[:set_ylabel]("Pension Level", fontsize=14)
+  if ydim == "a"
+    x1g, x2g = meshgrid(wg[:, t], ag)
+    x3g = v[:, :, b, z, t]
+    ax[:set_ylabel]("Belief Level (\$\\alpha\$)", fontsize=14)
+    title("v[:,:,$b,$z,$t]")
+  elseif ydim == "b"
+    x1g, x2g = meshgrid(wg[:, t], bg)
+    x3g = reshape(v[:, a, :, z, t]', size(v, 1), size(v, 3))
+    ax[:set_ylabel]("Belief Level (\$\\beta\$)", fontsize=14)
+    title("v[:,$a,:,$z,$t]")
+  elseif ydim == "z"
+    x1g, x2g = meshgrid(wg[:, t], zg)
+    x3g = reshape(v[:, a, b, :, t]', size(v, 1), size(v, 4))
+    ax[:set_ylabel]("Belief Level (z)", fontsize=14)
+    title("v[:,$a,$b,:,$t]")
   end
 
-  ax[:plot_surface](x1g, x2g, x3g, rstride = 1, cstride = 1,
+  ax[:plot_surface](x1g', x2g', x3g, rstride = 1, cstride = 1,
                     cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
   ax[:set_xlabel]("Wealth Level", fontsize=14)
   ax[:set_zlabel]("Value", fontsize=14)
-  title(heading)
   plt.show()
 end
+
+#######################################################################################
 
 function plotv(v::Array{Float64, 3}, wg::Array{Float64, 2}, yg::Array{Float64, 1},
                t::Int64; heading::String = "")
@@ -65,17 +74,13 @@ end
 
 function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
 
-  @assert length(periods) == 4
+  @assert size(periods,1) == 4
 
-  fig, ax = PyPlot.subplots(2, 2, sharex=true, sharey=true)
-  ax[1,1][:hist](w_t[:, periods[1]], bins = 100)
-  ax[1,1][:set_title]("Period "*string(periods[1]))
-  ax[1,2][:hist](w_t[:, periods[2]], bins = 100)
-  ax[1,2][:set_title]("Period "*string(periods[2]))
-  ax[2,1][:hist](w_t[:, periods[3]], bins = 100)
-  ax[2,1][:set_title]("Period "*string(periods[3]))
-  ax[2,2][:hist](w_t[:, periods[4]], bins = 100)
-  ax[2,2][:set_title]("Period "*string(periods[4]))
+  fig, axes = PyPlot.subplots(2, 2, sharex=true, sharey=true)
+  for (i,ax) in enumerate(reshape(axes,4,1))
+    ax[:hist](w_t[:, periods[i]], bins = 100)
+    ax[:set_title]("Period "*string(periods[i]))
+  end
   fig[:suptitle](L"Wealth Distributions, $\delta$="*string(δ))
   plt.show()
 end
@@ -118,7 +123,7 @@ function plothistory(i::Int64, c_t::Array{Float64, 2}, w_t::Array{Float64, 2},
   plt.show()
 end
 
-
+#######################################################################################
 ## Simulation Results ##
 
 function constrained_negative(w::Array{Float64,2}, wgrid::Array{Float64,2},
@@ -128,16 +133,16 @@ function constrained_negative(w::Array{Float64,2}, wgrid::Array{Float64,2},
   wmin = [wgrid[1, :] wgrid_R[1, :]]
 
   for t = 1:size(wgrid,2), i = 1:size(wp,1)
-      if abs(w[i, t] - wmin[t]) < 1e-3
-        constrained[t] += 1/1000
-      end
+    if abs(w[i, t] - wmin[t]) < 1e-3
+      constrained[t] += 1/1000
+    end
   end
 
   neg_cons = similar(constrained)
   for t = 1:70, i = 1:size(w,1)
-      if c_t[i, t] < 0
-        neg_cons[t] += 1
-      end
+    if c_t[i, t] < 0
+      neg_cons[t] += 1
+    end
   end
   neg_cons = neg_cons/1000
 
@@ -150,11 +155,8 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
                         plot::Bool = true)
 
   med_c = Array(Float64, size(c,2))
-  med_w = similar(med_c)
-  mean_w = similar(med_c)
-  var_c = similar(med_c)
-  var_w = similar(var_c)
-  var_y = similar(var_c)
+  med_w = similar(med_c); mean_w = similar(med_c)
+  var_c = similar(med_c); var_w = similar(var_c); var_y = similar(var_c)
 
   for t = 1:size(c,2)
     med_c[t] = median(c[:, t])
@@ -162,12 +164,7 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
     mean_w[t] = mean(w[:, t])
     var_c[t] = var(c[:, t])
     var_w[t] = var(w[:, t])
-
-    if t <= size(y,2)
-      var_y[t] = var(y[:, t])
-    else
-      var_y[t] = var(pension)
-    end
+    t <= size(y,2) ? var_y[t] = var(y[:, t]) : var_y[t] = var(pension)
   end
 
   if plot
@@ -190,25 +187,22 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
   return med_c, med_w, mean_w, var_c, var_w, var_y
 end
 
+################################################################################
 # Aggregate income, consumption, assets
 function aggregates(c::Array{Float64,2}, w::Array{Float64,2},
                     y::Array{Float64,2}, pension::Array)
   agg_c = Array(Float64, size(c,2))
-  agg_w = similar(agg_c)
-  agg_y = similar(agg_c)
+  agg_w = similar(agg_c);  agg_y = similar(agg_c)
 
   for t = 1:size(c,2)
     agg_c[t] = sum(c[:, t])
     agg_w[t] = sum(w[:, t])
-    if t <= tW
-      agg_y[t] = sum(y[:, t])
-    else
-      agg_y[t] = sum(pension)
-    end
+    t <= tW ? agg_y[t] = sum(y[:, t]) : agg_y[t] = sum(pension)
   end
   return agg_c, agg_w, agg_y
 end
 
+################################################################################
 # Beliefs vs grids vs realizations
 function plot_beliefs_realizations()
   ybelief = Array(Float64, (agents*bs, tW))
@@ -241,6 +235,7 @@ function plot_beliefs_realizations()
   plt.show()
 end
 
+################################################################################
 function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array;
                        figtext::String = "")
   α_mid = convert(Int64, round(size(c_x,2)/2))
