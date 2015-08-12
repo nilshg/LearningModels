@@ -3,23 +3,23 @@ include("../2_Learning.jl")
 include("NHL_3_Grid.jl")
 include("NHL_4_Retirement.jl")
 include("NHL_5_Transition.jl")
-include("NHL_6_Bellman.jl")
 include("NHL_7_Simulate.jl")
 include("NHL_Diagnostics.jl")
-include("../Chk_Monot.jl")
 
-nprocs()==CPU_CORES || addprocs(CPU_CORES-1)
-@printf "We're using %d processors (%d workers)\n" nprocs() nworkers()
-
-@everywhere include("C:/Users/tew207/My Documents/GitHub/LearningModels/Optimizations.jl")
-@everywhere include("C:/Users/tew207/My Documents/GitHub/LearningModels/Interpolations.jl")
-@everywhere include("C:/Users/tew207/My Documents/GitHub/LearningModels/Parameters.jl")
-
+nprocs() == CPU_CORES || addprocs(CPU_CORES-1)
+@everywhere begin
+  path=("C:/Users/tew207/My Documents/GitHub/LearningModels/")
+  include(path*"Optimizations.jl")
+  include(path*"Interpolations.jl")
+  include(path*"Parameters.jl")
+  include(path*"NHL_6_Bellman.jl")
+  include(path*"../Chk_Monot.jl")
+end
 
 # 1. Draw Income Distribution
 (yit, ymedian, pension) = incomeDistribution(
-    "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/LaborReal.dat",
-    "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/alfabeta.dat")
+  "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/LaborReal.dat",
+  "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/alfabeta.dat")
 
 # 2. Construct individual specific belief histories
 (s_f_i, stdy, k) = learning(yit, ρ, var_η, var_ɛ,
@@ -31,12 +31,11 @@ nprocs()==CPU_CORES || addprocs(CPU_CORES-1)
     "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN code/wealth.dat",
     "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/wealthR.dat")
 
-
 # 4. Solve Retirement Problem
 (v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ, σ)
 
 # 5.1 Solve Terminal Period Problem instead of 4. and 5.
-(wp_1, v_1, c_over_x_1) = solveTransition(wgrid, agrid, bgrid, zgrid, r, δ, 1.0)
+(wp_1, v_1, c_over_x_1) = solveTransition(wgrid, agrid, bgrid, zgrid, r, δ, 0.0334)
 
 @time (v_1, wp_1, c_over_x_1) =
   solveWorkingLife(v_1, wp_1, c_over_x_1, wgrid, agrid, bgrid, zgrid, stdy, k, r, δ)
