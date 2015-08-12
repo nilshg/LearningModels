@@ -6,7 +6,7 @@ using PyPlot, PyCall
 @pyimport seaborn as sns
 
 function plotv(v::Array{Float64, 6}, wg::Array, hg::Array, ag::Array, bg::Array, zg::Array,
-               ydim::String, h::Int64, a::Int64, b::Int64, z::Int64, t::Int64, heading::String)
+               ydim::String, h::Int64, a::Int64, b::Int64, z::Int64, t::Int64)
 
   fig = figure(figsize=(10,8))
   ax = fig[:add_subplot](111, projection="3d")
@@ -15,25 +15,28 @@ function plotv(v::Array{Float64, 6}, wg::Array, hg::Array, ag::Array, bg::Array,
     x1g, x2g = meshgrid(wg[:, t], hg[:, t])
     x3g = v[:, :, a, b, z, t]'
     ax[:set_ylabel]("Habit Level", fontsize=14)
+    title("v[:,:,$a,$b,$z,$t]")
   elseif ydim == "a"
     x1g, x2g = meshgrid(wg[:, t], ag)
     x3g = reshape(v[:, h, :, b, z, t]', size(v, 1), size(v, 3))
     ax[:set_ylabel](L"Belief Level ($\alpha$)", fontsize=14)
+    title("v[:,$h,:,$b,$z,$t]")
   elseif ydim == "b"
     x1g, x2g = meshgrid(wg[:, t], bg)
     x3g = reshape(v[:, h, a, :, z, t]', size(v, 1), size(v, 4))
     ax[:set_ylabel](L"Belief Level ($\beta$)", fontsize=14)
+    title("v[:,$h,$a,:,$z,$t]")
   elseif ydim == "z"
     x1g, x2g = meshgrid(wg[:, t], zg)
     x3g = reshape(v[:, h, a, b, :, t]', size(v, 1), size(v, 5))
     ax[:set_ylabel]("Belief Level (z)", fontsize=14)
+    title("v[:,$h,$a,$b,:,$t]")
   end
 
   ax[:plot_surface](x1g', x2g', x3g, rstride = 1, cstride = 1,
                     cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
   ax[:set_xlabel]("Wealth Level", fontsize=14)
   ax[:set_zlabel]("Value", fontsize=14)
-  title(heading)
   plt.show()
 end
 

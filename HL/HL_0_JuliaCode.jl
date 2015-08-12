@@ -1,10 +1,10 @@
 include("../1_Income.jl")
 include("../2_Learning.jl")
-include("HL_Diagnostics.jl")
 include("HL_3_Grid.jl")
 include("HL_4_Retirement.jl")
 include("HL_5_Transition.jl")
 include("HL_7_Simulate.jl")
+include("HL_Diagnostics.jl")
 
 nprocs() == CPU_CORES || addprocs(CPU_CORES-1)
 @everywhere begin
@@ -34,8 +34,8 @@ end
 (v_R, wp_R) = solveRetirement(wgrid_R, hgrid_R, ygrid_R, r, δ, λ)
 
 # 5. Solve Transition Problem
-(v, wp) = solveTransition(v_R, wgrid_R, hgrid_R, ygrid_R, wgrid, hgrid, agrid, bgrid,
-                          zgrid, ymedian, r, δ, λ)
+(v, wp) = solveTransition(v_R, wgrid_R, hgrid_R, ygrid_R, wgrid, hgrid,
+                          agrid, bgrid, zgrid, ymedian, r, δ, λ)
 
 # 6. Solve Working Life Problem
 (v, wp) = solveWorkingLife(v, wp, wgrid, hgrid, agrid, bgrid, zgrid,
@@ -43,5 +43,6 @@ end
 
 # 7. Simulate Economy
 (c_t, h_t, w_t, wp_t) = simulate(wp, wgrid, hgrid, agrid, bgrid, zgrid,
-                                 wgrid_R, hgrid_R, ygrid_R, yit, ymedian,
-                                 s_f_i, wp_R, r, λ)
+                  wgrid_R, hgrid_R, ygrid_R, yit, ymedian, s_f_i, wp_R, r, λ)
+
+plotv(v, wgrid, hgrid, agrid, bgrid, zgrid, "z", 3, 2, 5, 4, 40)
