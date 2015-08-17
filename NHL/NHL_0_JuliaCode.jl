@@ -1,19 +1,18 @@
-include("../1_Income.jl")
-include("../2_Learning.jl")
-include("NHL_3_Grid.jl")
-include("NHL_4_Retirement.jl")
-include("NHL_5_Transition.jl")
-include("NHL_7_Simulate.jl")
-include("NHL_Diagnostics.jl")
-
 nprocs() == CPU_CORES || addprocs(CPU_CORES-1)
 @everywhere begin
   path=("C:/Users/tew207/My Documents/GitHub/LearningModels/")
   include(path*"Optimizations.jl")
   include(path*"Interpolations.jl")
   include(path*"Parameters.jl")
-  include(path*"NHL_6_Bellman.jl")
-  include(path*"../Chk_Monot.jl")
+  include(path*"NHL/NHL_6_Bellman.jl")
+  include(path*"Chk_Monot.jl")
+  include("../1_Income.jl")
+  include("/2_Learning.jl")
+  include("NHL_3_Grid.jl")
+  include("NHL_4_Retirement.jl")
+  include("NHL_5_Transition.jl")
+  include("NHL_7_Simulate.jl")
+  include("NHL_Diagnostics.jl")
 end
 
 # 1. Draw Income Distribution

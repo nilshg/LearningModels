@@ -46,3 +46,4 @@ end
                   wgrid_R, hgrid_R, ygrid_R, yit, ymedian, s_f_i, wp_R, r, λ)
 
 plotv(v, wgrid, hgrid, agrid, bgrid, zgrid, "z", 3, 2, 5, 4, 40)
+plotdistributions(w_t, [5, 15, 25,40], δ)

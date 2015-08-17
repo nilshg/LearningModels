@@ -17,12 +17,14 @@ bs = 1000              # Different alpha/beta combinations in the population;
 # Parameters of income process (HIP)
 μₐ = 2.0               # Mean of the income intercept
 μᵦ = 0.009              # Mean of income growth rates
-var_α = 0.005          # Cross-sectional variance of alpha (std = 0.07)
-var_β = 0.00037        # Cross-sectional variance of beta (std = 0.019)
+var_α = 0.005          # Cross-sectional variance of α (std = 0.07)
+var_β = 0.00037        # Cross-sectional variance of β (std = 0.019)
+corr_αβ = -0.23        # Cross-sectiional correlation of α, β (cov = -0.0003)
 var_η = 0.029          # Variance of persistent shock (std = 0.17)
 var_ɛ = 0.047          # Variance of transitory shock (std = 0.22)
 ρ = 0.82               # Persistence of AR(1) component of income
 br = 40                # Period of structural break (has to be <T)
+y_adj = 0.4            # For comparability with Guvenen's code
 
 # Parameters of income process (RIP)
 var_η_RIP = 0.015      # σ²(η) (std = 0.122)
