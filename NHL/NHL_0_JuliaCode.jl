@@ -22,7 +22,7 @@ end
 
 # 2. Construct individual specific belief histories
 (s_f_i, stdy, k) = learning(yit, ρ, var_η, var_ɛ,
-    "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/SNext_in.dat")
+    "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code")
 
 # 3. Construct Grids
 (wgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
