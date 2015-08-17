@@ -41,9 +41,10 @@ function incomeDistribution(ypath::String, abpath::String)
       return rratio*avgy
   end
 
-  pension = Array(Float64, size(yit,1))
-  for i = 1:size(yit, 1)
-    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, mean(yit))
+  pension = Array(Float64, 100000)
+  benchmark = mean(yit)
+  for i = 1:100000
+    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, benchmark)
   end
 
   return yit, ymedian, pension, α, β
@@ -108,8 +109,9 @@ function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Flo
   end
 
   pension = Array(Float64, size(yit,1))
+  benchmark = mean(yit)
   for i = 1:size(yit, 1)
-    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, mean(yit))
+    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, benchmark)
   end
 
   return yit, ymedian, pension, α, β
