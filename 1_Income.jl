@@ -1,19 +1,8 @@
 ################################################################################
 ########################### INCOME DISTRIBUTION ################################
 ################################################################################
-#
-# Contains:
-#
-# (yit, alpha, beta, ymedian) = incomeDistribution(ypath, abpath):
-#   - Get yit from Guvenen's data
-#
-# (yit, alpha, beta, ymedian) = incomeDistribution(agents, μₐ, μᵦ, var_a, var_b,
-#                                                  var_ϵ, ρ, var_η, br, tW)
-#   - Draw a new income distribution yit with break parameters br
-#
-#################################################################################
 
-using DataFrames
+using Distributions
 
 #################################################################################
 
@@ -32,11 +21,10 @@ function incomeDistribution(ypath::String, abpath::String)
   @printf "\tMedian income in period 40 is %.2f\n" ymedian
 
   ybari = mean(yit, 2)[:]
-  (k_0, k_1) = linreg(yit[:, 40], ybari)
-  avgy = mean(yit)
-  k_0
-  k_1
-  function get_pension{T<:Float64}(y::T, k_0::T, k_1::T, avgy::T)
+  (γ_0, γ_1) = linreg(yit[:, 40], ybari)
+
+  function get_pension(y::Float64, k_0::Float64, k_1::Float64,
+                       avgy::Float64)
       ytilde = (k_0 + k_1*y)/avgy
       rratio = 0.0
 
@@ -55,88 +43,76 @@ function incomeDistribution(ypath::String, abpath::String)
 
   pension = Array(Float64, size(yit,1))
   for i = 1:size(yit, 1)
-    pension[i] = get_pension(yit[i, 40], k_0, k_1, avgy)
+    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, mean(yit))
   end
 
-  return yit, ymedian, pension
+  return yit, ymedian, pension, α, β
 end
 
 #################################################################################
 
 function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Float64,
-                            var_a::Float64, var_b::Float64, var_ɛ::Float64,
-                            var_η::Float64, ρ::Float64, br::Int64, tW::Int64)
+               var_α::Float64, var_β::Float64, cov_αβ::Float64, var_ɛ::Float64,
+               var_η::Float64, ρ::Float64, y_adj::Float64, tW::Int64)
+
+  min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
 
   @printf "1. Draw an income distribution\n"
   # Draw some alphas and betas
-  α = Array(Float64, bs)
-  β_1 = Array(Float64, bs)
+  ab = MvNormal([μₐ; μᵦ], [var_α cov_αβ; cov_αβ var_β])
+  draw = rand(ab, bs)'
   for i = 1:bs
-      α[i] = μₐ + sqrt(var_a)*randn()
-      β_1[i] = μᵦ + sqrt(var_b)*randn()
+    while draw[i,2] < min_β
+      draw[i,2] = min_β + abs(draw[i,2]-min_β)/50.0
+    end
   end
 
-  # Sort
-  sort!(β_1);
-
-  β_2 = Array(Float64, length(β_1))
-  for i in [1:length(β_2)]
-      if i < length(β_2)/2
-          β_2[i] = β_1[i] + sqrt(var_b)*randn()
-      else
-          β_2[i] = β_1[i] + sqrt(var_b)*randn()+0.015
-      end
-  end
-
-  # Create one beta matrix that holds each agents beta for each year
-  β = Array(Float64, agents*bs, tW)
-
-  for t = 1:tW
-      for i = 1:bs
-          if t < br
-              β[(i-1)*agents+1:agents*i,t] = β_1[i]
-          else
-              β[(i-1)*agents+1:agents*i,t] = β_2[i]
-          end
-      end
-  end
-
-  α = reshape(repmat(α,1,100)', agents*bs, 1)
+  α = reshape(repmat(draw[:, 1],1,100)', agents*bs, 1)
+  β = reshape(repmat(draw[:, 2],1,100)', agents*bs, 1)
 
   # Draw the income distribution:
   yit = zeros(bs*agents, tW)
   z = zeros(bs*agents, tW)
+  z[:, 1] = sqrt(var_η/(1-ρ^2))*randn(agents*bs)
 
-  for t = 1:tW
-      for i = 1:bs*agents
-          yit[i, t] = exp(α[i] + β[i, t]*t + z[t] + sqrt(var_ɛ)*randn())
-          if t < tW
-              z[i, t+1] = ρ*z[i, t] + sqrt(var_η)*randn()
-          end
-      end
+  for t = 1:tW, i = 1:bs*agents
+    yit[i, t] = y_adj + exp(α[i] + β[i]*t + z[i, t] + sqrt(var_ɛ)*randn())
+    if t < tW
+      z[i, t+1] = ρ*z[i, t] + sqrt(var_η)*randn()
+    end
   end
-  @printf "\tβ=[%.2f, %.2f], β_2=[%.2f, %.2f]\n" minimum(β_1) maximum(β_1) minimum(β_2) maximum(β_2)
 
-  # Calculate median income in last period for calculation of retirement benefits
+  # Median income in last period for calculation of retirement benefits
   ymedian = median(yit[:, end])
   @printf "\tMedian income in period 40 is %.2f\n" ymedian
 
-  pension = Array(Float64, agents*bs)
-  for i = 1:agents*bs # Directly copied out of Guvenen's code
-    ytemp = yit[i, end]
-    if (ytemp<0.3*ymedian)
-      yfixed=0.9*ytemp
-    elseif (ytemp<=2.0*ymedian)
-      yfixed=0.27*ymedian+0.32*(ytemp-0.3*ymedian)
-    elseif (ytemp<4.1*ymedian)
-      yfixed = 0.81*ymedian+0.15*(ytemp-2.0*ymedian)
-    else
-      yfixed = 1.1*ymedian
-    end
-    pension[i] = 0.715*yfixed
+  ybari = mean(yit, 2)[:]
+  (γ_0, γ_1) = linreg(yit[:, 40], ybari)
+
+  function get_pension(y::Float64, k_0::Float64, k_1::Float64,
+                       avgy::Float64)
+      ytilde = (k_0 + k_1*y)/avgy
+      rratio = 0.0
+
+      if ytilde < 0.3
+          rratio = 0.9*ytilde
+      elseif ytilde <= 2.0
+          rratio = 0.27 + 0.32*(ytilde - 0.3)
+      elseif ytilde <= 4.1
+          rratio = 0.814 + 0.15*(ytilde - 2.0)
+      else
+          rratio = 1.129
+      end
+
+      return rratio*avgy
   end
 
-  return yit, α, β, ymedian, pension
+  pension = Array(Float64, size(yit,1))
+  for i = 1:size(yit, 1)
+    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, mean(yit))
+  end
+
+  return yit, ymedian, pension, α, β
 end
 
 ################################################################################
