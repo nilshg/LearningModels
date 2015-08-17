@@ -14,12 +14,21 @@ bs = 1000              # Different alpha/beta combinations in the population;
 λ = 0.8                # Persistence of habits (lambda=0 --> no persistence)
 σ = 2.0                # Coefficient of relative risk aversion
 
+# Paremeters for belief calculation
+fpu = 0.65             # Proportion of variance of beta that is known
+init_α = 2.0           # Initial belief about mean of beta
+init_β = 0.009         # Initial belief about mean of beta
+init_z = 0.0           # Initial belief about mean of z
+init_var_β = 0.01      # Initial belief about variance of beta
+init_var_z = 0.01      # Initial belief about ariance of z
+
 # Parameters of income process (HIP)
 μₐ = 2.0               # Mean of the income intercept
 μᵦ = 0.009              # Mean of income growth rates
 var_α = 0.005          # Cross-sectional variance of α (std = 0.07)
 var_β = 0.00037        # Cross-sectional variance of β (std = 0.019)
-corr_αβ = -0.23        # Cross-sectiional correlation of α, β (cov = -0.0003)
+corr_αβ = -0.25        # Cross-sectional correlation of α, β (cov = -0.0003)
+cov_αβ = corr_αβ*sqrt((1-fpu)*var_β*var_α)
 var_η = 0.029          # Variance of persistent shock (std = 0.17)
 var_ɛ = 0.047          # Variance of transitory shock (std = 0.22)
 ρ = 0.82               # Persistence of AR(1) component of income
@@ -30,13 +39,6 @@ y_adj = 0.4            # For comparability with Guvenen's code
 var_η_RIP = 0.015      # σ²(η) (std = 0.122)
 var_ɛ_RIP = 0.061      # σ²(ɛ) (std = 0.247)
 ρ_RIP = 0.988          # AR(1) persistence
-
-# Paremeters for belief calculation
-fpu = 0.65             # Proportion of variance of beta that is known
-init_β = 0.029         # Initial belief about mean of beta
-init_z = 0.0           # Initial belief about mean of z
-init_var_β = 0.01      # Initial belief about variance of beta
-init_var_z = 0.01      # Initial belief about ariance of z
 
 # Parameters for grid construction
 wpoints = 20           # Wealth grid points (working life)
