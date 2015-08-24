@@ -54,7 +54,7 @@ function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array, ygrid_R::Array,
   # MAXIMIZATION
   wmin = wgrid_R[1, 1]
 
-  for a = 1:size(agrid,1), b = 51:size(bgrid,1), z = 1:size(zgrid,1)
+  for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
     size(agrid,2)==1 ? at = agrid[a] : at = agrid[a,end]
     size(bgrid,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
     zt = 0.0
