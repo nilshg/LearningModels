@@ -37,7 +37,7 @@ function solveRetirement(wgrid_R::Array, ygrid_R::Array, r::Float64, δ::Float64
   end
 
   for t = (tR-2):-1:1
-    v_R_interpol = interpolatev(v_R, wgrid_R, ygrid_R, t+1)
+    v_R_interpol = interpolateV(v_R, wgrid_R, ygrid_R, t+1)
     wmin = wgrid_R[1, t+1]
     for w = 1:size(wgrid_R,1), y = 1:size(ygrid_R,1)
       (wp_R[w, y, t], v_R[w, y, t]) =

@@ -41,14 +41,14 @@ var_ɛ_RIP = 0.061      # σ²(ɛ) (std = 0.247)
 ρ_RIP = 0.988          # AR(1) persistence
 
 # Parameters for grid construction
-wpoints = 20           # Wealth grid points (working life)
-wpoints_R = 40         # Wealth grid points (retirement)
+wpoints = 25           # Wealth grid points (working life)
+wpoints_R = 160        # Wealth grid points (retirement)
 hpoints = 6            # Habit grid points (working life)
 hpoints_R = 35         # Habit grid points (retirement)
-ypoints_R = 30         # Pension points
+ypoints_R = 150        # Pension points
 wmaxR = 1000.0         # Maximum retirement wealth
 apoints = 3            # Grid points for beliefs about α
-bpoints = 8           # Grid points for beliefs about β
+bpoints = 8            # Grid points for beliefs about β
 zpoints = 7            # Grid points for beliefs about z
 zpoints_RIP = 32       # Grid points for RIP persistent shock
 epspoints = 2          # Grid points for RIP transitory shock

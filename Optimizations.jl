@@ -2,33 +2,11 @@
 ############# OPTIMIZATIONS.JL - solve value function optimization #############
 ################################################################################
 
-# Contains:
-# bellOpt(w, h, a, b, z, wmin, v_int, yln, r, λ, δ, t):
-#     Solve value function optimization for state (x,h,a,b,z) using
-#     Gauss-Legendre Quadrature
-#
-# bellOpt_TRANS(w, h, y, pension, wmin, v_int, R, dbeta, λ, t):
-#     Solve value function optimization for last period of working life
-#     with retirement income given by pension
-#
-# bellOpt_R(w, h, y, wmin, v_int, r, δ, λ, t)
-#     Solve retirement value function optimization with constant income
-#
-# bellOpt(w, a, b, z, wmin, v_int, yln, R, δ, t):
-#     Solve optimization problem without habits
-#
-# bellOpt_TRANS(w, y, pension, wmin, v_int, R, δ, t)
-#     Solve transition period optimizatoin problem without habits
-#
-# bellOpt_R(w, y, wmin, v_int, R, δ, t)
-#     Solve retirement optimization problem without habits
-
-################################################################################
-
 using ApproXD, Distributions, Grid, Optim, QuantEcon
 
 ################################################################################
 
+# Working life with habits
 function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
                  z::Float64, wmin::Float64, v_int::CoordInterpGrid,
                  yln::LogNormal, k::Array, ρ::Float64, r::Float64, λ::Float64,
@@ -72,6 +50,7 @@ end
 
 ################################################################################
 
+# Transition period with habits
 function bellOpt_TRANS(w::Float64, h::Float64, y::Float64, pension::Float64,
                        wmin::Float64, v_int::Lininterp,
                        r::Float64, δ::Float64, λ::Float64)
@@ -90,6 +69,7 @@ end
 
 ################################################################################
 
+# Retirement period with habits
 function bellOpt_R(w::Float64, h::Float64, y::Float64, wmin::Float64,
                    v_int::Lininterp, r::Float64, δ::Float64, λ::Float64)
 
@@ -107,6 +87,7 @@ end
 
 ################################################################################
 
+# Working life, no habits
 function bellOpt(w::Float64, y::Float64, a::Float64, b::Float64, z::Float64,
                  wmin::Float64, v_int::Lininterp, yln::LogNormal, k::Array,
                  ρ::Float64, r::Float64, δ::Float64)
@@ -146,6 +127,7 @@ end
 
 ################################################################################
 
+# Transition period, no habits
 function bellOpt_TRANS(w::Float64, y::Float64, pension::Float64, wmin::Float64,
                        v_int::Lininterp, r::Float64, δ::Float64)
 

@@ -4,7 +4,7 @@
 
 using Distributions
 
-#################################################################################
+################################################################################
 
 function incomeDistribution(ypath::String, abpath::String)
 
@@ -50,7 +50,7 @@ function incomeDistribution(ypath::String, abpath::String)
   return yit, ymedian, pension, α, β
 end
 
-#################################################################################
+################################################################################
 
 function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Float64,
                var_α::Float64, var_β::Float64, cov_αβ::Float64, var_ɛ::Float64,

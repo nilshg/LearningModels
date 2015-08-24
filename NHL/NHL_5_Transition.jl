@@ -1,6 +1,6 @@
-###################################################################################
-#########################    TRANSITION PROBLEM      ##############################
-###################################################################################
+################################################################################
+#########################    TRANSITION PROBLEM      ###########################
+################################################################################
 #
 # CONTAINS:
 #
@@ -9,16 +9,17 @@
 #   retirement value as E[V']
 #
 # solveTransition(wgrid, agrid, bgrid, zgrid, r, δ, tW)
-# - solves the transition problem with a simple V_{T+1}=0 approach, no retirement
+# - solves the transition problem with a simple V_{T+1}=0 approach,
+#   no retirement
 #
-###################################################################################
+################################################################################
 
 using Dierckx
 
 function get_pension(y::Float64, k_0::Float64, k_1::Float64, avgy::Float64)
   ytilde = (k_0 + k_1*y)/avgy
-  rratio = 0.0
 
+  rratio = 0.0
   if ytilde < 0.3
     rratio = 0.9*ytilde
   elseif ytilde <= 2.0
@@ -53,12 +54,13 @@ function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array, ygrid_R::Array,
   # MAXIMIZATION
   wmin = wgrid_R[1, 1]
 
-  for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
+  for a = 1:size(agrid,1), b = 51:size(bgrid,1), z = 1:size(zgrid,1)
     size(agrid,2)==1 ? at = agrid[a] : at = agrid[a,end]
     size(bgrid,2)==1 ? bt = bgrid[b] : bt = bgrid[b,end]
     zt = 0.0
 
     yt = exp(at + bt*tW + zt)
+    y_est = k_0 + k_1*exp(at + bt*tW + zt)
     pension = get_pension(yt, k_0, k_1, avgy)
 
     for w = 1:size(wgrid,1)
@@ -79,7 +81,7 @@ function solveTransition(v_R::Array{Float64, 3}, wgrid_R::Array, ygrid_R::Array,
     end
   end
 
-  return v, wp, c_over_x
+  return wp, v, c_over_x
 end
 
 ###################################################################################

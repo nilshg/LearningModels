@@ -24,7 +24,7 @@ function learning(path::String)
     ht = [1; t; 1]
     pt = p_f[:, :, t]
     k[:, t] = pt*ht.*(ht'*pt*ht + 0.047).^(-1.0)
-    stdy[t] = [sqrt(ht'*p_f[:, :, t]*ht + 0.047)][1]
+    stdy[t] = collect(sqrt(ht'*p_f[:, :, t]*ht + 0.047))[1]
   end
 
   return s_f_i, stdy, k

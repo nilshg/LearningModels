@@ -1,19 +1,16 @@
-nprocs() == CPU_CORES || addprocs(CPU_CORES-1)
-@everywhere begin
-  path=("C:/Users/tew207/My Documents/GitHub/LearningModels/")
-  include(path*"Optimizations.jl")
-  include(path*"Interpolations.jl")
-  include(path*"Parameters.jl")
-  include(path*"NHL/NHL_6_Bellman.jl")
-  include(path*"Chk_Monot.jl")
-  include("../1_Income.jl")
-  include("/2_Learning.jl")
-  include("NHL_3_Grid.jl")
-  include("NHL_4_Retirement.jl")
-  include("NHL_5_Transition.jl")
-  include("NHL_7_Simulate.jl")
-  include("NHL_Diagnostics.jl")
-end
+path=("C:/Users/tew207/My Documents/GitHub/LearningModels/")
+include(path*"Optimizations.jl")
+include(path*"Interpolations.jl")
+include(path*"Parameters.jl")
+include(path*"NHL/NHL_6_Bellman.jl")
+include(path*"Chk_Monot.jl")
+include(path*"1_Income.jl")
+include(path*"2_Learning.jl")
+include(path*"NHL/NHL_3_Grid.jl")
+include(path*"NHL/NHL_4_Retirement.jl")
+include(path*"NHL/NHL_5_Transition.jl")
+include(path*"NHL/NHL_7_Simulate.jl")
+include(path*"NHL/NHL_Diagnostics.jl")
 
 # 1. Draw Income Distribution
 (yit, ymedian, pension) = incomeDistribution(
@@ -21,7 +18,7 @@ end
   "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/alfabeta.dat")
 
 # 2. Construct individual specific belief histories
-(s_f_i, stdy, k) = learning(yit, ρ, var_η, var_ɛ,
+(s_f_i, stdy, k) = learning(
     "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code")
 
 # 3. Construct Grids
@@ -31,14 +28,18 @@ end
     "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/wealthR.dat")
 
 # 4. Solve Retirement Problem
-(v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ, σ)
+(v_R, wp_R) = solveRetirement(wgrid_R, convert(Array,ygrid_R), r, δ, σ)
 
-# 5.1 Solve Terminal Period Problem instead of 4. and 5.
-(wp_1, v_1, c_over_x_1) = solveTransition(wgrid, agrid, bgrid, zgrid, r, δ, 0.0334)
+# 5. Solve Terminal Period Problem instead of 4. and 5.
+(wp, v, c_over_x) =
+  solveTransition(v_R, wgrid_R, ygrid_R, wgrid, agrid, bgrid,
+  zgrid, yit, r, δ)
 
-@time (v_1, wp_1, c_over_x_1) =
-  solveWorkingLife(v_1, wp_1, c_over_x_1, wgrid, agrid, bgrid, zgrid, stdy, k, r, δ)
+# 6. Solve working life problem
+(v, wp, c_over_x) =
+  solveWorkingLife(v, wp, c_over_x, wgrid, agrid, bgrid, zgrid, stdy, k, r, δ)
 
-(c_t_1, w_t_1, wp_t_1) =
-  simulate(wp_1, wgrid, agrid, bgrid,  zgrid, yit, ymedian, s_f_i, wp_R, wgrid_R,
+# 7. Simulate wealth distribution
+(c_t, w_t, wp_t) =
+  simulate(wp, wgrid, agrid, bgrid,  zgrid, yit, ymedian, s_f_i, wp_R, wgrid_R,
            ygrid_R, pension, r)

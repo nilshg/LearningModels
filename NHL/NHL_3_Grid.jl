@@ -46,14 +46,23 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
 
   # BELIEF GRIDS #
   if const_bel
-    agrid = linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints)
-    bgrid = linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints)
-    zgrid = linspace(minimum(s_f_i[3, :, :]), maximum(s_f_i[3, :, :]), zpoints)
+    agrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, 2:tW]),
+                             maximum(s_f_i[1, :, :]), apoints))
+    bgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, :]),
+                             maximum(s_f_i[2, :, :]), bpoints))
+    zgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, :]),
+                             maximum(s_f_i[3, :, :]), zpoints))
   else
-    for t = 1:size(s_f_i,3)
-      agrid[:, t] = linspace(minimum(s_f_i[1, :, t]), maximum(s_f_i[1, :, t]), apoints)
-      bgrid[:, t] = linspace(minimum(s_f_i[2, :, t]), maximum(s_f_i[2, :, t]), bpoints)
-      zgrid[:, t] = linspace(minimum(s_f_i[3, :, t]), maximum(s_f_i[3, :, t]), zpoints)
+    agrid = Array(Float64,(apoints,tW))
+    bgrid = Array(Float64,(bpoints,tW))
+    zgrid = Array(Float64,(zpoints,tW))
+    for t = 1:tW
+      agrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, t]),
+                             maximum(s_f_i[1, :, t]), apoints))
+      bgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, t]),
+                             maximum(s_f_i[2, :, t]), bpoints))
+      zgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, t]),
+                             maximum(s_f_i[3, :, t]), zpoints))
     end
   end
 
@@ -95,7 +104,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
 
   yminR = max(0.2*yminbelief[tW], 0.2)
   ymaxR = min(0.05*ymaxbelief[tW], 1000)
-  ygrid_R = linspace(yminR, ymaxR, ypoints_R)
+  ygrid_R = convert(Array, linspace(yminR, ymaxR, ypoints_R))
 
   @printf "\tWealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
   @printf "\tBelief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
@@ -127,20 +136,25 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
 
   # BELIEF GRIDS #
   if const_bel
-    agrid = linspace(minimum(s_f_i[1, :, 2:end]), maximum(s_f_i[1, :, :]), apoints)
-    bgrid = linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints)
-    zgrid = linspace(minimum(s_f_i[3, :, :]), maximum(s_f_i[3, :, :]), zpoints)
+    agrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, 2:end]),
+                     maximum(s_f_i[1, :, :]), apoints))
+    bgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, :]),
+                     maximum(s_f_i[2, :, :]), bpoints))
+    zgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, :]),
+                     maximum(s_f_i[3, :, :]), zpoints))
   else
     for t = 1:40
-      agrid[:, t] = linspace(minimum(s_f_i[1, :, t]), maximum(s_f_i[1, :, t]), apoints)
-      bgrid[:, t] = linspace(minimum(s_f_i[2, :, t]), maximum(s_f_i[2, :, t]), bpoints)
-      zgrid[:, t] = linspace(minimum(s_f_i[3, :, t]), maximum(s_f_i[3, :, t]), zpoints)
+      agrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, t]),
+                             maximum(s_f_i[1, :, t]), apoints))
+      bgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, t]),
+                             maximum(s_f_i[2, :, t]), bpoints))
+      zgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, t]),
+                             maximum(s_f_i[3, :, t]), zpoints))
     end
   end
 
   # Adjust borrowing constraints such that lowest belief does not have an empty
   # choice set in any period:
-
   for t = 39:-1:1
     if const_bel
       ymin = exp(agrid[1] + t*bgrid[1] + zgrid[1])
@@ -169,7 +183,7 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
     wgrid_R[:, t] = wgridexp[:, t].^2 + guvgrid_R[1,t]
   end
 
-  ygrid_R = linspace(0.24, 1000, ypoints_R)
+  ygrid_R = convert(Array{Float64,1}, linspace(0.24, 1000, ypoints_R))
 
   @printf "\tWealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
   @printf "\tBelief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
