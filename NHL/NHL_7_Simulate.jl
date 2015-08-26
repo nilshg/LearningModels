@@ -2,18 +2,14 @@
 ################################### SIMULATION #################################
 ################################################################################
 
-function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
-                  zgrid::Array, yit::Array, ymedian::Float64, s_f_i::Array,
-                  wp_R::Array, wgrid_R::Array, ygrid_R::Array, pension::Array,
-                  r::Float64)
+function sim(wp::Array, wgrid::Array, agrid::Array, bgrid::Array, zgrid::Array,
+  yit::Array, ymedian::Float64, s_f_i::Array, wp_R::Array, wgrid_R::Array,
+  ygrid_R::Array, pension::Array, r::Float64)
 
   @printf "7. Simulate Consumption and Wealth Distribution\n"
-  w_0 = 0.0
-  tW = size(yit,2)
-  tR = size(wgrid_R,2)
+  w_0 = 0.0; tW = size(yit,2); tR = size(wgrid_R,2)
   c_t = Array(Float64, (size(yit,1), tW+tR))
-  w_t = similar(c_t)
-  wp_t = similar(c_t)
+  w_t = similar(c_t); wp_t = similar(c_t)
   w_t[:, 1] = w_0
 
   negconscounter = 0
@@ -39,22 +35,15 @@ function simulate(wp::Array, wgrid::Array, agrid::Array, bgrid::Array,
   end
   negconscounter == 0 || @printf "\t%d neg. c choices!\n" negconscounter
 
-  function get_c_1(r::Float64, δ::Float64, x::Float64, y::Float64,
-                   σ::Float64, tR::Int64)
-    Rinv = 1/r
-    Rbsig = (r*δ)^(1/σ)
-    numerator = 1 - Rinv*Rbsig
-    denominator = 1 - (Rinv*Rbsig)^tR
+  function get_c_1{T<:AbstractFloat}(r::T, δ::T, x::T, y::T, σ::T, tR::Int64)
+    numerator = 1 - 1/r*(r*δ)^(1/σ)
+    denominator = 1 - (1/r*(r*δ)^(1/σ))^tR
     margprop = numerator/denominator
-    pdvlabour = y*((1-Rinv^tR)/(1-Rinv))
-    pdvresources = pdvlabour + x
-    c_1 = margprop * pdvresources
-
-    return c_1
+    pdvresources = y*((1-1/r^tR)/(1-1/r)) + x
+    return margprop * pdvresources
   end
 
-  function simulate_i(x::Float64, y::Float64, δ::Float64, σ::Float64,
-                    r::Float64, tR::Int64)
+  function simulate_i{T<:AbstractFloat}(x::T, y::T, δ::T, σ::T, r::T, tR::Int64)
     c_R_i = Array(Float64, tR)
     x_t = similar(c_R_i)
     c_R_i[1] = get_c_1(r, δ, x, y, σ, tR)[1]
