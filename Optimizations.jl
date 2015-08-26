@@ -2,17 +2,9 @@
 ############# OPTIMIZATIONS.JL - solve value function optimization #############
 ################################################################################
 
-using ApproXD, Distributions, Grid, Optim, QuantEcon
-
-################################################################################
-
 # Working life with habits
-function bellOpt(w::Float64, h::Float64, y::Float64, a::Float64, b::Float64,
-                 z::Float64, wmin::Float64, v_int::CoordInterpGrid,
-                 yln::LogNormal, k::Array, ρ::Float64, r::Float64, λ::Float64,
-                 δ::Float64)
-
-   x = w + y
+function bellOpt{T<:AbstractFloat}(x::T, h::T, y::T, a::T, b::T, z::T, wmin::T,
+  v_int::CoordInterpGrid, yln::LogNormal, k::Array, ρ::T, r::T, λ::T, δ::T)
 
   function EVprime(w′::Float64, h=h, a=a, b=b, z=z, yln=yln, k=k, v_int=v_int,
                    λ=λ, ρ=ρ)
@@ -51,11 +43,9 @@ end
 ################################################################################
 
 # Transition period with habits
-function bellOpt_TRANS(w::Float64, h::Float64, y::Float64, pension::Float64,
+function bellOpt_TRANS(x::Float64, h::Float64, y::Float64, pension::Float64,
                        wmin::Float64, v_int::Lininterp,
                        r::Float64, δ::Float64, λ::Float64)
-
-  x = w + y
 
   Blmn(w′::Float64) = -(u(x - w′, h) +
                       δ*getValue(v_int, [r*w′, (1-λ)*h + λ*(x-w′), pension])[1])
@@ -70,8 +60,8 @@ end
 ################################################################################
 
 # Retirement period with habits
-function bellOpt_R(w::Float64, h::Float64, y::Float64, wmin::Float64,
-                   v_int::Lininterp, r::Float64, δ::Float64, λ::Float64)
+function bellOpt_R{T<:AbstractFloat}(w::T, h::T, y::T, wmin::T,
+                                     v_int::Lininterp, r::T, δ::T, λ::T)
 
   x = w + y
 
@@ -88,11 +78,8 @@ end
 ################################################################################
 
 # Working life, no habits
-function bellOpt(w::Float64, y::Float64, a::Float64, b::Float64, z::Float64,
-                 wmin::Float64, v_int::Lininterp, yln::LogNormal, k::Array,
-                 ρ::Float64, r::Float64, δ::Float64)
-
-  x = w + y
+function bellOpt{T<:AbstractFloat}(x::T, a::T, b::T, z::T, wmin::T,
+   v_int::Lininterp, yln::LogNormal, k::Array, ρ::T, r::T, δ::T)
 
   function EVprime(w′::Float64, a=a, b=b, z=z, yln=yln, k=k, v_int=v_int, ρ=ρ)
 
@@ -103,9 +90,9 @@ function bellOpt(w::Float64, y::Float64, a::Float64, b::Float64, z::Float64,
       for i = 1:size(y, 1)
         @inbounds result[i, :] =
           (getValue(v_int,[w′ + y[i],
-                           a + k[1]*(log(y[i]) - ey),
-                           b + k[2]*(log(y[i]) - ey),
-                           ρ*z + k[3]*(log(y[i]) - ey)])[1])*pdf(yln, y[i])
+            a + k[1]*(log(y[i]) - ey),
+            b + k[2]*(log(y[i]) - ey),
+            ρ*z + k[3]*(log(y[i]) - ey)])[1])*pdf(yln, y[i])
       end
       return result
     end
@@ -128,10 +115,8 @@ end
 ################################################################################
 
 # Transition period, no habits
-function bellOpt_TRANS(w::Float64, y::Float64, pension::Float64, wmin::Float64,
-                       v_int::Lininterp, r::Float64, δ::Float64)
-
-  x = w + y
+function bellOpt_TRANS{T<:AbstractFloat}(x::T, pension::T, wmin::T,
+                                         v_int::Lininterp, r::T, δ::T)
 
   Blmn(w′) = -( u(x-w′) + δ*(getValue(v_int, [r*w′ + pension, pension])[1]) )
 
