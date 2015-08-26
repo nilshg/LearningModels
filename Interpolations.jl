@@ -1,14 +1,9 @@
-#######################################################################################
-#################### Interpolations for value and policy functions ####################
-#######################################################################################
+################################################################################
+#################### Interpolations for value and policy functions #############
+################################################################################
 
-using ApproXD, Grid
-
-#######################################################################################
-
-function interpolateV(v::Array{Float64, 5}, wgrid::Array{Float64,1},
-                      hgrid::Array{Float64,1}, agrid::Array{Float64,1},
-                      bgrid::Array{Float64,1}, zgrid::Array{Float64,1})
+function interpolateV{T<:AbstractFloat}(v::Array{T,5}, wgrid::Array{T,1},
+  hgrid::Array{T,1}, agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1})
 
   wr = range(wgrid[1], wgrid[2] - wgrid[1], size(wgrid, 1))
   hr = range(hgrid[1], hgrid[2] - hgrid[1], size(hgrid, 1))
@@ -19,27 +14,27 @@ function interpolateV(v::Array{Float64, 5}, wgrid::Array{Float64,1},
   CoordInterpGrid((wr, hr, ar, br, zr), v, BCnearest, InterpLinear)
 end
 
-#######################################################################################
+################################################################################
 
-function interpolateV(v::Array{Float64,4}, xgrid::Array{Float64,1},
-            agrid::Array{Float64,1}, bgrid::Array{Float64,1}, zgrid::Array{Float64,1})
+function interpolateV{T<:AbstractFloat}(v::Array{T,4}, xgrid::Array{T,1},
+            agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1})
 
   xabz = Array{Float64,1}[]
   push!(xabz, xgrid); push!(xabz, agrid); push!(xabz, bgrid); push!(xabz, zgrid)
   return Lininterp(v, xabz)
 end
 
-#######################################################################################
+################################################################################
 
-function interpolateV(v::Array{Float64,3}, xgrid::Array{Float64,1},
-                      ygrid::Array{Float64,1}, hgrid::Array{Float64,1})
+function interpolateV{T<:AbstractFloat}(v::Array{T,3}, xgrid::Array{T,1},
+                      ygrid::Array{T,1}, hgrid::Array{T,1})
 
   xyh = Array{Float64,1}[]
   push!(xyh, xgrid); push!(xyh, ygrid); push!(xyh, hgrid)
   return Lininterp(v, xyh)
 end
 
-#######################################################################################
+################################################################################
 
 function interpolateV(v::Array{Float64,2}, xgrid::Array{Float64,1},
                       ygrid::Array{Float64,1})
