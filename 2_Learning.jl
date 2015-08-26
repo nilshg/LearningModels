@@ -2,10 +2,11 @@
 ############################## BELIEF FORMATION ################################
 ################################################################################
 
-function learning(path::String)
+function learning(user::AbstractString)
 
   @printf "2. Import Guvenen's learning results\n"
   # Import beliefs
+  path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   s_f_guv_org = readdlm(path*"/SNext_in.dat")
   s_f_i = Array(Float64, (3, 100000, 40))
   for t = 1:40

@@ -2,15 +2,12 @@
 ########################### INCOME DISTRIBUTION ################################
 ################################################################################
 
-using Distributions
-
-################################################################################
-
-function incomeDistribution(ypath::String, abpath::String)
+function incomeDistribution(user::AbstractString)
 
   @printf "1. Import Guvenen's income distribution\n"
-  yit = readdlm(ypath)
-  alfabeta = readdlm(abpath)
+  path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
+  yit = readdlm(path*"LaborReal.dat")
+  alfabeta = readdlm(path*"alfabeta.dat")
   α = alfabeta[:, 1]
   α = reshape(repmat(α, 1, 100)', 100000, 1)
   β = alfabeta[:, 2]
