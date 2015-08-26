@@ -48,17 +48,17 @@ hpoints_R = 35         # Habit grid points (retirement)
 ypoints_R = 150        # Pension points
 wmaxR = 1000.0         # Maximum retirement wealth
 apoints = 3            # Grid points for beliefs about α
-bpoints = 8            # Grid points for beliefs about β
-zpoints = 7            # Grid points for beliefs about z
+bpoints = 11           # Grid points for beliefs about β
+zpoints = 8            # Grid points for beliefs about z
 zpoints_RIP = 32       # Grid points for RIP persistent shock
 epspoints = 2          # Grid points for RIP transitory shock
 power = 2.0            # Wealth Grid Curvature
 
 # Utility function
-function u(c::Float64, h::Float64, γ=γ, σ=σ)
+function u_h(c::Float64, h::Float64, γ=γ, σ=σ)
     ((c/(h^γ))^(1-σ))/(1-σ)
 end
 
 function u(c::Float64, σ=σ)
-     (c^(1-σ))/(1-σ)
+     c^(1-σ)/(1-σ)
 end
