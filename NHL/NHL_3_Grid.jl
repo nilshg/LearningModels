@@ -117,12 +117,12 @@ end
 
 function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
                zpoints::Int64, ypoints_R::Int64, r::Float64, const_bel::Bool,
-               wpath::String, wRpath::String)
+               user::AbstractString)
 
   @printf "3. Construct Grids (using Guvenen's data)\n"
-
+  path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   # WEALTH GRID #
-  wgrid_org = readdlm(wpath)'
+  wgrid_org = readdlm(path*"wealth.dat")'
   wgrid = Array(Float64, (wpoints, tW)); wgridexp = similar(wgrid)
 
   for t = tW:-1:1
@@ -169,7 +169,7 @@ function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
   end
 
   # RETIREMENT GRIDS #
-  guvgrid_R_org = readdlm(wRpath)'
+  guvgrid_R_org = readdlm(path*"wealthR.dat")'
   guvgrid_R = reshape(guvgrid_R_org, 1, 7200)
   guvgrid_R = unique(reshape(guvgrid_R_org, 12, 600), 2)
   wgrid_R = Array(Float64, (wpoints_R, tR)); wgridexp = similar(wgrid_R)
