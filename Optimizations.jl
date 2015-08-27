@@ -2,6 +2,10 @@
 ############# OPTIMIZATIONS.JL - solve value function optimization #############
 ################################################################################
 
+using ApproXD, Distributions, Grid, Optim, QuantEcon
+
+################################################################################
+
 # Working life with habits
 function bellOpt{T<:AbstractFloat}(x::T, h::T, y::T, a::T, b::T, z::T, wmin::T,
   v_int::CoordInterpGrid, yln::LogNormal, k::Array, ρ::T, r::T, λ::T, δ::T)

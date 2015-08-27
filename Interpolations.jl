@@ -2,6 +2,10 @@
 #################### Interpolations for value and policy functions #############
 ################################################################################
 
+using ApproXD, Grid
+
+################################################################################
+
 function interpolateV{T<:AbstractFloat}(v::Array{T,5}, wgrid::Array{T,1},
   hgrid::Array{T,1}, agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1})
 
