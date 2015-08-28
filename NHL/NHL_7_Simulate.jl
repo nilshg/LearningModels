@@ -2,38 +2,39 @@
 ################################### SIMULATION #################################
 ################################################################################
 
-function sim(wp::Array, wgrid::Array, agrid::Array, bgrid::Array, zgrid::Array,
-  yit::Array, ymedian::Float64, s_f_i::Array, wp_R::Array, wgrid_R::Array,
-  ygrid_R::Array, pension::Array, r::Float64)
+function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
+  agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,2},
+  ygrid_R::Array{T,1}, yit::Array{T,2}, s_f_i::Array{T,3}, wp_R::Array{T,3},
+  pension::Array{T,1}, r::T)
 
   @printf "7. Simulate Consumption and Wealth Distribution\n"
-  w_0 = 0.0; tW = size(yit,2); tR = size(wgrid_R,2)
+  tW = size(yit,2); tR = size(wgrid_R,2)
   c_t = Array(Float64, (size(yit,1), tW+tR))
   w_t = similar(c_t); wp_t = similar(c_t)
-  w_t[:, 1] = w_0
 
-  negconscounter = 0
+  # Initial wealth
+  w_0 = 0.; w_t[:, 1] = w_0
+
+  negcons = 0
   for t = 1:tW
     # INTERPOLATION
     wp_int =
-      interpolateV(wp[:, :, :, :, t], wgrid[:, t], agrid, bgrid, zgrid)
+      interpolateV(wp[:, :, :, :, t], xgrid[:, t], agrid, bgrid, zgrid)
 
     # Bond Choice
     for i = 1:size(yit,1)
-      wt = w_t[i, t]
-      yt = yit[i, t]
+      wt = w_t[i, t]; yt = yit[i, t]
       (at, bt, zt) = s_f_i[:, i, t]
       xt = wt + yt
+
       wp_t[i, t] = getValue(wp_int, [xt, at, bt, zt])[1]
       c_t[i, t] = xt - wp_t[i, t]
       w_t[i, t+1] = r*wp_t[i, t]
 
-      if c_t[i, t] < 0.0
-        negconscounter +=  1
-      end
+      c_t[i, t] < 0.0 ? negcons +=  1 : 0
     end
   end
-  negconscounter == 0 || @printf "\t%d neg. c choices!\n" negconscounter
+  negcons == 0 || println("\t$negcons negative consumption choices!\n"
 
   function get_c_1{T<:AbstractFloat}(r::T, δ::T, x::T, y::T, σ::T, tR::Int64)
     numerator = 1 - 1/r*(r*δ)^(1/σ)
