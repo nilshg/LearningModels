@@ -34,7 +34,7 @@ function plotv(v::Array{Float64, 5}, wg::Array, ag::Array, bg::Array, zg::Array,
                     cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
   ax[:set_xlabel]("Wealth Level", fontsize=14)
   ax[:set_zlabel]("Value", fontsize=14)
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -53,7 +53,7 @@ function plotv(v::Array{Float64, 3}, wg::Array{Float64, 2}, yg::Array{Float64, 1
   ax[:set_ylabel]("Pension Level", fontsize=14)
   ax[:set_zlabel]("Value", fontsize=14)
   title(heading)
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -82,7 +82,7 @@ function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
     ax[:set_title]("Period "*string(periods[i]))
   end
   fig[:suptitle](L"Wealth Distributions, $\delta$="*string(δ))
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -101,7 +101,7 @@ function plotdistributions(yit::Array{Float64, 2}, pension::Array, periods::Arra
   ax[2,2][:hist](pension, bins = 100)
   ax[2,2][:set_title]("Pension Income")
   fig[:suptitle]("Income Distributions")
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -118,9 +118,9 @@ function plothistory(i::Int64, c_t::Array{Float64, 2}, w_t::Array{Float64, 2},
   ax[:plot]([ybelief' pension[i]*ones(tR, 1)']', label = "Belief")
   ax[:plot]([wgrid[1, :] wgrid_R[1, :]]', linestyle=":", label = "Borrowing Constraint")
   ax[:axvline](tW, linestyle = "--", color = "black")
+  ax[:legend](loc="best")
   fig[:suptitle]("Simulation History for Agent "*string(i))
-  plt.legend()
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -181,7 +181,7 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
     ax[2,1][:legend](loc = "best")
     ax[1,1][:set_title]("Means and Medians")
     ax[2,1][:set_title]("Variances")
-    plt.show()
+    plt[:show]()
   end
 
   return med_c, med_w, mean_w, var_c, var_w, var_y
@@ -232,12 +232,13 @@ function plot_beliefs_realizations()
   ax[2,1][:plot](ymaxactual, label = "Highest actual income")
   ax[1,1][:legend](loc="best")
   ax[2,1][:legend](loc="best")
-  plt.show()
+  plt[:show]()
 end
 
 ################################################################################
-function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array;
-                       figtext::String = "")
+function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array, a::Int64,
+  b::Int64; figtext::String = "")
+
   α_mid = convert(Int64, round(size(c_x,2)/2))
   β_mid = convert(Int64, round(size(c_x,3)/2))
   z_mid = convert(Int64, round(size(c_x,4)/2))
@@ -246,30 +247,34 @@ function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array;
   z_hi = size(c_x,4)
 
   fig, ax = PyPlot.subplots(2, 2)
-  ax[1,1][:plot](c_x[:, 1, β_mid, z_mid, t], label = L"\alpha=1")
-  ax[1,1][:plot](c_x[:, α_mid, β_mid, z_mid, t], label = L"\alpha=2")
-  ax[1,1][:plot](c_x[:, end, β_mid, z_mid, t], label = L"\alpha="*string(α_hi))
-  ax[1,1][:set_title](L"\beta="*string(β_mid)*", z="*string(z_mid))
+  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b, 1, β_mid, z_mid, t], label = "α=1")
+  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, z_mid, t], label = "α=2")
+  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b,end,β_mid,z_mid,t], label="α="*string(α_hi))
+  #ax[1,1][:plot](wgrid[a:b,t],wgrid[a:b,t], linestyle=":", color="black")
+  ax[1,1][:set_title]("β="*string(β_mid)*", z="*string(z_mid))
   ax[1,1][:legend](loc = "best")
-  ax[2,1][:plot](c_x[:, α_mid, 1, 4, t], label = L"\beta=1")
-  ax[2,1][:plot](c_x[:, α_mid, 4, 4, t], label = L"\beta=4")
-  ax[2,1][:plot](c_x[:, α_mid, 6, 4, t], label = L"\beta=6")
-  ax[2,1][:plot](c_x[:, α_mid, end, 4, t], label = L"\beta="*string(β_hi))
-  ax[2,1][:set_title](L"\alpha="*string(α_mid)*", z="*string(z_mid))
+  ax[2,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, 1, 4, t], label = "β=1")
+  ax[2,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, 4, 4, t], label = "β=4")
+  ax[2,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, 6, 4, t], label = "β=6")
+  ax[2,1][:plot](wgrid[a:b,t], c_x[a:b,α_mid,end,4,t],label = "β="*string(β_hi))
+  #ax[2,1][:plot](wgrid[a:b,t],wgrid[a:b,t], linestyle=":", color="black")
+  ax[2,1][:set_title]("α="*string(α_mid)*", z="*string(z_mid))
   ax[2,1][:legend](loc = "best")
-  ax[1,2][:plot](c_x[:, α_mid, β_mid, 1, t], label = L"z=1")
-  ax[1,2][:plot](c_x[:, α_mid, β_mid, 3, t], label = L"z=2")
-  ax[1,2][:plot](c_x[:, α_mid, β_mid, 5, t], label = L"z=3")
-  ax[1,2][:plot](c_x[:, α_mid, β_mid, end, t], label = L"z="*string(z_hi))
-  ax[1,2][:set_title](L"\alpha="*string(α_mid)*", "*L"\beta="*string(β_mid))
+  ax[1,2][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, 1, t], label = "z=1")
+  ax[1,2][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, 3, t], label = "z=2")
+  ax[1,2][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, 5, t], label = "z=3")
+  ax[1,2][:plot](wgrid[a:b,t], c_x[a:b,α_mid,β_mid,end,t],label="z="*string(z_hi))
+  #ax[1,2][:plot](wgrid[a:b,t],wgrid[a:b,t], linestyle=":", color="black")
+  ax[1,2][:set_title]("α="*string(α_mid)*", "*"β="*string(β_mid))
   ax[1,2][:legend](loc = "best")
-  ax[2,2][:plot](c_x[:, 1, 1, 1, t], label = L"\beta=1")
-  ax[2,2][:plot](c_x[:, 1, 4, 1, t], label = L"\beta=4")
-  ax[2,2][:plot](c_x[:, 1, 6, 1, t], label = L"\beta=6")
-  ax[2,2][:plot](c_x[:, 1, 8, 1, t], label = L"\beta="*string(β_hi))
-  ax[2,2][:set_title](L"\alpha=1, z=1")
+  ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 1, 1, t], label = "β=1")
+  ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 4, 1, t], label = "β=4")
+  ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 6, 1, t], label = "β=6")
+  ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 8, 1, t], label = "β="*string(β_hi))
+  #ax[2,2][:plot](wgrid[a:b,t],wgrid[a:b,t], linestyle=":", color="black")
+  ax[2,2][:set_title]("α=1, z=1")
   ax[2,2][:legend](loc = "best")
-  fig[:suptitle]("Consumption over assets, period "*string(t))
+  fig[:suptitle]("c/x, period "*string(t))
   fig[:text](0.01, 0.01, figtext)
-  plt.show()
+  plt[:show]()
 end
