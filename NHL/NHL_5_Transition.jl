@@ -26,7 +26,7 @@ function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,2},
   tW = size(xgrid,2)
   wp = Array(Float64,
     (size(xgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))
-  v = similar(wp)
+  v = similar(wp); c_over_x = similar(wp)
 
   # Predicting pension from last period income
   ybari = mean(yit, 2)[:]
@@ -48,8 +48,10 @@ function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,2},
 
       (wp[x, a, b, z, tW], v[x, a, b, z, tW]) =
         bellOpt_TRANS(xt, pension, wmin, valueRETIRE, r, δ)
+
+      c_over_x[x,a,b,z,tW] = (xt-wp[x,a,b,z,tW])/xt
     end
   end
 
-  return v, wp
+  return v, wp, c_over_x
 end
