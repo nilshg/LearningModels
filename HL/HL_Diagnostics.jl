@@ -39,7 +39,7 @@ function plotv(v::Array{Float64, 6}, wg::Array, hg::Array, ag::Array, bg::Array,
                     cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
   ax[:set_xlabel]("Wealth Level", fontsize=14)
   ax[:set_zlabel]("Value", fontsize=14)
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -67,7 +67,7 @@ function plotv(v::Array{Float64, 4}, wg::Array, hg::Array, yg::Array, ydim::Stri
   ax[:set_xlabel]("Wealth Level", fontsize=14)
   ax[:set_zlabel]("Value", fontsize=14)
   title(heading)
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -82,7 +82,7 @@ function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
     ax[:set_title]("Period "*string(periods[i]))
   end
   fig[:suptitle](L"Wealth Distributions, $\delta$="*string(δ))
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -101,7 +101,7 @@ function plotdistributions(yit::Array{Float64, 2}, pension::Array, periods::Arra
   ax[2,2][:hist](pension, bins = 100)
   ax[2,2][:set_title]("Pension Income")
   fig[:suptitle]("Income Distributions")
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -122,7 +122,7 @@ function plothistory(i::Int64, c_t::Array{Float64,2}, w_t::Array{Float64,2},
   ax[:axvline](tW, linestyle = "--", color = "black")
   fig[:suptitle]("Simulation History for Agent "*string(i))
   plt.legend()
-  plt.show()
+  plt[:show]()
 end
 
 #######################################################################################
@@ -183,7 +183,7 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
     ax[2,1][:legend](loc = "best")
     ax[1,1][:set_title]("Means and Medians")
     ax[2,1][:set_title]("Variances")
-    plt.show()
+    plt[:show]()
   end
 
   return med_c, med_w, mean_w, var_c, var_w, var_y
@@ -234,5 +234,5 @@ function plot_beliefs_realizations()
   ax[2,1][:plot](ymaxactual, label = "Highest actual income")
   ax[1,1][:legend](loc="best")
   ax[2,1][:legend](loc="best")
-  plt.show()
+  plt[:show]()
 end
