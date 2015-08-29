@@ -7,11 +7,11 @@ using ApproXD, Distributions, Grid, Optim, QuantEcon
 ################################################################################
 
 # Working life with habits
-function bellOpt{T<:AbstractFloat}(x::T, h::T, y::T, a::T, b::T, z::T, wmin::T,
-  v_int::CoordInterpGrid, yln::LogNormal, k::Array, ρ::T, r::T, λ::T, δ::T)
+function bellOpt{T<:AbstractFloat}(x::T, h::T, a::T, b::T, z::T, wmin::T,
+  v_int::CoordInterpGrid, yln::LogNormal, k::Array, ρ::T, r::T, δ::T, λ::T)
 
   function EVprime(w′::Float64, h=h, a=a, b=b, z=z, yln=yln, k=k, v_int=v_int,
-                   λ=λ, ρ=ρ)
+                   λ=λ, ρ=ρ, x=x)
 
     h′ = (1-λ)*h + λ*(x - w′)
 
@@ -35,7 +35,7 @@ function bellOpt{T<:AbstractFloat}(x::T, h::T, y::T, a::T, b::T, z::T, wmin::T,
     quadrect(EVp, 9, exp(y_l), exp(y_h))
   end
 
-  Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u(x - w′, h) + δ*EVprime(r*w′) )
+  Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u_h(x - w′, h) + δ*EVprime(r*w′) )
 
   optimum = optimize(Blmn, wmin/r, x)
   w′ = optimum.minimum
@@ -47,11 +47,10 @@ end
 ################################################################################
 
 # Transition period with habits
-function bellOpt_TRANS(x::Float64, h::Float64, y::Float64, pension::Float64,
-                       wmin::Float64, v_int::Lininterp,
-                       r::Float64, δ::Float64, λ::Float64)
+function bellOpt_TRANS{T<:AbstractFloat}(x::T, h::T, pension::T, wmin::T,
+  v_int::Lininterp, r::T, δ::T, λ::T)
 
-  Blmn(w′::Float64) = -(u(x - w′, h) +
+  Blmn(w′::Float64) = -(u_h(x - w′, h) +
                       δ*getValue(v_int, [r*w′, (1-λ)*h + λ*(x-w′), pension])[1])
 
   optimum = optimize(Blmn, wmin/r, x)
@@ -65,11 +64,11 @@ end
 
 # Retirement period with habits
 function bellOpt_R{T<:AbstractFloat}(w::T, h::T, y::T, wmin::T,
-                                     v_int::Lininterp, r::T, δ::T, λ::T)
+  v_int::Lininterp, r::T, δ::T, λ::T)
 
   x = w + y
 
-  Blmn(w′) = -(u(x - w′, h)
+  Blmn(w′) = -(u_h(x - w′, h)
              + δ*getValue(v_int, [r*w′, (1-λ)*h + λ*(x-w′), y])[1])
 
   optimum = optimize(Blmn, wmin/r, x)
