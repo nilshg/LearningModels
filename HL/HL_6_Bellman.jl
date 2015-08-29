@@ -2,58 +2,43 @@
 ############################## BELLMAN RECURSION ###############################
 ################################################################################
 
-using Distributions
-
-function solveWorkingLife(v::Array, wp::Array, wgrid::Array, hgrid::Array,
-                          agrid::Array, bgrid::Array, zgrid::Array,
-                          stdy::Array, r::Float64, k::Array, δ::Float64,
-                          λ::Float64, ρ::Float64)
+function solveWorkingLife{T<:AbstractFloat}(v::Array{T,6}, wp::Array{T,6},
+  xgrid::Array{T,2}, hgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1},
+  zgrid::Array{T,1}, stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, λ::T, ρ::T,
+  c_over_x::Array{T,6})
 
   @printf "6. Recursively solve for optimal decision rules\n"
-  @printf "\tSolving the problem on %d points\n" length(v)/size(wgrid,2)
-  tic()
-  for t = (size(wgrid,2)-1):-1:1
+  @printf "\tSolving the problem on %d points\n" length(v[:,:,:,:,:,end])
+
+  wpnow = SharedArray(Float64, size(v)[1:5], pids=procs()); vnow=similar(wpnow)
+  cxnow = similar(wpnow)
+
+  for t = (size(xgrid,2)-1):-1:1
     # INTERPOLATION
-    v_interpol = interpolateV(v[:,:,:,:,:,t+1],
-                              wgrid[:,t+1], hgrid[:,t+1], agrid, bgrid, zgrid)
+    v_interpol = interpolateV(v[:,:,:,:,:,t+1], xgrid[:,t+1], hgrid[:,t+1],
+                                agrid, bgrid, zgrid)
 
     # MAXIMIZATION
-    wpnow = SharedArray(Float64, (size(v[:,:,:,:,:,1])), pids=procs())
-    vnow = similar(wpnow)
-    wmin = wgrid[1, t+1]
-
-    @inbounds @sync @parallel for w = 1:size(wgrid,1)
-      wt = wgrid[w, t]
+    wmin = xgrid[1, t+1]
+    @inbounds @sync @parallel for x = 1:size(xgrid,1)
+      xt = xgrid[x, t]
       for h = 1:size(hgrid,1), a = 1:size(agrid,1), b = 1:size(bgrid,1)
         for z = 1:size(zgrid,1)
-          ht = hgrid[h, t]
-          at = agrid[a]
-          bt = bgrid[b]
-          zt = zgrid[z]
-          yt = exp(at + bt*t + zt)
+          ht = hgrid[h, t]; at = agrid[a]; bt = bgrid[b]; zt = zgrid[z]
           yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
 
-          if wt + yt - wmin/r < 0.01
-            error("Error: Cash on hand is too low, at w, a, b, z")
-          end
+          (wpnow[x,h,a,b,z], vnow[x,h,a,b,z]) =
+            bellOpt(xt,ht,at,bt,zt,wmin,v_interpol,yln,k[:,t],ρ,r,δ,λ)
 
-          (wpopt, vopt) = bellOpt(wt, ht, yt, at, bt, zt, wmin,
-                                  v_interpol, yln, k[:,t], ρ, r, δ, λ)
-
-          wpnow[w,h,a,b,z] = wpopt
-          vnow[w,h,a,b,z] = vopt
-
-          wpopt < wt + yt || @printf "NC @ w=%d,h=%d,y=%d,t=%d" w h yt t
+          cxnow[x,h,a,b,z] = (xt-wpnow[x,h,a,b,z])/xt
         end
       end
     end
-    v[:,:,:,:,:,t] = sdata(vnow)
-    wp[:,:,:,:,:,t] = sdata(wpnow)
-
+    v[:,:,:,:,:,t] = sdata(vnow); wp[:,:,:,:,:,t] = sdata(wpnow);
+    c_over_x[:,:,:,:,:,t] = sdata(cxnow)
     mv = checkmonotonicity(v[:,:,:,:,:,t])
-    @printf "\tMonotonicity violations: w=%d, h=%d, a=%d, b=%d, z=%d, t=%d\n" mv[1] mv[2] mv[3] mv[4] mv[5] t
+    println("\tMonotonicity violations: [w,h,a,b,z]=$(mv), t=$t")
   end
-  @printf "\tMaximization took %d seconds\n" toq()
 
-  return v, wp
+  return v, wp, c_over_x
 end

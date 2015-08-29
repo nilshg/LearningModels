@@ -1,49 +1,43 @@
-include("../1_Income.jl")
-include("../2_Learning.jl")
-include("HL_3_Grid.jl")
-include("HL_4_Retirement.jl")
-include("HL_5_Transition.jl")
-include("HL_7_Simulate.jl")
-include("HL_Diagnostics.jl")
-
 nprocs() == CPU_CORES || addprocs(CPU_CORES-1)
+import ApproXD, Grid, Distributions, Optim, QuantEcon, PyPlot, PyCall
 @everywhere begin
   path=("C:/Users/tew207/Documents/GitHub/LearningModels/")
   include(path*"Optimizations.jl")
   include(path*"Interpolations.jl")
   include(path*"Parameters.jl")
+  include(path*"1_Income.jl")
+  include(path*"2_Learning.jl")
+  include(path*"HL/HL_3_Grid.jl")
+  include(path*"HL/HL_4_Retirement.jl")
+  include(path*"HL/HL_5_Transition.jl")
+  include(path*"HL/HL_6_Bellman.jl")
+  include(path*"HL/HL_7_Simulate.jl")
   include(path*"Chk_Monot.jl")
-  include(path*"/HL/HL_6_Bellman.jl")
 end
 
 # 1. Draw Income Distribution
-(yit, ymedian, pension) = incomeDistribution(
-  "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/LaborReal.dat",
-  "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/alfabeta.dat")
+(yit, ymedian, pension) = incomeDistribution("tew207")
 
 # 2. Construct individual specific belief histories
-(s_f_i, stdy, k) = learning(yit, ρ, var_η, var_ɛ,
-    "C:/Users/tew207/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/SNext_in.dat")
+(s_f_i, stdy, k) = learning("tew207")
 
 # 3. Construct Grids
-(wgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R, ygrid_R) =
+(xgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R, ygrid_R) =
     grids(s_f_i, stdy, wpoints, hpoints, apoints, bpoints, zpoints,
-           wpoints_R, hpoints_R, ypoints_R, wmaxR, power, r, tR, true, true)
+           wpoints_R, hpoints_R, ypoints_R, wmaxR, power, r, tR, true)
 
 # 4. Solve Retirement Problem
 (v_R, wp_R) = solveRetirement(wgrid_R, hgrid_R, ygrid_R, r, δ, λ)
 
 # 5. Solve Transition Problem
-(v, wp) = solveTransition(v_R, wgrid_R, hgrid_R, ygrid_R, wgrid, hgrid,
-                          agrid, bgrid, zgrid, ymedian, r, δ, λ)
+(v, wp, c_over_x) =
+  solveTransition(v_R, wgrid_R, hgrid_R, ygrid_R, xgrid, hgrid, agrid, bgrid,
+                  zgrid, ymedian, r, δ, λ)
 
 # 6. Solve Working Life Problem
-(v, wp) = solveWorkingLife(v, wp, wgrid, hgrid, agrid, bgrid, zgrid,
-                           stdy, r, k, δ, λ, ρ)
+(v, wp, c_over_x) = solveWorkingLife(v, wp, xgrid, hgrid, agrid, bgrid, zgrid,
+                                     stdy, k, r, δ, λ, ρ, c_over_x)
 
 # 7. Simulate Economy
-(c_t, h_t, w_t, wp_t) = simulate(wp, wgrid, hgrid, agrid, bgrid, zgrid,
-                  wgrid_R, hgrid_R, ygrid_R, yit, ymedian, s_f_i, wp_R, r, λ)
-
-plotv(v, wgrid, hgrid, agrid, bgrid, zgrid, "z", 3, 2, 5, 4, 40)
-plotdistributions(w_t, [5, 15, 25,40], δ)
+(c_t, h_t, w_t, wp_t) = sim(wp, xgrid, hgrid, agrid, bgrid, zgrid,
+                  wgrid_R, hgrid_R, ygrid_R, yit, s_f_i, wp_R, pension, r, λ)

@@ -3,13 +3,11 @@
 ################################################################################
 
 function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
-               hpoints::Int64, apoints::Int64, bpoints::Int64, zpoints::Int64,
-               wpoints_R::Int64, hpoints_R::Int64, ypoints_R, wmaxR::Float64,
-               power::Float64, r::Float64, tR::Int64, guv_dist::Bool,
-               const_beliefs::Bool)
+  hpoints::Int64, apoints::Int64, bpoints::Int64, zpoints::Int64,
+  wpoints_R::Int64, hpoints_R::Int64, ypoints_R, wmaxR::Float64, power::Float64,
+  r::Float64, tR::Int64, guv_dist::Bool)
 
-   @printf "3. Construct Grids\n"
-
+  @printf "3. Construct Grids\n"
   tW = size(s_f_i,3)
   hmat = [ones(1,tW); linspace(1,tW,tW)'; ones(1,tW)]
   ybelief = Array(Float64, (size(s_f_i,2), tW))
@@ -29,19 +27,25 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
 
   @printf "\t3.1 Wealth Grid\n"
   if guv_dist
-    guvgrid = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealth.dat")'
-    wgrid = Array(Float64, (wpoints, size(s_f_i,3)))
-    for t = 1:size(s_f_i,3)
-      wgrid[:, t] = linspace(guvgrid[1, t], guvgrid[end, t], wpoints)
+    wgrid_org = readdlm("C:\\Users\\tew207\\Dropbox\\QMUL\\PhD\\Code\\Julia\\Guvenen\\wealth.dat")'
+    wgrid = Array(Float64, (wpoints, tW)); wgridexp = similar(wgrid)
+
+    for t = tW:-1:1
+      wdistexp = (wgrid_org[end, t])^(1/power)# - wgrid_org[1, t])^(1/power)
+      winc = wdistexp/(wpoints-1)
+      for i = 1: wpoints
+        wgridexp[i, t] = (i-1)*winc
+      end
+      wgrid[:, t] = wgridexp[:, t].^power# + wgrid_org[1, t]
     end
   else
     wmin = Array(Float64, tW)
     wmax = similar(wmin)
 
-    wmin[tW] = -0.7*yminbelief[tW]
+    wmin[tW] = 0.#-0.7*yminbelief[tW]
     wmax[tW] = 2*ymaxbelief[tW]
     for t = (tW-1):-1:1
-      wmin[t] = wmin[t+1]/r - 0.7*yminbelief[t]
+      wmin[t] = wmin[t+1]/r # - 0.7*yminbelief[t]
       wmax[t] = 2*ymaxbelief[t]
     end
 
@@ -57,9 +61,6 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
       wgrid[:, t] = wgridexp[:, t].^power + wmin[t]
     end
   end
-  ################## HACK!! ####################
-  wgrid[:, 1] = linspace(wgrid[1, 2], wgrid[end, 1], wpoints)
-  ###############################################
 
   @printf "\t3.2 Habit Grid\n"
   hgrid = Array(Float64, (hpoints, tW))
@@ -68,37 +69,12 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   end
 
   @printf "\t3.3 Grids for α, β, z\n"
-  if const_beliefs
-    agrid = linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints)
-    bgrid = linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints)
-    zgrid = linspace(minimum(s_f_i[3, :, :]), maximum(s_f_i[3, :, :]), zpoints)
-  else
-    for t = 1:size(s_f_i,3)
-      agrid[:, t] = linspace(minimum(s_f_i[1, :, t]), maximum(s_f_i[1, :, t]), apoints)
-      bgrid[:, t] = linspace(minimum(s_f_i[2, :, t]), maximum(s_f_i[2, :, t]), bpoints)
-      zgrid[:, t] = linspace(minimum(s_f_i[3, :, t]), maximum(s_f_i[3, :, t]), zpoints)
-    end
-  end
-
-  # Adjust borrowing constraints such that lowest belief does not have an empty
-  # choice set in any period:
-  adjustments = 0
-  for t = (size(s_f_i,3)-1):-1:1
-    if const_beliefs
-      ymin = exp(agrid[1] + t*bgrid[1] + zgrid[1])
-    else
-      ymin = exp(agrid[1,t] + t*bgrid[1,t] + zgrid[1,t])
-    end
-    tightening = wgrid[1, t] - wgrid[1, t+1]/r
-    if tightening > ymin
-      adjustments += 1
-    end
-    while ymin + tightening < 0.01
-      tightening = wgrid[1, t] - wgrid[1, t+1]/r
-      wgrid[:, t] = linspace(wgrid[1, t]+0.1, wgrid[end, t], wpoints)
-    end
-  end
-  @printf "\t%d adjustments made to borrowing constraint\n" adjustments
+  agrid = convert(Array{Float64,1},
+    linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints))
+  bgrid = convert(Array{Float64,1},
+    linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints))
+  zgrid = convert(Array{Float64,1},
+    linspace(minimum(s_f_i[3, :, :]), maximum(s_f_i[3, :, :]), zpoints))
 
   @printf "\t3.4 Retirement Grids\n"
   if guv_dist # Use Guvenen's retirement grid
@@ -138,7 +114,7 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
 
   yminR = max(0.2*yminbelief[tW], 0.2)
   ymaxR = min(0.2*ymaxbelief[tW], 1000)
-  ygrid_R = linspace(yminR, ymaxR, ypoints_R)
+  ygrid_R = convert(Array{Float64, 1}, linspace(yminR, ymaxR, ypoints_R))
 
   @printf "Asset grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
   @printf "Belief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
