@@ -34,7 +34,7 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
       c_t[i, t] < 0.0 ? negcons +=  1 : 0
     end
   end
-  negcons == 0 || println("\t$negcons negative consumption choices!\n"
+  negcons == 0 || println("\t$negcons negative consumption choices!")
 
   function get_c_1{T<:AbstractFloat}(r::T, δ::T, x::T, y::T, σ::T, tR::Int64)
     numerator = 1 - 1/r*(r*δ)^(1/σ)

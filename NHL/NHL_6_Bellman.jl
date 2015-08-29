@@ -19,12 +19,12 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
 
     # MAXIMIZATION
     wmin = xgrid[1, t+1]
-    @sync @parallel for x = 1:size(xgrid,1)
+    @inbounds @sync @parallel for x = 1:size(xgrid,1)
       for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
         at = agrid[a]; bt = bgrid[b]; zt = zgrid[z]; xt = xgrid[x, t]
         yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
 
-        (xt - xmin/r < 0.01) ? xt = wmin/r + 0.01 : 0
+        (xt - wmin/r < 0.01) ? xt = wmin/r + 0.01 : 0
         (wpnow[x, a, b, z], vnow[x, a, b, z]) =
           bellOpt(xt, at, bt, zt, wmin, v_interpol, yln, k[:, t], ρ, r, δ)
 

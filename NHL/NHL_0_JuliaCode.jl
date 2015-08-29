@@ -37,5 +37,6 @@ end
 
 # 7. Simulate wealth distribution
 (c_t, w_t, wp_t) =
-  sim(wp, xgrid, agrid, bgrid,  zgrid, yit, ymedian, s_f_i, wp_R, wgrid_R,
-           ygrid_R, pension, r)
+  sim(wp, xgrid, agrid, bgrid,  zgrid, wgrid_R, ygrid_R, yit, s_f_i, wp_R,
+        pension, r)
+        
