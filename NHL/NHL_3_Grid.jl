@@ -3,9 +3,9 @@
 ################################################################################
 
 function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
-               apoints::Int64, bpoints::Int64, zpoints::Int64, wpoints_R::Int64,
-               ypoints_R::Int64, wmaxR::Float64, power::Float64, r::Float64,
-               tR::Int64, const_bel::Bool)
+  apoints::Int64, bpoints::Int64, zpoints::Int64, wpoints_R::Int64,
+  ypoints_R::Int64, wmaxR::Float64, power::Float64, r::Float64, tR::Int64,
+  const_bel::Bool)
 
   @printf "3. Construct Grids\n"
   tW = size(s_f_i,3)
@@ -115,64 +115,38 @@ end
 
 ################################################################################
 
-function grids(s_f_i::Array{Float64, 3}, apoints::Int64, bpoints::Int64,
-               zpoints::Int64, ypoints_R::Int64, r::Float64, const_bel::Bool,
-               user::AbstractString)
+function grids(s_f_i::Array{Float64, 3}, wpoints::Int64, apoints::Int64,
+  bpoints::Int64, zpoints::Int64, wpoints_R::Int64, ypoints_R::Int64,
+  r::Float64, user::AbstractString)
 
   @printf "3. Construct Grids (using Guvenen's data)\n"
   path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   # WEALTH GRID #
   wgrid_org = readdlm(path*"wealth.dat")'
-  wgrid = Array(Float64, (wpoints, tW)); wgridexp = similar(wgrid)
+  wgrid = Array(Float64, (wpoints, 40)); wgridexp = similar(wgrid)
 
-  for t = tW:-1:1
-    wdistexp = (wgrid_org[end, t])^(1/power)# - wgrid_org[1, t])^(1/power)
+  for t = 40:-1:1
+    wdistexp = (wgrid_org[end, t])^(1./2.)# - wgrid_org[1, t])^(1/power)
     winc = wdistexp/(wpoints-1)
     for i = 1: wpoints
       wgridexp[i, t] = (i-1)*winc
     end
-    wgrid[:, t] = wgridexp[:, t].^power# + wgrid_org[1, t]
+    wgrid[:, t] = wgridexp[:, t].^2.# + wgrid_org[1, t]
   end
 
   # BELIEF GRIDS #
-  if const_bel
-    agrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, 2:end]),
-                     maximum(s_f_i[1, :, :]), apoints))
-    bgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, :]),
-                     maximum(s_f_i[2, :, :]), bpoints))
-    zgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, :]),
-                     maximum(s_f_i[3, :, :]), zpoints))
-  else
-    for t = 1:40
-      agrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, t]),
-                             maximum(s_f_i[1, :, t]), apoints))
-      bgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, t]),
-                             maximum(s_f_i[2, :, t]), bpoints))
-      zgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, t]),
-                             maximum(s_f_i[3, :, t]), zpoints))
-    end
-  end
-
-  # Adjust borrowing constraints such that lowest belief does not have an empty
-  # choice set in any period:
-  for t = 39:-1:1
-    if const_bel
-      ymin = exp(agrid[1] + t*bgrid[1] + zgrid[1])
-    else
-      ymin = exp(agrid[1,t] + t*bgrid[1,t] + zgrid[1,t])
-    end
-    tightening = wgrid[1, t] - wgrid[1, t+1]/r
-    while ymin + tightening < 0.01
-      tightening = wgrid[1, t] - wgrid[1, t+1]/r
-      wgrid[:, t] += 0.1
-    end
-  end
+  agrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, 2:end]),
+                   maximum(s_f_i[1, :, :]), apoints))
+  bgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, :]),
+                   maximum(s_f_i[2, :, :]), bpoints))
+  zgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, :]),
+                   maximum(s_f_i[3, :, :]), zpoints))
 
   # RETIREMENT GRIDS #
   guvgrid_R_org = readdlm(path*"wealthR.dat")'
   guvgrid_R = reshape(guvgrid_R_org, 1, 7200)
   guvgrid_R = unique(reshape(guvgrid_R_org, 12, 600), 2)
-  wgrid_R = Array(Float64, (wpoints_R, tR)); wgridexp = similar(wgrid_R)
+  wgrid_R = Array(Float64, (wpoints_R, 30)); wgridexp = similar(wgrid_R)
 
   for t = 1:30
     wdistexp = sqrt(guvgrid_R[end, t] - guvgrid_R[1, t])

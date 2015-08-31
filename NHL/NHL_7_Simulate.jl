@@ -4,8 +4,7 @@
 
 function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,2},
-  ygrid_R::Array{T,1}, yit::Array{T,2}, s_f_i::Array{T,3}, wp_R::Array{T,3},
-  pension::Array{T,1}, r::T)
+  yit::Array{T,2}, s_f_i::Array{T,3}, pension::Array{T,1}, r::T, δ::T, σ::T)
 
   @printf "7. Simulate Consumption and Wealth Distribution\n"
   tW = size(yit,2); tR = size(wgrid_R,2)
@@ -44,9 +43,8 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
     return margprop * pdvresources
   end
 
-  function simulate_i{T<:AbstractFloat}(x::T, y::T, δ::T, σ::T, r::T, tR::Int64)
-    c_R_i = Array(Float64, tR)
-    x_t = similar(c_R_i)
+  function simulate_i{T<:AbstractFloat}(x::T, y::T, δ=δ, σ=σ, r=r, tR=tR)
+    c_R_i = Array(Float64, tR); x_t = similar(c_R_i)
     c_R_i[1] = get_c_1(r, δ, x, y, σ, tR)[1]
     x_t[1] = x + y
 
@@ -58,10 +56,8 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   end
 
   for i = 1:size(yit,1)
-    (a,b) =
-      simulate_i(w_t[i, tW+1], pension[i], δ, σ, r, tR)
-    c_t[i, 41:70] = a
-    w_t[i, 41:70] = b
+    (c_t[i, 41:70], w_t[i, 41:70]) =
+      simulate_i(w_t[i, tW+1], pension[i])
   end
 
   return c_t, w_t, wp_t
