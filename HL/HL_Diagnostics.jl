@@ -5,10 +5,10 @@
 using PyPlot, PyCall
 @pyimport seaborn as sns
 
-#######################################################################################
+################################################################################
 
 function plotv(v::Array{Float64, 6}, wg::Array, hg::Array, ag::Array, bg::Array,
-            zg::Array, ydim::String, h::Int64, a::Int64, b::Int64, z::Int64, t::Int64)
+  zg::Array, ydim::String, h::Int64, a::Int64, b::Int64, z::Int64, t::Int64)
 
   fig = figure(figsize=(10,8))
   ax = fig[:add_subplot](111, projection="3d")
@@ -42,10 +42,10 @@ function plotv(v::Array{Float64, 6}, wg::Array, hg::Array, ag::Array, bg::Array,
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 
-function plotv(v::Array{Float64, 4}, wg::Array, hg::Array, yg::Array, ydim::String,
-               h::Int64, y::Int64, t::Int64)
+function plotv(v::Array{Float64, 4}, wg::Array, hg::Array, yg::Array,
+  ydim::String, h::Int64, y::Int64, t::Int64)
 
   fig = figure(figsize=(10,8))
   ax = fig[:add_subplot](111, projection="3d")
@@ -70,7 +70,7 @@ function plotv(v::Array{Float64, 4}, wg::Array, hg::Array, yg::Array, ydim::Stri
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 
 function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
 
@@ -85,9 +85,9 @@ function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 
-function plotdistributions(yit::Array{Float64, 2}, pension::Array, periods::Array)
+function plotdistributions(yit::Array{Float64, 2},pension::Array,periods::Array)
 
   @assert length(periods) == 3
 
@@ -104,11 +104,11 @@ function plotdistributions(yit::Array{Float64, 2}, pension::Array, periods::Arra
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 
 function plothistory(i::Int64, c_t::Array{Float64,2}, w_t::Array{Float64,2},
-                     h_t::Array{Float64,2}, yit::Array{Float64, 2}, pension::Array,
-                     s_f_i::Array{Float64,3}, wgrid::Array, wgrid_R::Array)
+  h_t::Array{Float64,2}, yit::Array{Float64, 2}, pension::Array,
+  s_f_i::Array{Float64,3}, wgrid::Array, wgrid_R::Array)
 
   ybelief = [exp([[1 t 1]*s_f_i[:, 1, t]][1]) for t in 1:40]
 
@@ -118,43 +118,36 @@ function plothistory(i::Int64, c_t::Array{Float64,2}, w_t::Array{Float64,2},
   ax[:plot](h_t[i, :]', label = "Habits")
   ax[:plot]([yit[i, :] pension[i]*ones(30, 1)']', label = "Income")
   ax[:plot]([ybelief' pension[i]*ones(30, 1)']', label = "Belief")
-  ax[:plot]([wgrid[1, :] wgrid_R[1, :]]', linestyle=":", label = "Borrowing Constraint")
+  ax[:plot]([wgrid[1, :] wgrid_R[1, :]]', linestyle=":",
+                                          label = "Borrowing Constraint")
   ax[:axvline](tW, linestyle = "--", color = "black")
   fig[:suptitle]("Simulation History for Agent "*string(i))
   plt.legend()
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 ## Simulation Results ##
 
 function constrained_negative(w::Array{Float64,2}, wgrid::Array{Float64,2},
                               wgrid_R::Array{Float64,2})
 
-  constrained = zeros(Float64, size(w,2))
+  cnstr = zeros(Float64, size(w,2)); neg_cons = similar(cnstr)
   wmin = [wgrid[1, :] wgrid_R[1, :]]
 
-  for t = 1:size(wgrid,2), i = 1:size(wp,1)
-    if abs(w[i, t] - wmin[t]) < 1e-3
-      constrained[t] += 1/1000
-    end
+  for t = 1:size(w,2), i = 1:size(w,1)
+    abs(w[i, t] - wmin[t]) < 1e-3 ? constrained[t] += 1/1000 : 0
+    c_t[i, t] < 0 ? neg_cons[t] += 1 : 0
   end
-
-  neg_cons = similar(constrained)
-  for t = 1:70, i = 1:size(w,1)
-    if c_t[i, t] < 0
-      neg_cons[t] += 1
-    end
-  end
-  neg_cons = neg_cons/1000
+  neg_cons = neg_cons/1000.
 
   return constrained, neg_cons
 end
+
 ################################################################################
 # Variance of consumption and asset series
 function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
-                        pension::Array, wgrid::Array, wgrid_R::Array,
-                        plot::Bool = true)
+  pension::Array, wgrid::Array, wgrid_R::Array, plot::Bool = true)
 
   med_c = Array(Float64, size(c,2))
   med_w = similar(med_c); mean_w = similar(med_c)
@@ -177,7 +170,7 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
     ax[1,1][:plot](mean_w, label = "Mean Wealth")
     ax[1,1][:plot](bc, linestyle = ":", color = "black", label = "Borrowing Constraint")
     ax[2,1][:plot](var_c, label = "Consumption variance")
-    ax[2,1][:plot](var_w, label = "Asset variance")
+    #ax[2,1][:plot](var_w, label = "Asset variance")
     ax[2,1][:plot](var_y, label = "Income/Pension variance")
     ax[1,1][:legend](loc = "best")
     ax[2,1][:legend](loc = "best")
@@ -192,7 +185,8 @@ end
 ################################################################################
 # Aggregate income, consumption, assets
 function aggregates(c::Array{Float64,2}, w::Array{Float64,2},
-                    y::Array{Float64,2}, pension::Array)
+  y::Array{Float64,2}, pension::Array)
+  
   agg_c = Array(Float64, size(c,2))
   agg_w = similar(agg_c);  agg_y = similar(agg_c)
 

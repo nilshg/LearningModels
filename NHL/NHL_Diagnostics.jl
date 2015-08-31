@@ -72,14 +72,18 @@ end
 
 #######################################################################################
 
-function plotdistributions(w_t::Array{Float64, 2}, periods::Array, δ::Float64)
+function plotdistributions(w_t::Array{Float64, 2}, pds::Array, δ::Float64)
 
-  @assert size(periods,1) == 4
+  @assert size(pds,1) == 4
 
-  fig, axes = PyPlot.subplots(2, 2, sharex=true, sharey=true)
+  fig, axes = PyPlot.subplots(2, 2, sharey=true)
   for (i,ax) in enumerate(reshape(axes,4,1))
-    ax[:hist](w_t[:, periods[i]], bins = 100)
-    ax[:set_title]("Period "*string(periods[i]))
+    ax[:hist](w_t[:, pds[i]], bins = 100)
+    ax[:set_title]("Period "*string(pds[i])*" (age "*string(pds[i]+20)*")")
+    mednow = mean(w_t[:, pds[i]])
+    ax[:axvline](mednow, linestyle="--", label="Mean=$(round(mednow,1))",
+                  color="DarkRed")
+    ax[:legend](loc="best")
   end
   fig[:suptitle](L"Wealth Distributions, $\delta$="*string(δ))
   plt[:show]()
@@ -87,28 +91,28 @@ end
 
 #######################################################################################
 
-function plotdistributions(yit::Array{Float64, 2}, pension::Array, periods::Array)
+function plotdistributions(yit::Array{Float64, 2}, pension::Array, pds::Array)
 
-  @assert length(periods) == 3
+  @assert length(pds) == 3
 
-  fig, ax = PyPlot.subplots(2, 2, sharex=true, sharey=true)
-  ax[1,1][:hist](yit[:, periods[1]], bins = 100)
-  ax[1,1][:set_title]("Period "*string(periods[1]))
-  ax[1,2][:hist](yit[:, periods[2]], bins = 100)
-  ax[1,2][:set_title]("Period "*string(periods[2]))
-  ax[2,1][:hist](yit[:, periods[3]], bins = 100)
-  ax[2,1][:set_title]("Period "*string(periods[3]))
+  fig, ax = PyPlot.subplots(2, 2, sharey=true)
+  ax[1,1][:hist](yit[:, pds[1]], bins = 100)
+  ax[1,1][:set_title]("Period "*string(pds[1]))
+  ax[1,2][:hist](yit[:, pds[2]], bins = 100)
+  ax[1,2][:set_title]("Period "*string(pds[2]))
+  ax[2,1][:hist](yit[:, pds[3]], bins = 100)
+  ax[2,1][:set_title]("Period "*string(pds[3]))
   ax[2,2][:hist](pension, bins = 100)
   ax[2,2][:set_title]("Pension Income")
   fig[:suptitle]("Income Distributions")
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 
 function plothistory(i::Int64, c_t::Array{Float64, 2}, w_t::Array{Float64, 2},
-                     yit::Array{Float64, 2}, pension::Array, s_f_i::Array{Float64, 3},
-                     wgrid::Array, wgrid_R::Array, tW::Int64, tR::Int64)
+  yit::Array{Float64, 2}, pension::Array, s_f_i::Array{Float64, 3},
+  wgrid::Array, wgrid_R::Array, tW::Int64, tR::Int64)
 
   ybelief = [exp([[1 t 1]*s_f_i[:, 1, t]][1]) for t in 1:40]
   fig, ax = PyPlot.subplots()
@@ -116,43 +120,36 @@ function plothistory(i::Int64, c_t::Array{Float64, 2}, w_t::Array{Float64, 2},
   ax[:plot](w_t[i, :]', label = "Assets")
   ax[:plot]([yit[i, :] pension[i]*ones(tR, 1)']', label = "Income")
   ax[:plot]([ybelief' pension[i]*ones(tR, 1)']', label = "Belief")
-  ax[:plot]([wgrid[1, :] wgrid_R[1, :]]', linestyle=":", label = "Borrowing Constraint")
+  ax[:plot]([wgrid[1, :] wgrid_R[1, :]]', linestyle=":",
+  label = "Borrowing Constraint")
   ax[:axvline](tW, linestyle = "--", color = "black")
   ax[:legend](loc="best")
   fig[:suptitle]("Simulation History for Agent "*string(i))
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 ## Simulation Results ##
 
 function constrained_negative(w::Array{Float64,2}, wgrid::Array{Float64,2},
                               wgrid_R::Array{Float64,2})
 
-  constrained = zeros(Float64, size(w,2))
+  cnstr = zeros(Float64, size(w,2)); neg_cons = similar(cnstr)
   wmin = [wgrid[1, :] wgrid_R[1, :]]
 
-  for t = 1:size(wgrid,2), i = 1:size(wp,1)
-    if abs(w[i, t] - wmin[t]) < 1e-3
-      constrained[t] += 1/1000
-    end
+  for t = 1:size(w,2), i = 1:size(w,1)
+    abs(w[i, t] - wmin[t]) < 1e-3 ? constrained[t] += 1/1000 : 0
+    c_t[i, t] < 0 ? neg_cons[t] += 1 : 0
   end
-
-  neg_cons = similar(constrained)
-  for t = 1:70, i = 1:size(w,1)
-    if c_t[i, t] < 0
-      neg_cons[t] += 1
-    end
-  end
-  neg_cons = neg_cons/1000
+  neg_cons = neg_cons/1000.
 
   return constrained, neg_cons
 end
+
 ################################################################################
 # Variance of consumption and asset series
 function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
-                        pension::Array, wgrid::Array, wgrid_R::Array,
-                        plot::Bool = true)
+  pension::Array, wgrid::Array, wgrid_R::Array, plot::Bool = true)
 
   med_c = Array(Float64, size(c,2))
   med_w = similar(med_c); mean_w = similar(med_c)
@@ -175,7 +172,7 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
     ax[1,1][:plot](mean_w, label = "Mean Wealth")
     ax[1,1][:plot](bc, linestyle = ":", color = "black", label = "Borrowing Constraint")
     ax[2,1][:plot](var_c, label = "Consumption variance")
-    ax[2,1][:plot](var_w, label = "Asset variance")
+    #ax[2,1][:plot](var_w, label = "Asset variance")
     ax[2,1][:plot](var_y, label = "Income/Pension variance")
     ax[1,1][:legend](loc = "best")
     ax[2,1][:legend](loc = "best")
@@ -191,7 +188,7 @@ end
 # Aggregate income, consumption, assets
 function aggregates(c::Array{Float64,2}, w::Array{Float64,2},
                     y::Array{Float64,2}, pension::Array)
-  agg_c = Array(Float64, size(c,2))
+  agg_c = Array(Float64, size(c,2));
   agg_w = similar(agg_c);  agg_y = similar(agg_c)
 
   for t = 1:size(c,2)
@@ -206,12 +203,10 @@ end
 # Beliefs vs grids vs realizations
 function plot_beliefs_realizations()
   ybelief = Array(Float64, (agents*bs, tW))
-  ymaxbelief = Array(Float64, (tW, 1))
-  yminbelief = Array(Float64, (tW, 1))
-  ymingridbelief = Array(Float64, tW)
-  ymaxgridbelief = Array(Float64, tW)
-  yminactual = Array(Float64, tW)
-  ymaxactual = Array(Float64, tW)
+  ymaxbelief = Array(Float64, (tW, 1)); yminbelief = similar(ymaxbelief)
+  ymingridbelief = Array(Float64, tW); ymaxgridbelief = Array(Float64, tW)
+  yminactual = Array(Float64, tW); ymaxactual = Array(Float64, tW)
+
   for t = 1:tW
     ymingridbelief[t] = exp(agrid[1] + t*bgrid[1] + zgrid[1])
     ymaxgridbelief[t] = exp(agrid[end] + t*bgrid[end] + zgrid[end])
@@ -242,9 +237,7 @@ function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array, a::Int64,
   α_mid = convert(Int64, round(size(c_x,2)/2))
   β_mid = convert(Int64, round(size(c_x,3)/2))
   z_mid = convert(Int64, round(size(c_x,4)/2))
-  α_hi = size(c_x,2)
-  β_hi = size(c_x,3)
-  z_hi = size(c_x,4)
+  α_hi = size(c_x,2); β_hi = size(c_x,3); z_hi = size(c_x,4)
 
   fig, ax = PyPlot.subplots(2, 2)
   ax[1,1][:plot](wgrid[a:b,t], c_x[a:b, 1, β_mid, z_mid, t], label = "α=1")
