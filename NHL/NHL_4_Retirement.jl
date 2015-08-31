@@ -6,6 +6,7 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
   ygrid_R::Array{T,1}, r::T, δ::T, σ::T)
 
   @printf "4. Solving the retirement problem\n"
+  tR = size(wgrid_R,2)
   function get_c_1{T<:AbstractFloat}(r::T, δ::T, x::T, y::T, σ::T, tR::Int64)
     numerator = 1 - 1/r*(r*δ)^(1/σ)
     denominator = 1 - (1/r*(r*δ)^(1/σ))^tR
@@ -30,15 +31,12 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
     return x_t, sum_u
   end
 
-  wp_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), size(wgrid_R,2)))
+  wp_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), tR))
   v_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), 1))
 
   for w = 1:size(wgrid_R,1), y = 1:size(ygrid_R,1)
-    xt = wgrid_R[w]
-    yt = ygrid_R[y]
-
-    (wp_R[w, y, :], v_R[w, y]) =
-      simul(xt, yt, δ, σ, r, tR)
+    xt = wgrid_R[w]; yt = ygrid_R[y]
+    (wp_R[w, y, :], v_R[w, y]) = simul(xt, yt, δ, σ, r, tR)
   end
   return v_R, wp_R
 end
