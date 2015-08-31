@@ -22,7 +22,7 @@ end
 
 # 3. Construct Grids
 (xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
-  grids(s_f_i, wpoints, apoints, bpoints, zpoints, wpoints_R, ypoints_R, r, "tew207")
+  grids(s_f_i, apoints, bpoints, zpoints, ypoints_R, r, true, "tew207")
 
 # 4. Solve Retirement Problem
 (v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ, σ)
@@ -33,8 +33,10 @@ end
 
 # 6. Solve working life problem
 @time (v, wp, c_over_x) =
-  solveWorkingLife(v,wp, xgrid, agrid, bgrid, zgrid, stdy, k, r, δ, ρ, c_over_x)
+  solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid, stdy, k, r, δ, c_over_x)
 
 # 7. Simulate wealth distribution
 (c_t, w_t, wp_t) =
-  sim(wp, xgrid, agrid, bgrid,  zgrid, wgrid_R, yit, s_f_i, pension, r, δ, σ)
+  sim(wp, xgrid, agrid, bgrid,  zgrid, wgrid_R, ygrid_R, yit, s_f_i, wp_R,
+        pension, r)
+        

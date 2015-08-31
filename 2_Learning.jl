@@ -15,7 +15,7 @@ function learning(user::AbstractString)
     end
   end
 
-  # Import P matrix
+  # Import
   p_f = reshape(readdlm(path*"/Pnow.dat")', 3,3,40)
 
   # Parameters variances, standard deviation of income
@@ -33,8 +33,9 @@ end
 
 ################################################################################
 
-function learning{T<:AbstractFloat}(α::Array{T,1},β::Array{T,1},yit::Array{T,2},
-  ρ::T, var_α::T, var_β::T, cov_αβ::T, var_η::T, var_ɛ::T, fpu::T)
+function learning(α::Array, β::Array, yit::Array, ρ::Float64, var_α::Float64,
+                  var_β::Float64, cov_αβ::Float64, var_η::Float64,
+                  var_ɛ::Float64, fpu::Float64)
 
   @printf "2. Calculate agent's beliefs\n"
   tW = size(yit,2)
@@ -56,7 +57,8 @@ function learning{T<:AbstractFloat}(α::Array{T,1},β::Array{T,1},yit::Array{T,2
   p_f[:, :, 1] = p_0;
 
   # Evolution of Var-Cov-Matrix
-  stdy = Array(Float64, tW); k = Array(Float64, (3, tW))
+  stdy = Array(Float64, tW)
+  k = Array(Float64, (3, tW))
   for t = 1:tW
     ht = [1; t; 1]
     pt = p_f[:, :, t]
@@ -65,9 +67,9 @@ function learning{T<:AbstractFloat}(α::Array{T,1},β::Array{T,1},yit::Array{T,2
     if t < tW
       p_f[:, :, t+1] = f*(pt-pt*ht.*(ht'*pt*ht+var_ɛ).^(-1.0)*ht'*pt)*f' + q
       for i = 1:size(yit,1)
-        s_f_i[:, i, t+1] = f*(s_f_i[:, i, t]
+      s_f_i[:, i, t+1] = f*(s_f_i[:, i, t]
                             + k[:,t].*(log(yit[i, t]) - ht'*s_f_i[:, i, t]))
-      end
+    end
     end
   end
 

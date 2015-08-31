@@ -4,7 +4,7 @@
 
 function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
   xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1},
-  stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, ρ::T, c_over_x::Array{T,5})
+  stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, c_over_x::Array{T,5})
 
   @printf "6. Recursively solve for optimal decision rules\n"
   @printf "\tSolving on %d points..." length(v[:, :, :, :, end])
@@ -24,6 +24,7 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
         at = agrid[a]; bt = bgrid[b]; zt = zgrid[z]; xt = xgrid[x, t]
         yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
 
+        (xt - wmin/r < 0.01) ? xt = wmin/r + 0.01 : 0
         (wpnow[x, a, b, z], vnow[x, a, b, z]) =
           bellOpt(xt, at, bt, zt, wmin, v_interpol, yln, k[:, t], ρ, r, δ)
 
