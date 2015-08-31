@@ -22,7 +22,7 @@ end
 
 # 3. Construct Grids
 (xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
-  grids(s_f_i, wpoints, apoints, bpoints, zpoints, wpoints_R, ypoints_R, r, "tew207")
+  grids(s_f_i,wpoints,apoints,bpoints,zpoints,wpoints_R,ypoints_R,r,"tew207")
 
 # 4. Solve Retirement Problem
 (v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ, σ)
