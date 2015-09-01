@@ -9,9 +9,9 @@ function incomeDistribution(user::AbstractString)
   yit = readdlm(path*"LaborReal.dat")
   alfabeta = readdlm(path*"alfabeta.dat")
   α = alfabeta[:, 1]
-  α = reshape(repmat(α, 1, 100)', 100000, 1)
+  α = reshape(repmat(α, 1, 100)', 100000)
   β = alfabeta[:, 2]
-  β = reshape(repmat(β, 1, 100)', 100000, 1)
+  β = reshape(repmat(β, 1, 100)', 100000)
 
   # Median income in last period for calculation of retirement benefits
   ymedian = median(yit[:, end])
