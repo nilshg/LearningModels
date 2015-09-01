@@ -15,10 +15,15 @@ import ApproXD, Grid, Distributions, Optim, QuantEcon, PyPlot, PyCall
 end
 
 # 1. Draw Income Distribution
-(yit, ymedian, pension) = incomeDistribution("tew207")
+#(yit, pension) = incomeDistribution("tew207")
+(yit, pension, α, β, β_k) =
+  incomeDistribution(agents, bs, μₐ, μᵦ, var_α, var_β, cov_αβ, var_ɛ, var_η, ρ,
+                       y_adj, tW)
 
 # 2. Construct individual specific belief histories
-(s_f_i, stdy, k) = learning("tew207")
+#(s_f_i, stdy, k) = learning("tew207")
+(s_f_i, stdy, k) = learning(α, β, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η,
+                              var_ɛ, fpu)
 
 # 3. Construct Grids
 (xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =

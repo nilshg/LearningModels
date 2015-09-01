@@ -2,23 +2,20 @@
 ########################### INCOME DISTRIBUTION ################################
 ################################################################################
 
+using Distributions
+
+################################################################################
+
 function incomeDistribution(user::AbstractString)
 
   @printf "1. Import Guvenen's income distribution\n"
   path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   yit = readdlm(path*"LaborReal.dat")
-  alfabeta = readdlm(path*"alfabeta.dat")
-  α = alfabeta[:, 1]
-  α = reshape(repmat(α, 1, 100)', 100000)
-  β = alfabeta[:, 2]
-  β = reshape(repmat(β, 1, 100)', 100000)
+  println("\tMedian income in period 40 is $(median(yit[:, end]))")
 
-  # Median income in last period for calculation of retirement benefits
-  ymedian = median(yit[:, end])
-  @printf "\tMedian income in period 40 is %.2f\n" ymedian
-
-  ybari = mean(yit, 2)[:]
-  (γ_0, γ_1) = linreg(yit[:, 40], ybari)
+  # Retirement benefits
+  ybar_i = mean(yit, 2)[:]
+  (γ_0, γ_1) = linreg(yit[:, 40], ybar_i)
 
   function get_pension(y::Float64, k_0::Float64, k_1::Float64,
                        avgy::Float64)
@@ -39,56 +36,53 @@ function incomeDistribution(user::AbstractString)
   end
 
   pension = Array(Float64, 100000)
-  benchmark = mean(yit)
+  ybar = mean(yit)
   for i = 1:100000
-    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, benchmark)
+    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, ybar)
   end
 
-  return yit, ymedian, pension, α, β
+  return yit, pension
 end
 
 ################################################################################
 
-function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Float64,
-               var_α::Float64, var_β::Float64, cov_αβ::Float64, var_ɛ::Float64,
-               var_η::Float64, ρ::Float64, y_adj::Float64, tW::Int64)
+function incomeDistribution{T<:AbstractFloat}(agents::Int64, bs::Int64, μₐ::T,
+  μᵦ::T,var_α::T,var_β::T,cov_αβ::T,var_ɛ::T,var_η::T,ρ::T,y_adj::T,tW::Int64)
 
   min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
 
   @printf "1. Draw an income distribution\n"
   # Draw some alphas and betas
   ab = MvNormal([μₐ; μᵦ], [var_α cov_αβ; cov_αβ var_β])
-  draw = rand(ab, bs)'
+  draw1 = rand(ab, bs)'
+  draw2 = rand(ab, bs)'
   for i = 1:bs
-    while draw[i,2] < min_β
-      draw[i,2] = min_β + abs(draw[i,2]-min_β)/50.0
-    end
+    draw1[i,2] < min_β ? draw1[i,2] = min_β + abs(draw1[i,2]-min_β)/50.0 : 0
+    draw2[i,2] < min_β ? draw2[i,2] = min_β + abs(draw2[i,2]-min_β)/50.0 : 0
   end
-
-  α = reshape(repmat(draw[:, 1],1,100)', agents*bs, 1)
-  β = reshape(repmat(draw[:, 2],1,100)', agents*bs, 1)
+  α = (draw1[:,1] + draw2[:,1])/2.
+  α = reshape(repmat(α,1,100)', agents*bs)
+  β_u = reshape(repmat(draw1[:, 2],1,100)', agents*bs)
+  β_k = reshape(repmat(draw2[:, 2],1,100)', agents*bs)
+  β = (1-fpu)*β_k + fpu*β_u
 
   # Draw the income distribution:
-  yit = zeros(bs*agents, tW)
-  z = zeros(bs*agents, tW)
-  z[:, 1] = sqrt(var_η/(1-ρ^2))*randn(agents*bs)
+  yit = zeros(bs*agents, tW); z = similar(yit)
 
+  z[:, 1] = sqrt(var_η/(1-ρ^2))*randn(agents*bs)
   for t = 1:tW, i = 1:bs*agents
     yit[i, t] = y_adj + exp(α[i] + β[i]*t + z[i, t] + sqrt(var_ɛ)*randn())
-    if t < tW
-      z[i, t+1] = ρ*z[i, t] + sqrt(var_η)*randn()
-    end
+    t < tW ? z[i, t+1] = ρ*z[i, t] + sqrt(var_η)*randn() : 0
   end
 
   # Median income in last period for calculation of retirement benefits
-  ymedian = median(yit[:, end])
-  @printf "\tMedian income in period 40 is %.2f\n" ymedian
+  ymedian =
+  println("\tMedian income in period 40 is $(median(yit[:, end]))")
 
-  ybari = mean(yit, 2)[:]
-  (γ_0, γ_1) = linreg(yit[:, 40], ybari)
+  ybar_i = mean(yit, 2)[:]
+  (γ_0, γ_1) = linreg(yit[:, 40], ybar_i)
 
-  function get_pension(y::Float64, k_0::Float64, k_1::Float64,
-                       avgy::Float64)
+  function get_pension(y::T, k_0::T, k_1::T, avgy::T)
       ytilde = (k_0 + k_1*y)/avgy
       rratio = 0.0
 
@@ -106,32 +100,31 @@ function incomeDistribution(agents::Int64, bs::Int64, μₐ::Float64, μᵦ::Flo
   end
 
   pension = Array(Float64, size(yit,1))
-  benchmark = mean(yit)
+  ybar = mean(yit)
   for i = 1:size(yit, 1)
-    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, benchmark)
+    pension[i] = get_pension(yit[i, 40], γ_0, γ_1, ybar)
   end
 
-  return yit, ymedian, pension, α, β
+  return yit, pension, α, β, β_k
 end
 
 ################################################################################
 
-function incomeDistribution(α::Float64, β::Float64, var_η_RIP::Float64,
-                            var_ɛ_RIP::Float64, zgridpoints_RIP::Int64,
-                            epsgridpoints::Int64, tW::Int64)
+function incomeDistribution{T<:AbstractFloat}(α::T, β::T, var_η_RIP::T,
+  var_ɛ_RIP::T, zpoints_RIP::Int64, epspoints::Int64, tW::Int64)
 
   @printf "1. Drawing an RIP-consistent income distribution\n"
-  @printf "\tσ²(η) = %.3f,  σ²(ɛ) =  %.3f\n" var_η_RIP var_ɛ_RIP
+  println("\tσ²(η) = $var_η_RIP,  σ²(ɛ) =  $var_ɛ_RIP")
 
-  zdisc = [-(1/2)*(zgridpoints_RIP-1)*sqrt(var_η_RIP)+(i-1)*sqrt(var_η_RIP)
-               for i = 1:zgridpoints_RIP]
+  zdisc = [-(1/2)*(zpoints_RIP-1)*sqrt(var_η_RIP)+(i-1)*sqrt(var_η_RIP)
+               for i = 1:zpoints_RIP]
 
-  epsdisc = [-(1/2)*(epsgridpoints-1)*sqrt(var_ɛ_RIP)+(i-1)*sqrt(var_ɛ_RIP)
-               for i = 1:epsgridpoints]
+  epsdisc = [-(1/2)*(epspoints-1)*sqrt(var_ɛ_RIP)+(i-1)*sqrt(var_ɛ_RIP)
+               for i = 1:epspoints]
 
-  yit = Array(Float64, (zgridpoints_RIP, epsgridpoints, tW))
+  yit = Array(Float64, (zpoints_RIP, epspoints, tW))
 
-  for t = 1:tW, z = 1:zgridpoints_RIP, ɛ = 1:epsgridpoints
+  for t = 1:tW, z = 1:zpoints_RIP, ɛ = 1:epspoints
     if t < 2
       yit[:, ɛ, t] = exp(α + β*t + 0.8*zdisc[z] + 0.6*epsdisc[ɛ])
     elseif t < 3
