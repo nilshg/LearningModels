@@ -28,7 +28,7 @@ init_var_z = 0.01      # Initial belief about ariance of z
 var_α = 0.005          # Cross-sectional variance of α (std = 0.07)
 var_β = 0.00037        # Cross-sectional variance of β (std = 0.019)
 corr_αβ = -0.25        # Cross-sectional correlation of α, β (cov = -0.0003)
-cov_αβ = corr_αβ*sqrt((1-fpu)*var_β*var_α)
+cov_αβ = corr_αβ*sqrt(var_β*var_α)
 var_η = 0.029          # Variance of persistent shock (std = 0.17)
 var_ɛ = 0.047          # Variance of transitory shock (std = 0.22)
 ρ = 0.82               # Persistence of AR(1) component of income
