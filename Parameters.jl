@@ -60,5 +60,6 @@ function u_h(c::Float64, h::Float64, γ=γ, σ=σ)
 end
 
 function u(c::Float64, σ=σ)
-     c^(1-σ)/(1-σ)
+     u = c^(1-σ)/(1-σ)
+     c < 0.0 ? u - 10000. : 0
 end
