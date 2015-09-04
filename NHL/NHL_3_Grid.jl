@@ -26,10 +26,10 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
 
   wmin = Array(Float64, tW); wmax = similar(wmin)
 
-  wmin[tW] = -1.5 # -0.7*yminbelief[tW]
+  wmin[tW] = 0. # -0.7*yminbelief[tW]
   wmax[tW] = 1.5*ymaxbelief[tW]
   for t = (tW-1):-1:1
-    wmin[t] = wmin[t+1]#/r - 0.7*yminbelief[t]
+    wmin[t] = wmin[t+1]/r #- 0.7*yminbelief[t]
     wmax[t] = 2*ymaxbelief[t]
   end
 
@@ -126,12 +126,12 @@ function grids(s_f_i::Array{Float64, 3}, wpoints::Int64, apoints::Int64,
   wgrid = Array(Float64, (wpoints, 40)); wgridexp = similar(wgrid)
 
   for t = 40:-1:1
-    wdistexp = (wgrid_org[end, t] - 1.5)^(1./2.)# - wgrid_org[1, t])^(1/power)
+    wdistexp = (wgrid_org[end, t])^(1./2.)# - wgrid_org[1, t])^(1/power)
     winc = wdistexp/(wpoints-1)
     for i = 1: wpoints
       wgridexp[i, t] = (i-1)*winc
     end
-    wgrid[:, t] = wgridexp[:, t].^2. - 1.5# + wgrid_org[1, t]
+    wgrid[:, t] = wgridexp[:, t].^2.# + wgrid_org[1, t]
   end
 
   # BELIEF GRIDS #
