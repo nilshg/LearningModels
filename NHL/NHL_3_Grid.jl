@@ -2,10 +2,9 @@
 ############################# GRID CONStRUCTION ################################
 ################################################################################
 
-function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
-  apoints::Int64, bpoints::Int64, zpoints::Int64, wpoints_R::Int64,
-  ypoints_R::Int64, wmaxR::Float64, power::Float64, r::Float64, tR::Int64,
-  const_bel::Bool)
+function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array, xpoints::T,
+  apoints::T, bpoints::T, zpoints::T, wpoints_R::T, ypoints_R::T,
+  wmaxR::Float64, power::Float64, r::Float64, tR::T, const_bel::Bool)
 
   @printf "3. Construct Grids\n"
   tW = size(s_f_i,3)
@@ -24,24 +23,21 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   # Maximum wealth is given by three times the highest earnings
   # Minimum wealth is given by some ad hoc constraint
 
-  wmin = Array(Float64, tW); wmax = similar(wmin)
-
-  wmin[tW] = -0.7*yminbelief[tW]
-  wmax[tW] = 1.5*ymaxbelief[tW]
+  xmin = Array(Float64, tW); xmax = similar(xmin)
+  xmin[tW] = -0.7*yminbelief[tW]
   for t = (tW-1):-1:1
-    wmin[t] = wmin[t+1]/r - 0.7*yminbelief[t]
-    wmax[t] = 2*ymaxbelief[t]
+    xmin[t] = xmin[t+1]/r - 0.7*yminbelief[t]
   end
+  xmax = ymaxbelief
 
-  wgrid = Array(Float64, (wpoints, tW)); wgridexp = similar(wgrid)
-
+  xgrid = Array(Float64, (xpoints, tW)); xgridexp = similar(xgrid)
   for t = tW:-1:1
-    wdistexp = (wmax[t] - wmin[t])^(1/power)
-    winc = wdistexp/(wpoints-1)
-    for i = 1: wpoints
-      wgridexp[i, t] = (i-1)*winc
+    xdistexp = (xmax[t] - xmin[t])^(1/power)
+    xinc = xdistexp/(xpoints-1)
+    for i = 1:xpoints
+      xgridexp[i, t] = (i-1)*xinc
     end
-    wgrid[:, t] = wgridexp[:, t].^power + wmin[t]
+    xgrid[:, t] = xgridexp[:, t].^power + xmin[t]
   end
 
   # BELIEF GRIDS #
@@ -63,21 +59,6 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
                              maximum(s_f_i[2, :, t]), bpoints))
       zgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, t]),
                              maximum(s_f_i[3, :, t]), zpoints))
-    end
-  end
-
-  # Adjust borrowing constraints such that lowest belief does not have an empty
-  # choice set in any period:
-  for t = (size(s_f_i,3)-1):-1:1
-    if const_bel
-      ymin = exp(agrid[1] + t*bgrid[1] + zgrid[1])
-    else
-      ymin = exp(agrid[1,t] + t*bgrid[1,t] + zgrid[1,t])
-    end
-    tightening = wgrid[1, t] - wgrid[1, t+1]/r
-    while ymin + tightening < 0.01
-      tightening = wgrid[1, t] - wgrid[1, t+1]/r
-      wgrid[:, t] = linspace(wgrid[1, t]+0.1, wgrid[end, t], wpoints)
     end
   end
 
@@ -106,41 +87,39 @@ function grids(s_f_i::Array{Float64, 3}, stdy::Array, wpoints::Int64,
   ymaxR = min(0.05*ymaxbelief[tW], 1000)
   ygrid_R = convert(Array, linspace(yminR, ymaxR, ypoints_R))
 
-  @printf "\tWealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
-  @printf "\tBelief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
-  @printf "\tRetirement grids: w_R [%.2f %.2f], y_R [%.2f %.2f]\n" wgrid_R[1, 5] wgrid_R[end, 5] ygrid_R[1] ygrid_R[end]
+  println("\tC-i-h grid: $(round([xgrid[1,1] xgrid[end,1]],2)) in period 1, "*
+    "$(round([xgrid[1,end] xgrid[end,end]],2)) in period 40")
+  println("\tBelief grids: α $(round([agrid[1] agrid[end]],2)), β "*
+    "$(round([bgrid[1] bgrid[end]],2)), z $(round([zgrid[1] zgrid[end]],2))")
+  println("\tRetirement grids: w_R $(round([wgrid_R[1,1] wgrid_R[end,1]],2)), "*
+    "y_R $(round([ygrid_R[1,1] ygrid_R[end,1]],2))")
 
-  return wgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R
+  return xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R
 end
 
 ################################################################################
 
-function grids(s_f_i::Array{Float64, 3}, wpoints::Int64, apoints::Int64,
-  bpoints::Int64, zpoints::Int64, wpoints_R::Int64, ypoints_R::Int64,
-  r::Float64, user::AbstractString)
+function grids{T<:Int}(xpoints::T, apoints::T, bpoints::T, zpoints::T,
+  wpoints_R::T, ypoints_R::T, user::AbstractString)
 
   @printf "3. Construct Grids (using Guvenen's data)\n"
   path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   # WEALTH GRID #
   wgrid_org = readdlm(path*"wealth.dat")'
-  wgrid = Array(Float64, (wpoints, 40)); wgridexp = similar(wgrid)
-
+  xgrid = Array(Float64, (xpoints, 40)); xgridexp = similar(xgrid)
   for t = 40:-1:1
-    wdistexp = (wgrid_org[end, t] - wgrid_org[1, t])^(1./power)
-    winc = wdistexp/(wpoints-1)
-    for i = 1: wpoints
-      wgridexp[i, t] = (i-1)*winc
+    xdistexp = (wgrid_org[end, t] - wgrid_org[1, t])^(1./2.)
+    xinc = xdistexp/(xpoints-1)
+    for i = 1: xpoints
+      xgridexp[i, t] = (i-1)*xinc
     end
-    wgrid[:, t] = wgridexp[:, t].^2. + wgrid_org[1, t]
+    xgrid[:, t] = xgridexp[:, t].^2. + wgrid_org[1, t]
   end
 
   # BELIEF GRIDS #
-  agrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, 2:end]),
-                   maximum(s_f_i[1, :, :]), apoints))
-  bgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, :]),
-                   maximum(s_f_i[2, :, :]), bpoints))
-  zgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, :]),
-                   maximum(s_f_i[3, :, :]), zpoints))
+  agrid = convert(Array{Float64,1}, linspace(1.92,2.09, apoints))
+  bgrid = convert(Array{Float64,1}, linspace(-0.05,0.08, bpoints))
+  zgrid = convert(Array{Float64,1}, linspace(-0.86,1.04, zpoints))
 
   # RETIREMENT GRIDS #
   guvgrid_R_org = readdlm(path*"wealthR.dat")'
@@ -159,9 +138,12 @@ function grids(s_f_i::Array{Float64, 3}, wpoints::Int64, apoints::Int64,
 
   ygrid_R = convert(Array{Float64,1}, linspace(0.24, 1000, ypoints_R))
 
-  @printf "\tWealth grid: [%.2f %.2f] in period 1, [%.2f %.2f] in period 40\n" wgrid[1,1] wgrid[end,1] wgrid[1,end] wgrid[end,end]
-  @printf "\tBelief grids: α [%.2f %.2f], β [%.2f %.2f], z [%.2f %.2f]\n" agrid[1] agrid[end] bgrid[1] bgrid[end] zgrid[1] zgrid[end]
-  @printf "\tRetirement grids: w_R [%.2f %.2f], y_R [%.2f %.2f]\n" wgrid_R[1, 5] wgrid_R[end, 5] ygrid_R[1] ygrid_R[end]
+  println("\tC-i-h grid: $(round([xgrid[1,1] xgrid[end,1]],2)) in period 1, "*
+    "$(round([xgrid[1,end] xgrid[end,end]],2)) in period 40")
+  println("\tBelief grids: α $(round([agrid[1] agrid[end]],2)), β "*
+    "$(round([bgrid[1] bgrid[end]],2)), z $(round([zgrid[1] zgrid[end]],2))")
+  println("\tRetirement grids: w_R $(round([wgrid_R[1,1] wgrid_R[end,1]],2)), "*
+    "y_R $(round([ygrid_R[1,1] ygrid_R[end,1]],2))")
 
-  return wgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R
+  return xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R
 end

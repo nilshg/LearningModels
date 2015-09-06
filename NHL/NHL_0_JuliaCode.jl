@@ -13,22 +13,22 @@ import ApproXD, Grid, Distributions, Optim, QuantEcon, PyPlot, PyCall
   include(path*"NHL/NHL_6_Bellman.jl")
   include(path*"NHL/NHL_7_Simulate.jl")
 end
-include(path*"NHL/NHL_Diagnostics.jl")
+include(path*"NHL/NHL_Diagnostics.jl")s
 
 # 1. Draw Income Distribution
-#(yit, pension) = incomeDistribution("tew207")
-(yit, pension, α, β, β_k) =
-  incomeDistribution(agents, bs, μₐ, μᵦ, var_α, var_β, cov_αβ, var_ɛ, var_η, ρ,
-                       y_adj, tW)
+(yit, pension) = incomeDistribution("tew207")
+#(yit, pension, α, β, β_k) =
+  #incomeDistribution(agents, bs, μₐ, μᵦ, var_α, var_β, cov_αβ, var_ɛ, var_η, ρ,
+  #                     y_adj, tW)
 
 # 2. Construct individual specific belief histories
-#(s_f_i, stdy, k) = learning("tew207")
-(s_f_i, stdy, k) = learning(α, β, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η,
-                              var_ɛ, fpu)
+(s_f_i, stdy, k) = learning("tew207")
+#(s_f_i, stdy, k) = learning(α, β, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η,
+#                              var_ɛ, fpu)
 
 # 3. Construct Grids
 (xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
-  grids(s_f_i,wpoints,apoints,bpoints,zpoints,wpoints_R,ypoints_R,r,"tew207")
+  grids(wpoints, apoints, bpoints, zpoints, wpoints_R, ypoints_R, "tew207")
 
 # 4. Solve Retirement Problem
 (v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ, σ)
