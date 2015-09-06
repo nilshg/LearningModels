@@ -13,7 +13,7 @@ import ApproXD, Grid, Distributions, Optim, QuantEcon, PyPlot, PyCall
   include(path*"NHL/NHL_6_Bellman.jl")
   include(path*"NHL/NHL_7_Simulate.jl")
 end
-include(path*"NHL/NHL_Diagnostics.jl")s
+include(path*"NHL/NHL_Diagnostics.jl")
 
 # 1. Draw Income Distribution
 (yit, pension) = incomeDistribution("tew207")
