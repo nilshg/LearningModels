@@ -5,7 +5,7 @@
 using PyCall, PyPlot, QuantEcon
 @pyimport seaborn as sns
 
-#######################################################################################
+################################################################################
 
 function plotv(v::Array{Float64, 5}, wg::Array, ag::Array, bg::Array, zg::Array,
                ydim::String, a::Int64, b::Int64, z::Int64, t::Int64)
@@ -37,9 +37,9 @@ function plotv(v::Array{Float64, 5}, wg::Array, ag::Array, bg::Array, zg::Array,
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 
-function plotv(v::Array{Float64, 3}, wg::Array{Float64, 2}, yg::Array{Float64, 1},
+function plotv(v::Array{Float64, 3}, wg::Array{Float64,2}, yg::Array{Float64,1},
                t::Int64; heading::String = "")
 
   xg, yg = meshgrid(wg[:, t], yg[:])
@@ -56,7 +56,7 @@ function plotv(v::Array{Float64, 3}, wg::Array{Float64, 2}, yg::Array{Float64, 1
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 
 # Plot value and policy functions
 function plot_value_policy(tw::Int64, tr::Int64)
@@ -70,9 +70,10 @@ function plot_value_policy(tw::Int64, tr::Int64)
       "Retirement policy function, period "*string(tr))
 end
 
-#######################################################################################
+################################################################################
 
-function plotdistributions(w_t::Array{Float64, 2}, pds::Array, δ::Float64)
+function plotdistributions(w_t::Array{Float64, 2}, pds::Array,
+  title::AbstractString)
 
   @assert size(pds,1) == 4
 
@@ -80,16 +81,19 @@ function plotdistributions(w_t::Array{Float64, 2}, pds::Array, δ::Float64)
   for (i,ax) in enumerate(reshape(axes,4,1))
     ax[:hist](w_t[:, pds[i]], bins = 100)
     ax[:set_title]("Period "*string(pds[i])*" (age "*string(pds[i]+20)*")")
-    mednow = mean(w_t[:, pds[i]])
-    ax[:axvline](mednow, linestyle="--", label="Mean=$(round(mednow,1))",
+    menow = mean(w_t[:, pds[i]])
+    mednow = median(w_t[:, pds[i]])
+    ax[:axvline](menow, linestyle="--", label="Mean=$(round(menow,1))",
                   color="DarkRed")
+    ax[:axvline](mednow, linestyle="--", label="Median=$(round(mednow,1))",
+                  color="DarkGreen")
     ax[:legend](loc="best")
   end
-  fig[:suptitle](L"Wealth Distributions, $\delta$="*string(δ))
+  fig[:suptitle]("Wealth Distributions"*title)
   plt[:show]()
 end
 
-#######################################################################################
+################################################################################
 
 function plotdistributions(yit::Array{Float64, 2}, pension::Array, pds::Array)
 
@@ -170,7 +174,8 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
     ax[1,1][:plot](med_c, label = "Median Consumption")
     ax[1,1][:plot](med_w, label = "Median Wealth")
     ax[1,1][:plot](mean_w, label = "Mean Wealth")
-    ax[1,1][:plot](bc, linestyle = ":", color = "black", label = "Borrowing Constraint")
+    ax[1,1][:plot](bc, linestyle = ":", color = "black",
+                       label = "Borrowing Constraint")
     ax[2,1][:plot](var_c, label = "Consumption variance")
     #ax[2,1][:plot](var_w, label = "Asset variance")
     ax[2,1][:plot](var_y, label = "Income/Pension variance")
@@ -231,7 +236,7 @@ function plot_beliefs_realizations()
 end
 
 ################################################################################
-function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array, a::Int64,
+function plot2Dconfunc(c_x::Array{Float64,5}, t::Int64, wgrid::Array, a::Int64,
   b::Int64; figtext::String = "")
 
   α_mid = convert(Int64, round(size(c_x,2)/2))
@@ -240,30 +245,36 @@ function plot2Dconfunc(c_x::Array{Float64, 5}, t::Int64, wgrid::Array, a::Int64,
   α_hi = size(c_x,2); β_hi = size(c_x,3); z_hi = size(c_x,4)
 
   fig, ax = PyPlot.subplots(2, 2)
-  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b, 1, β_mid, z_mid, t], label = "α=1")
-  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, z_mid, t], label = "α=2")
-  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b,end,β_mid,z_mid,t], label="α="*string(α_hi))
+  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b, 1, β_mid, z_mid, t],
+                                    label = "α=1")
+  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, z_mid, t],
+                                    label = "α=2")
+  ax[1,1][:plot](wgrid[a:b,t], c_x[a:b,end,β_mid,z_mid,t],
+                                    label="α="*string(α_hi))
   #ax[1,1][:plot](wgrid[a:b,t],wgrid[a:b,t], linestyle=":", color="black")
   ax[1,1][:set_title]("β="*string(β_mid)*", z="*string(z_mid))
   ax[1,1][:legend](loc = "best")
   ax[2,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, 1, 4, t], label = "β=1")
   ax[2,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, 4, 4, t], label = "β=4")
   ax[2,1][:plot](wgrid[a:b,t], c_x[a:b, α_mid, 6, 4, t], label = "β=6")
-  ax[2,1][:plot](wgrid[a:b,t], c_x[a:b,α_mid,end,4,t],label = "β="*string(β_hi))
+  ax[2,1][:plot](wgrid[a:b,t], c_x[a:b,α_mid,end,4,t],
+                                    label = "β="*string(β_hi))
   #ax[2,1][:plot](wgrid[a:b,t],wgrid[a:b,t], linestyle=":", color="black")
   ax[2,1][:set_title]("α="*string(α_mid)*", z="*string(z_mid))
   ax[2,1][:legend](loc = "best")
   ax[1,2][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, 1, t], label = "z=1")
   ax[1,2][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, 3, t], label = "z=2")
   ax[1,2][:plot](wgrid[a:b,t], c_x[a:b, α_mid, β_mid, 5, t], label = "z=3")
-  ax[1,2][:plot](wgrid[a:b,t], c_x[a:b,α_mid,β_mid,end,t],label="z="*string(z_hi))
+  ax[1,2][:plot](wgrid[a:b,t], c_x[a:b,α_mid,β_mid,end,t],
+                                    label="z="*string(z_hi))
   #ax[1,2][:plot](wgrid[a:b,t],wgrid[a:b,t], linestyle=":", color="black")
   ax[1,2][:set_title]("α="*string(α_mid)*", "*"β="*string(β_mid))
   ax[1,2][:legend](loc = "best")
   ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 1, 1, t], label = "β=1")
   ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 4, 1, t], label = "β=4")
   ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 6, 1, t], label = "β=6")
-  ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 8, 1, t], label = "β="*string(β_hi))
+  ax[2,2][:plot](wgrid[a:b,t], c_x[a:b, 1, 8, 1, t],
+                                    label = "β="*string(β_hi))
   #ax[2,2][:plot](wgrid[a:b,t],wgrid[a:b,t], linestyle=":", color="black")
   ax[2,2][:set_title]("α=1, z=1")
   ax[2,2][:legend](loc = "best")
