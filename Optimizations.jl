@@ -37,7 +37,7 @@ function bellOpt{T<:AbstractFloat}(x::T, h::T, a::T, b::T, z::T, wmin::T,
 
   Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u_h(x - w′, h) + δ*EVprime(r*w′) )
 
-  optimum = optimize(Blmn, wmin/r, x)
+  optimum = optimize(Blmn, wmin/r, x + abs(wmin/r) + 0.001)
   w′ = optimum.minimum
   vopt = -(optimum.f_minimum)
 
@@ -108,7 +108,7 @@ function bellOpt{T<:AbstractFloat}(x::T, a::T, b::T, z::T, wmin::T,
 
   Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u(x-w′) + δ*EVprime(r*w′) )
 
-  optimum = optimize(Blmn, wmin/r, x)
+  optimum = optimize(Blmn, wmin/r, x + abs(wmin/r) + .001)
   w′ = optimum.minimum
   vopt = -(optimum.f_minimum)
 
