@@ -21,11 +21,12 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
     wmin = xgrid[1, t+1]
     @inbounds @sync @parallel for x = 1:size(xgrid,1)
       for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
+        #x=3;a=2;b=5;z=4;
         at = agrid[a]; bt = bgrid[b]; zt = zgrid[z]; xt = xgrid[x, t]
-        yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
+        yn = Normal(at + bt*(t+1) + ρ*zt, stdy[t])
 
         (wpnow[x, a, b, z], vnow[x, a, b, z]) =
-          bellOpt(xt, at, bt, zt, wmin, v_interpol, yln, k[:, t], ρ, r, δ)
+          bellOpt(xt, at, bt, zt, wmin, v_interpol, yn, k[:, t], ρ, r, δ)
 
         cxnow[x,a,b,z] = (xt-wpnow[x,a,b,z])/xt
       end

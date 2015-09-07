@@ -41,7 +41,7 @@ var_ɛ_RIP = 0.061      # σ²(ɛ) (std = 0.247)
 ρ_RIP = 0.988          # AR(1) persistence
 
 # Parameters for grid construction
-wpoints = 25           # Wealth grid points (working life)
+xpoints = 25           # Cash-in-hand grid points (working life)
 wpoints_R = 160        # Wealth grid points (retirement)
 hpoints = 6            # Habit grid points (working life)
 hpoints_R = 35         # Habit grid points (retirement)

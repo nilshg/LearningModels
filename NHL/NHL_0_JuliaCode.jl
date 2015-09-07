@@ -1,5 +1,5 @@
 nprocs()==CPU_CORES || addprocs(CPU_CORES-1)
-import ApproXD, Grid, Distributions, Optim, QuantEcon, PyPlot, PyCall
+import ApproXD, Grid, Distributions, Optim, PyPlot, PyCall, FastGaussQuadrature
 @everywhere begin
   path=("C:/Users/tew207/My Documents/GitHub/LearningModels/")
   include(path*"Optimizations.jl")
@@ -17,9 +17,8 @@ include(path*"NHL/NHL_Diagnostics.jl")
 
 # 1. Draw Income Distribution
 (yit, pension) = incomeDistribution("tew207")
-#(yit, pension, α, β, β_k) =
-  #incomeDistribution(agents, bs, μₐ, μᵦ, var_α, var_β, cov_αβ, var_ɛ, var_η, ρ,
-  #                     y_adj, tW)
+#(yit, pension, α, β, β_k) = incomeDistribution(agents, bs, μₐ, μᵦ, var_α,
+#                                     var_β, cov_αβ, var_ɛ, var_η, ρ, y_adj, tW)
 
 # 2. Construct individual specific belief histories
 (s_f_i, stdy, k) = learning("tew207")
@@ -28,7 +27,7 @@ include(path*"NHL/NHL_Diagnostics.jl")
 
 # 3. Construct Grids
 (xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
-  grids(wpoints, apoints, bpoints, zpoints, wpoints_R, ypoints_R, "tew207")
+  grids(xpoints, apoints, bpoints, zpoints, wpoints_R, ypoints_R, "tew207")
 
 # 4. Solve Retirement Problem
 (v_R, wp_R) = solveRetirement(wgrid_R, ygrid_R, r, δ, σ)
