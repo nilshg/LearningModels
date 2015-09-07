@@ -26,7 +26,7 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array, xpoints::T,
   xmin = Array(Float64, tW); xmax = similar(xmin)
   xmin[tW] = -0.7*yminbelief[tW]
   for t = (tW-1):-1:1
-    xmin[t] = xmin[t+1]/r - 0.7*yminbelief[t]
+    xmin[t] = xmin[t+1]/r - 0.5*yminbelief[t]
   end
   xmax = ymaxbelief
 
@@ -65,15 +65,12 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array, xpoints::T,
   # RETIREMENT GRIDS #
   wminR = Array(Float64, (1, tR))
   wminR[tR] = 0.1059/(0.7)   # Directly from Guvenen's code
-
   for t = tR:-1:2
     wminR[t-1] = wminR[t]/r + wminR[tR] - 0.02
   end
-
   wminR = -0.7*wminR
   wgrid_R = Array(Float64, (wpoints_R, tR))
   wgridexp_R = Array(Float64, (wpoints_R, tR))
-
   for t = 1:tR
     wdistexp = (wmaxR - wminR[t])^(1/power)
     winc = wdistexp/(wpoints_R-1)
@@ -83,9 +80,7 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array, xpoints::T,
     wgrid_R[:, t] = wgridexp_R[:, t].^power + wminR[t]
   end
 
-  yminR = max(0.2*yminbelief[tW], 0.2)
-  ymaxR = min(0.05*ymaxbelief[tW], 1000)
-  ygrid_R = convert(Array, linspace(yminR, ymaxR, ypoints_R))
+  ygrid_R = convert(Array, linspace(4., 15., ypoints_R))
 
   println("\tC-i-h grid: $(round([xgrid[1,1] xgrid[end,1]],2)) in period 1, "*
     "$(round([xgrid[1,end] xgrid[end,end]],2)) in period 40")
@@ -108,7 +103,7 @@ function grids{T<:Int}(xpoints::T, apoints::T, bpoints::T, zpoints::T,
   wgrid_org = readdlm(path*"wealth.dat")'
   xgrid = Array(Float64, (xpoints, 40)); xgridexp = similar(xgrid)
   for t = 40:-1:1
-    xdistexp = (wgrid_org[end, t] - wgrid_org[1, t])^(1./2.)
+    xdistexp = (wgrid_org[end, t]/3. - wgrid_org[1, t])^(1./2.)
     xinc = xdistexp/(xpoints-1)
     for i = 1: xpoints
       xgridexp[i, t] = (i-1)*xinc
@@ -136,7 +131,7 @@ function grids{T<:Int}(xpoints::T, apoints::T, bpoints::T, zpoints::T,
     wgrid_R[:, t] = wgridexp[:, t].^2 + guvgrid_R[1,t]
   end
 
-  ygrid_R = convert(Array{Float64,1}, linspace(0.24, 1000, ypoints_R))
+  ygrid_R = convert(Array{Float64,1}, linspace(4.,15., ypoints_R))
 
   println("\tC-i-h grid: $(round([xgrid[1,1] xgrid[end,1]],2)) in period 1, "*
     "$(round([xgrid[1,end] xgrid[end,end]],2)) in period 40")
