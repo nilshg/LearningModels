@@ -282,3 +282,11 @@ function plot2Dconfunc(c_x::Array{Float64,5}, t::Int64, wgrid::Array, a::Int64,
   fig[:text](0.01, 0.01, figtext)
   plt[:show]()
 end
+
+################################################################################
+
+function gini(y::Array{Float64,1})
+  n = length(y)
+  ysort = sort(y)
+  g = (n+1)/n - 2*sum([(n+1-i)*ysort[i] for i=1:n])/(n*sum(ysort))
+end
