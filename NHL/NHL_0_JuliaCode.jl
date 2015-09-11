@@ -1,5 +1,5 @@
 nprocs()==CPU_CORES || addprocs(CPU_CORES-1)
-import ApproXD, Grid, Distributions, Optim, PyPlot, PyCall, FastGaussQuadrature
+import ApproXD, Distributions, Optim, PyPlot, PyCall, FastGaussQuadrature
 @everywhere begin
   path=("C:/Users/tew207/My Documents/GitHub/LearningModels/")
   include(path*"Optimizations.jl")
@@ -22,8 +22,7 @@ include(path*"NHL/NHL_Diagnostics.jl")
 
 # 2. Construct individual specific belief histories
 (s_f_i, stdy, k) = learning("tew207")
-#(s_f_i, stdy, k) = learning(α, β, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η,
-#                              var_ɛ, fpu)
+#(s_f_i, stdy, k) = learning(α,β_k,yit,ρ,var_α,var_β,cov_αβ,var_η,var_ɛ,fpu)
 
 # 3. Construct Grids
 (xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R) =
@@ -43,23 +42,3 @@ include(path*"NHL/NHL_Diagnostics.jl")
 # 7. Simulate wealth distribution
 (c_t, w_t, wp_t) =
   sim(wp, xgrid, agrid, bgrid,  zgrid, wgrid_R, yit, s_f_i, pension, r, δ, σ)
-
-agg_w = [mean(mean(w_t[:,6:15],2)) mean(mean(w_t[:,16:25],2)) mean(mean(w_t[:,26:35],2))]./mean(yit)
-wpint = interpolateV(wp[:,:,:,:,39], xgrid[:,39],agrid,bgrid,zgrid)
-wpex = getValue(wpint,[10.,agrid[2],bgrid[5],zgrid[3]])[1]
-mrplc = mean(pension)/mean(yit)
-
-using DataFrames
-results = DataFrame(
-  Metric =
-    ["Parameters","xpoints","apoints", "bpoints","zpoints","xhigh40","xlow1",
-     "curvature","δ",
-     "Replacement rate"," ", "Results","xmax40","w_agg(26-35)/mean(y)","w_agg(36-45)/mean(y)",
-     "w_agg(46-55)/mean(y)","wp[10,2.005,0.002,-0.47]"],
-  Value =
-    [" ",xpoints,apoints,bpoints,zpoints,round(xgrid[end,40],2),round(xgrid[1,1],2),
-     power, δ, round(mrplc,2)," "," ",maximum(w_t[:,40]),round(agg_w[1],2),round(agg_w[2],2),
-     round(agg_w[3],2),round(wpex,3)])
-
-writetable("C:/Users/tew207/Desktop/results.csv", results)
-println(results)
