@@ -4,7 +4,7 @@
 
 function learning(user::AbstractString)
 
-  @printf "2. Import Guvenen's learning results\n"
+  @printf "Import Guvenen's learning results\n"
   # Import beliefs
   path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   s_f_guv_org = readdlm(path*"/SNext_in.dat")
@@ -32,10 +32,10 @@ end
 
 ################################################################################
 
-function learning{T<:AbstractFloat}(α::Array{T,1},β::Array{T,1},β_k::Array{T,1},
+function learning{T<:AbstractFloat}(α::Array{T,1},β_k::Array{T,1},
   yit::Array{T,2}, ρ::T, var_α::T,var_β::T,cov_αβ::T,var_η::T,var_ɛ::T,fpu::T)
 
-  @printf "2. Calculate agent's beliefs\n"
+  @printf "Calculate agent's beliefs\n"
   tW = size(yit,2); s_f_i = Array(Float64, (3, size(yit,1),tW))
   # Initial belief is the known part of β
   for i = 1:agents*bs
