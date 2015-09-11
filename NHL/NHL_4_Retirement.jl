@@ -5,7 +5,6 @@
 function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
   ygrid_R::Array{T,1}, r::T, δ::T, σ::T)
 
-  @printf "4. Solving the retirement problem\n"
   tR = size(wgrid_R,2)
   function get_c_1{T<:AbstractFloat}(r::T, δ::T, x::T, y::T, σ::T, tR::Int64)
     numerator = 1 - 1/r*(r*δ)^(1/σ)

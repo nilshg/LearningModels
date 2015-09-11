@@ -6,7 +6,7 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array, xpoints::T,
   apoints::T, bpoints::T, zpoints::T, wpoints_R::T, ypoints_R::T,
   wmaxR::Float64, power::Float64, r::Float64, tR::T, const_bel::Bool)
 
-  @printf "3. Construct Grids\n"
+  println("Construct Grids")
   tW = size(s_f_i,3)
 
   ybelief = Array(Float64, (size(s_f_i,2), tW))
@@ -97,7 +97,7 @@ end
 function grids{T<:Int}(xpoints::T, apoints::T, bpoints::T, zpoints::T,
   wpoints_R::T, ypoints_R::T, power::Float64, user::AbstractString)
 
-  @printf "3. Construct Grids (using Guvenen's data)\n"
+  println("Construct Grids (using Guvenen's data)")
   path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   # WEALTH GRID #
   wgrid_org = readdlm(path*"wealth.dat")'

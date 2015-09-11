@@ -6,7 +6,7 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,2},
   yit::Array{T,2}, s_f_i::Array{T,3}, pension::Array{T,1}, r::T, δ::T, σ::T)
 
-  @printf "7. Simulate Consumption and Wealth Distribution\n"
+  @printf "Simulate Consumption and Wealth Distribution\n"
   tW = size(yit,2); tR = size(wgrid_R,2)
   c_t = Array(Float64, (size(yit,1), tW+tR))
   w_t = similar(c_t); wp_t = similar(c_t)

@@ -22,7 +22,6 @@ function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,2},
   ygrid_R::Array{T,1}, xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1},
   zgrid::Array{T,1}, yit::Array{T,2}, r::T, δ::T)
 
-  @printf "5. Solving the problem for the last period of work\n"
   tW = size(xgrid,2)
   wp = Array(Float64,
     (size(xgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW))

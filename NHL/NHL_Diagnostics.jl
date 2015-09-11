@@ -135,15 +135,15 @@ end
 ################################################################################
 ## Simulation Results ##
 
-function constrained_negative(w::Array{Float64,2}, wgrid::Array{Float64,2},
+function constrained_negative(w::Array{Float64,2}, xgrid::Array{Float64,2},
                               wgrid_R::Array{Float64,2})
 
   cnstr = zeros(Int64, size(w,2)); neg_cons = similar(cnstr)
-  wmin = [wgrid[1, :] wgrid_R[1, :]]
+  wmin = [xgrid[1, :] wgrid_R[1, :]]
 
   for t = 1:size(w,2)
-    cnstr[t] = sum(abs(w_t[:,1] - xgrid[1,1]) .< 1e-3)
-    neg_cons[t] = sum(c_t[:,t] .< 1e-5)
+    t < length(wmin) ? cnstr[t] = sum(abs(w_t[:,t] - wmin[t+1]/r) .< 1e-3) : 0
+    neg_cons[t] = sum(c_t[:,70] .< 1e-5)
   end
 
   return cnstr, neg_cons

@@ -8,7 +8,7 @@ using Distributions
 
 function incomeDistribution(user::AbstractString)
 
-  @printf "1. Import Guvenen's income distribution\n"
+  @printf "Import Guvenen's income distribution\n"
   path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   yit = readdlm(path*"LaborReal.dat")
   println("\tMedian income in period 40 is $(median(yit[:, end]))")
@@ -51,7 +51,7 @@ function incomeDistribution{T<:AbstractFloat}(agents::Int64, bs::Int64, μₐ::T
 
   min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
 
-  @printf "1. Draw an income distribution\n"
+  @printf "Draw an income distribution\n"
   # Draw some alphas and betas
   ab = MvNormal([μₐ; μᵦ], [var_α cov_αβ; cov_αβ var_β])
   draw1 = rand(ab, bs)'
