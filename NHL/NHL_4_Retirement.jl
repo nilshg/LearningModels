@@ -14,11 +14,11 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
     return margprop * pdvresources
   end
 
-  function simul{T<:AbstractFloat}(x::T, y::T, δ::T, σ::T, r::T, tR::Int64)
+  function simul{T<:AbstractFloat}(w::T, y::T, δ::T, σ::T, r::T, tR::Int64)
     c_t = Array(Float64, tR); x_t = similar(c_t); sum_u = 0.0
 
-    c_t[1] = get_c_1(r, δ, x, y, σ, tR)[1]
-    x_t[1] = x + y
+    c_t[1] = get_c_1(r, δ, w, y, σ, tR)[1]
+    x_t[1] = w + y
 
     for t = 1:tR-1
       c_t[t+1] = (r*δ)^(1/σ)*c_t[t]
@@ -34,8 +34,8 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
   v_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), 1))
 
   for w = 1:size(wgrid_R,1), y = 1:size(ygrid_R,1)
-    xt = wgrid_R[w]; yt = ygrid_R[y]
-    (wp_R[w, y, :], v_R[w, y]) = simul(xt, yt, δ, σ, r, tR)
+    wt = wgrid_R[w]; yt = ygrid_R[y]
+    (wp_R[w, y, :], v_R[w, y]) = simul(wt, yt, δ, σ, r, tR)
   end
   return v_R, wp_R
 end
