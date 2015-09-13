@@ -51,7 +51,7 @@ end
 ################################################################################
 
 function get_lins{T<:AbstractFloat}(v::Array{T,4}, xgrid::Array{T,1},
-  agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, t::Int64)
+  agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1})
 
   lin_int = Array(Lininterp, length(xgrid))
   for x = 1:length(xgrid)
