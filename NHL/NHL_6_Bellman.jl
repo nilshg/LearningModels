@@ -6,9 +6,11 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
   xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1},
   stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, ρ::T, c_over_x::Array{T,5})
 
-  println("Solve for policy function on $(prod(size(v)[1:4])) points")
-  wpnow = SharedArray(Float64, size(v)[1:4], pids=procs()); vnow=similar(wpnow)
-  cxnow = similar(wpnow)
+  println("Solving for decision rules on prod(size(v)[1:4]) points")
+
+  wpnow = SharedArray(Float64, size(v)[1:4], pids=procs());
+  vnow = SharedArray(Float64, size(v)[1:4], pids=procs());
+  cxnow = SharedArray(Float64, size(v)[1:4], pids=procs());
 
   for t = (size(xgrid,2)-1):-1:1
     # INTERPOLATION
