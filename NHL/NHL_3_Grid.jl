@@ -95,7 +95,7 @@ end
 ################################################################################
 
 function grids{T<:Int}(xpoints::T, apoints::T, bpoints::T, zpoints::T,
-  wpoints_R::T, ypoints_R::T, user::AbstractString)
+  wpoints_R::T, ypoints_R::T, power::Float64, user::AbstractString)
 
   println("Construct Grids (using Guvenen's data)")
   path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
@@ -103,12 +103,12 @@ function grids{T<:Int}(xpoints::T, apoints::T, bpoints::T, zpoints::T,
   wgrid_org = readdlm(path*"wealth.dat")'
   xgrid = Array(Float64, (xpoints, 40)); xgridexp = similar(xgrid)
   for t = 40:-1:1
-    xdistexp = (wgrid_org[end, t]/3. - wgrid_org[1, t])^(1./2.)
+    xdistexp = (wgrid_org[end, t] - wgrid_org[1, t])^(1./power)
     xinc = xdistexp/(xpoints-1)
     for i = 1: xpoints
       xgridexp[i, t] = (i-1)*xinc
     end
-    xgrid[:, t] = xgridexp[:, t].^2. + wgrid_org[1, t]
+    xgrid[:, t] = xgridexp[:, t].^power + wgrid_org[1, t]
   end
 
   # BELIEF GRIDS #
