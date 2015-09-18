@@ -138,15 +138,25 @@ end
 function constrained_negative(w::Array{Float64,2}, xgrid::Array{Float64,2},
                               wgrid_R::Array{Float64,2})
 
+<<<<<<< HEAD
   cnstr = zeros(Int64, size(w,2)); neg_cons = similar(cnstr)
   wmin = [xgrid[1, :] wgrid_R[1, :]]
 
   for t = 1:size(w,2)
     t < length(wmin) ? cnstr[t] = sum(abs(w_t[:,t] - wmin[t+1]/r) .< 1e-3) : 0
     neg_cons[t] = sum(c_t[:,70] .< 1e-5)
-  end
+=======
+  cnstr = zeros(Float64, size(w,2)); neg_cons = similar(cnstr)
+  wmin = [wgrid[1, :] wgrid_R[1, :]]
 
-  return cnstr, neg_cons
+  for t = 1:size(w,2), i = 1:size(w,1)
+    abs(w[i, t] - wmin[t]) < 1e-3 ? constrained[t] += 1/1000 : 0
+    c_t[i, t] < 0 ? neg_cons[t] += 1 : 0
+>>>>>>> parent of e2b3cee... Fix constr_neg function
+  end
+  neg_cons = neg_cons/1000.
+
+  return constrained, neg_cons
 end
 
 ################################################################################
