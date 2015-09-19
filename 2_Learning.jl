@@ -60,7 +60,7 @@ function learning{T<:AbstractFloat}(α::Array{T,1},β_k::Array{T,1},
       p_f[:, :, t+1] = f*(pt-pt*ht.*(ht'*pt*ht+var_ɛ).^(-1.0)*ht'*pt)*f' + q
       for i = 1:size(yit,1)
         s_f_i[:, i, t+1] = f*(s_f_i[:, i, t]
-                            + k[:,t].*(log(yit[i, t]-y_adj) - ht'*s_f_i[:, i, t]))
+                            + k[:,t].*(log(yit[i, t]) - g_t[t] - ht'*s_f_i[:, i, t]))
       end
     end
   end
