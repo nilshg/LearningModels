@@ -47,7 +47,8 @@ end
 ################################################################################
 
 function incomeDistribution{T<:AbstractFloat}(agents::Int64, bs::Int64, μₐ::T,
-  μᵦ::T,var_α::T,var_β::T,cov_αβ::T,var_ɛ::T,var_η::T,ρ::T,y_adj::T,tW::Int64)
+  μᵦ::T, var_α::T, var_β::T, cov_αβ::T, var_ɛ::T, var_η::T, ρ::T,
+  g_t::Array{T,1}, tW::Int64)
 
   min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
 
@@ -71,12 +72,11 @@ function incomeDistribution{T<:AbstractFloat}(agents::Int64, bs::Int64, μₐ::T
 
   z[:, 1] = sqrt(var_η/(1-ρ^2))*randn(agents*bs)
   for t = 1:tW, i = 1:bs*agents
-    yit[i, t] = y_adj + exp(α[i] + β[i]*t + z[i, t] + sqrt(var_ɛ)*randn())
+    yit[i, t] = exp(g_t[t] + α[i] + β[i]*t + z[i, t] + sqrt(var_ɛ)*randn())
     t < tW ? z[i, t+1] = ρ*z[i, t] + sqrt(var_η)*randn() : 0
   end
 
-  # Median income in last period for calculation of retirement benefits
-  ymedian =
+  # Median income in last period for calculation of retirement benefitss
   println("\tMedian income in period 40 is $(median(yit[:, end]))")
 
   ybar_i = mean(yit, 2)[:]
