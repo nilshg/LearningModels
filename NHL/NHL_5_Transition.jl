@@ -18,9 +18,9 @@ function get_pension{T<:AbstractFloat}(y::T, k_0::T, k_1::T, avgy::T)
   return rratio*avgy
 end
 
-function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,2},
+function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,1},
   ygrid_R::Array{T,1}, xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1},
-  zgrid::Array{T,1}, yit::Array{T,2}, r::T, δ::T)
+  zgrid::Array{T,1}, yit::Array{T,2}, g_t::Array{T,1}, r::T, δ::T)
 
   tW = size(xgrid,2)
   wp = Array(Float64,
@@ -36,10 +36,10 @@ function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,2},
   valueRETIRE = interpolateV(v_R[:, :, 1], wgrid_R[:, 1], ygrid_R)
 
   # MAXIMIZATION
-  wmin = wgrid_R[1, 1]
+  wmin = wgrid_R[1]
   for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
     at = agrid[a]; bt = bgrid[b]; zt = zgrid[z]
-    yt = exp(at + bt*tW + zt)
+    yt = exp(g_t[tW] + at + bt*tW + zt)
     pension = get_pension(yt, k_0, k_1, avgy)
 
     for x = 1:size(xgrid,1)
@@ -48,7 +48,7 @@ function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,2},
       (wp[x, a, b, z, tW], v[x, a, b, z, tW]) =
         bellOpt_TRANS(xt, pension, wmin, valueRETIRE, r, δ)
 
-      c_over_x[x,a,b,z,tW] = (xt-wp[x,a,b,z,tW])/xt
+      c_over_x[x,a,b,z,tW] = (xt - wp[x,a,b,z,tW])/xt
     end
   end
 

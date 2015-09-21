@@ -32,7 +32,7 @@ end
 
 ################################################################################
 
-function learning{T<:AbstractFloat}(α::Array{T,1},β_k::Array{T,1},
+function learning{T<:AbstractFloat}(α::Array{T,1}, β_k::Array{T,1},
   yit::Array{T,2}, ρ::T, var_α::T,var_β::T,cov_αβ::T,var_η::T,var_ɛ::T,
   g_t::Array{T,1}, fpu::T)
 
