@@ -47,3 +47,8 @@ v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
 # 7. Simulate wealth distribution
 c_t, w_t, wp_t = sim(wp, xgrid, agrid, bgrid,  zgrid, wgrid_R, yit, s_f_i,
                                                         pension, r, δ, σ, tR)
+
+w_t /= mean(yit)
+
+include("C:/Users/Nils-Holger/Documents/GitHub/SCFtools/SCF_percentiles.jl")
+winfriedcompare(w_t, SCF_prime_age_pctiles, SCF_agedetail_pctiles)

@@ -2,13 +2,13 @@
 ################################  DIAGNOSTICS  #################################
 ################################################################################
 
-using PyCall, PyPlot, QuantEcon
+using PyCall, PyPlot, QuantEcon, StatsBase
 @pyimport seaborn as sns
 
 ################################################################################
 
 function plotv(v::Array{Float64, 5}, wg::Array, ag::Array, bg::Array, zg::Array,
-               ydim::String, a::Int64, b::Int64, z::Int64, t::Int64)
+               ydim::AbstractString, a::Int64, b::Int64, z::Int64, t::Int64)
 
   fig = figure(figsize=(10,8))
   ax = fig[:add_subplot](111, projection="3d")
@@ -40,7 +40,7 @@ end
 ################################################################################
 
 function plotv(v::Array{Float64, 3}, wg::Array{Float64,2}, yg::Array{Float64,1},
-               t::Int64; heading::String = "")
+               t::Int64; heading::AbstractString = "")
 
   xg, yg = meshgrid(wg[:, t], yg[:])
 
@@ -236,7 +236,7 @@ end
 
 ################################################################################
 function plot2Dconfunc(c_x::Array{Float64,5}, t::Int64, wgrid::Array, a::Int64,
-  b::Int64; figtext::String = "")
+  b::Int64; figtext::AbstractString = "")
 
   α_mid = convert(Int64, round(size(c_x,2)/2))
   β_mid = convert(Int64, round(size(c_x,3)/2))
@@ -288,4 +288,44 @@ function gini(y::Array{Float64,1})
   n = length(y)
   ysort = sort(y)
   g = (n+1)/n - 2*sum([(n+1-i)*ysort[i] for i=1:n])/(n*sum(ysort))
+end
+
+################################################################################
+
+function winfriedcompare(w_t::Array{Float64,2}, scf_prime::Array{Float64,2},
+  scf_age::Array{Float64,2})
+
+  agep = zeros(90,3); primep = zeros(90)
+  for i = 1:90
+    agep[i,1] = percentile(mean(w_t[:,6:15],2)[:], i)
+    agep[i,2] = percentile(mean(w_t[:,16:25],2)[:], i)
+    agep[i,3] = percentile(mean(w_t[:,26:35],2)[:], i)
+    primep[i] = percentile(mean(w_t[:,6:35],2)[:], i)
+  end
+
+  fig, ax = subplots(1,3, figsize = (12,10))
+  ax[1,1][:plot](agep[:,1], label = "Model")
+  ax[1,1][:plot](scf_age[1:90,2], label = "Data", linestyle = "--")
+  ax[1,1][:set_title]("Age 26 - 35")
+  ax[1,1][:set_ylabel]("Net wealth in units of mean yearly income")
+  ax[1,1][:set_xlabel]("Percentile")
+  ax[2,1][:plot](agep[:,2], label = "Model")
+  ax[2,1][:plot](scf_age[1:90,3], label = "Data", linestyle = "--")
+  ax[2,1][:set_title]("Age 36 - 45")
+  ax[2,1][:set_xlabel]("Percentile")
+  ax[3,1][:plot](agep[:,3], label = "Model")
+  ax[3,1][:plot](scf_age[1:90,4], label = "Data", linestyle = "--")
+  ax[3,1][:set_title]("Age 46 - 55")
+  ax[3,1][:set_xlabel]("Percentile")
+  [ax[i,1][:legend](loc="best") for i = 1:3]
+  fig[:show]()
+
+  fig, ax = subplots(figsize = (10,8))
+  ax[:plot](primep, label = "Model")
+  ax[:plot](scf_prime[1:90,2], label = "Data", linestyle = "--")
+  ax[:set_title]("Age 26 - 55")
+  ax[:legend](loc="best")
+  ax[:set_ylabel]("Net wealth in units of mean yearly income")
+  ax[:set_xlabel]("Percentile")
+  fig[:show]()
 end
