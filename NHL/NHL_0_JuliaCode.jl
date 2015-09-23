@@ -1,7 +1,7 @@
 nprocs()==CPU_CORES || addprocs(CPU_CORES-1)
 import ApproXD, Distributions, Optim, PyPlot, PyCall, FastGaussQuadrature
 @everywhere begin
-  path=("C:/Users/Nils-Holger/Documents/GitHub/LearningModels/")
+  path=("C:/Users/tew207/Documents/GitHub/LearningModels/")
   include(path*"NHL/NHL_Optimizations.jl")
   include(path*"NHL/NHL_Interpolations.jl")
   include(path*"Parameters.jl")
@@ -15,16 +15,11 @@ import ApproXD, Distributions, Optim, PyPlot, PyCall, FastGaussQuadrature
 end
 include(path*"NHL/NHL_Diagnostics.jl")
 
-# Life cycle profile from PSID 1968-1996
-g_t = [8.36 + 0.07*t - 0.15*t^2/100 for t = 1:40]
-
 # 1. Draw Income Distribution
-#(yit, pension) = incomeDistribution("tew207")
-yit, pension, α, β, β_k = incomeDistribution(agents, bs, μₐ, μᵦ, var_α,
-                                     var_β, cov_αβ, var_ɛ, var_η, ρ, g_t, tW)
+yit, pension, α, β, β_k, g_t, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ =
+  incomeDistribution(agents, bs, tW, profile="")
 
 # 2. Construct individual specific belief histories
-#(s_f_i, stdy, k) = learning("tew207")
 s_f_i, stdy, k = learning(α, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ,
                               g_t, fpu)
 
@@ -49,6 +44,4 @@ c_t, w_t, wp_t = sim(wp, xgrid, agrid, bgrid,  zgrid, wgrid_R, yit, s_f_i,
                                                         pension, r, δ, σ, tR)
 
 w_t /= mean(yit)
-
-include("C:/Users/Nils-Holger/Documents/GitHub/SCFtools/SCF_percentiles.jl")
-winfriedcompare(w_t, SCF_prime_age_pctiles, SCF_agedetail_pctiles)
+include("C:/Users/tew207/Documents/GitHub/SCFtools/SCF_percentiles.jl")

@@ -25,7 +25,7 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array{Float64,1},
   # Minimum wealth is given by some ad hoc constraint
 
   xmin = Array(Float64, tW);
-  xmax = ymaxbelief
+  xmax = 3*ymaxbelief
   xmin[tW] = -0.7*yminbelief[tW]
   for t = (tW-1):-1:1
     xmin[t] = xmin[t+1]/r - 0.5*yminbelief[t]

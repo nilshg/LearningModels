@@ -46,14 +46,47 @@ end
 
 ################################################################################
 
-function incomeDistribution{T<:AbstractFloat}(agents::Int64, bs::Int64, μₐ::T,
-  μᵦ::T, var_α::T, var_β::T, cov_αβ::T, var_ɛ::T, var_η::T, ρ::T,
-  g_t::Array{T,1}, tW::Int64)
+function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
 
-  min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
+  # Life cycle profiles
+  if profile == "psid"
+    # PSID log real labour income, 1968-1996 (median income at 40: $29703)
+    g_t = [8.36 + 0.07*t - 0.15*t^2/100 for t = 1:tW]
+    μₐ = 1.17; μᵦ = 0.009; var_α = 0.03; var_β = 0.00031; corr_αβ = -0.3
+    cov_αβ = corr_αβ*sqrt(var_β*var_α); var_η = 0.013; var_ɛ = 0.03; ρ = 0.853
+  elseif profile == "bhps_grosslab"
+    # BHPS log real gross labour income, 1992-2008 (median £25k mean £28.7k)
+    g_t = [9.65 + 0.024*t + 0.019*t^2/100 - 0.014*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009; var_α = 0.036; var_β = 0.00032; corr_αβ = -0.51
+    cov_αβ = corr_αβ*sqrt(var_β*var_α); var_η = 0.106; var_ɛ = 0.08; ρ = 0.719
+  elseif profile == "bhps_netlab"
+    # BHPS log real net labour income, 1992-2008 (median £19k, mean £21.6k)
+    g_t = [9.41 + 0.019*t + 0.029*t^2/100 - 0.014*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009; var_α = 0.032; var_β = 0.00019; corr_αβ = -0.59
+    cov_αβ = corr_αβ*sqrt(var_β*var_α); var_η = 0.073; var_ɛ = 0.07; ρ = 0.808
+  elseif profile == "bhps_netinc"
+    # BHPS log real net houseold income, 1992-2008 (median £22.6k, mean £26k)
+    g_t = [9.49 + 0.026*t - 0.008*t^2/100 - 0.007*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009; var_α = 0.052; var_β = 0.00011; corr_αβ = -0.42
+    cov_αβ = corr_αβ*sqrt(var_β*var_α); var_η = 0.027; var_ɛ = 0.056; ρ = 0.857
+  elseif profile == "bhps_netincdef"
+    # BHP log real net household income, deflated & equivalized, 1992-2008
+    # (median £16.9k, mean £19.4k)
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009; var_α = 0.1; var_β = 0.0; corr_αβ = -1.
+    cov_αβ = corr_αβ*sqrt(var_β*var_α); var_η = 0.039; var_ɛ = 0.042; ρ = 0.812
+  else
+    g_t = [0. for t = 1:tW]
+    μₐ = 2.0; μᵦ = 0.009; var_α = 0.005; var_β = 0.00037; corr_αβ = -0.25
+    cov_αβ = corr_αβ*sqrt(var_β*var_α); var_η = 0.029; var_ɛ = 0.047; ρ = 0.82
+    profile = "no"
+  end
 
-  @printf "Draw an income distribution\n"
+  println("Draw an income distribution using the $profile profile")
+  println("Parameters of the income process are:")
+  println("ρ=$ρ, var_α=$var_α, var_β=$var_β, var_η=$var_η, var_ɛ=$var_ɛ")
   # Draw some alphas and betas
+  min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
   ab = MvNormal([μₐ; μᵦ], [var_α cov_αβ; cov_αβ var_β])
   draw1 = rand(ab, bs)'
   draw2 = rand(ab, bs)'
@@ -72,17 +105,19 @@ function incomeDistribution{T<:AbstractFloat}(agents::Int64, bs::Int64, μₐ::T
 
   z[:, 1] = sqrt(var_η/(1-ρ^2))*randn(agents*bs)
   for t = 1:tW, i = 1:bs*agents
-    yit[i, t] = exp(g_t[t] + α[i] + β[i]*t + z[i, t] + sqrt(var_ɛ)*randn())
+    yit[i, t] = exp(g_t[t] + α[i] + β[i]*t + z[i, t] + sqrt(var_ɛ)*randn()) +0.4
     t < tW ? z[i, t+1] = ρ*z[i, t] + sqrt(var_η)*randn() : 0
   end
 
   # Median income in last period for calculation of retirement benefitss
-  println("\tMedian income in period 40 is $(median(yit[:, end]))")
+  println("\tMedian and mean income in period 40 are "*
+                    "$(round(median(yit[:, end]),2)) and "*
+                    "$(round(mean(yit[:, end]),2))")
 
   ybar_i = mean(yit, 2)[:]
   (γ_0, γ_1) = linreg(yit[:, 40], ybar_i)
 
-  function get_pension(y::T, k_0::T, k_1::T, avgy::T)
+  function get_pension{T<:AbstractFloat}(y::T, k_0::T, k_1::T, avgy::T)
       ytilde = (k_0 + k_1*y)/avgy
       rratio = 0.0
 
@@ -105,7 +140,7 @@ function incomeDistribution{T<:AbstractFloat}(agents::Int64, bs::Int64, μₐ::T
     pension[i] = get_pension(yit[i, 40], γ_0, γ_1, ybar)
   end
 
-  return yit, pension, α, β, β_k
+  return yit, pension, α, β, β_k, g_t, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ
 end
 
 ################################################################################
