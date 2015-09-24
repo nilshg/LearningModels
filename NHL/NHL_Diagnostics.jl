@@ -291,9 +291,9 @@ function gini(y::Array{Float64,1})
 end
 
 ################################################################################
-
-function winfriedcompare(w_t::Array{Float64,2}, scf_prime::Array{Float64,2},
-  scf_age::Array{Float64,2})
+winfriedcompare(w_t, W1_prime, W1_young, W1_middle, W1_old)
+function winfriedcompare{T<:AbstractFloat}(w_t::Array{T,2}, prime::Array{T,1},
+  young::Array{T,1}, middle::Array{T,1}, old::Array{T,1})
 
   agep = zeros(90,3); primep = zeros(90)
   for i = 1:90
@@ -305,16 +305,16 @@ function winfriedcompare(w_t::Array{Float64,2}, scf_prime::Array{Float64,2},
 
   fig, ax = subplots(1,3, figsize = (12,10))
   ax[1,1][:plot](agep[:,1], label = "Model")
-  ax[1,1][:plot](scf_age[1:90,2], label = "Data", linestyle = "--")
+  ax[1,1][:plot](young[1:90], label = "Data", linestyle = "--")
   ax[1,1][:set_title]("Age 26 - 35")
   ax[1,1][:set_ylabel]("Net wealth in units of mean yearly income")
   ax[1,1][:set_xlabel]("Percentile")
   ax[2,1][:plot](agep[:,2], label = "Model")
-  ax[2,1][:plot](scf_age[1:90,3], label = "Data", linestyle = "--")
+  ax[2,1][:plot](middle[1:90], label = "Data", linestyle = "--")
   ax[2,1][:set_title]("Age 36 - 45")
   ax[2,1][:set_xlabel]("Percentile")
   ax[3,1][:plot](agep[:,3], label = "Model")
-  ax[3,1][:plot](scf_age[1:90,4], label = "Data", linestyle = "--")
+  ax[3,1][:plot](old[1:90], label = "Data", linestyle = "--")
   ax[3,1][:set_title]("Age 46 - 55")
   ax[3,1][:set_xlabel]("Percentile")
   [ax[i,1][:legend](loc="best") for i = 1:3]
@@ -322,7 +322,7 @@ function winfriedcompare(w_t::Array{Float64,2}, scf_prime::Array{Float64,2},
 
   fig, ax = subplots(figsize = (10,8))
   ax[:plot](primep, label = "Model")
-  ax[:plot](scf_prime[1:90,2], label = "Data", linestyle = "--")
+  ax[:plot](prime[1:90], label = "Data", linestyle = "--")
   ax[:set_title]("Age 26 - 55")
   ax[:legend](loc="best")
   ax[:set_ylabel]("Net wealth in units of mean yearly income")
