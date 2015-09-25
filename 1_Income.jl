@@ -52,37 +52,62 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
   if profile == "psid"
     # PSID log real labour income, 1968-1996 (median income at 40: $29703)
     g_t = [8.36 + 0.07*t - 0.15*t^2/100 for t = 1:tW]
-    μₐ = 1.17;
-    μᵦ = 0.009;
-    var_α = 0.03;
-    var_β = 0.00031; corr_αβ = -0.3
-    cov_αβ = corr_αβ*sqrt(var_β*var_α);
-    var_η = 0.013;
-    var_ɛ = 0.03;
+    μₐ = 1.17
+    μᵦ = 0.009
+    var_α = 0.03
+    var_β = 0.00031
+    corr_αβ = -0.3
+    cov_αβ = corr_αβ*sqrt(var_β*var_α)
+    var_η = 0.013
+    var_ɛ = 0.03
     ρ = 0.853
+  elseif profile == "psid_68_86"
+    # PSID log real labour income, 1968-1996 (median income at 40: $29703)
+    g_t = [8.36 + 0.07*t - 0.15*t^2/100 for t = 1:tW]
+    μₐ = 1.17
+    μᵦ = 0.009
+    var_α = 0.11
+    var_β = 0.00001
+    corr_αβ = -0.42
+    cov_αβ = corr_αβ*sqrt(var_β*var_α)
+    var_η = 0.013
+    var_ɛ = 0.043
+    ρ = 0.885
+  elseif profile == "psid_87_13"
+    # PSID log real labour income, 1968-1996 (median income at 40: $29703)
+    g_t = [8.36 + 0.07*t - 0.15*t^2/100 for t = 1:tW]
+    μₐ = 1.17
+    μᵦ = 0.009
+    var_α = 0.097
+    var_β = 0.00025
+    corr_αβ = -0.31
+    cov_αβ = corr_αβ*sqrt(var_β*var_α)
+    var_η = 0.032
+    var_ɛ = 0.085
+    ρ = 0.854
   elseif profile == "bhps_grosslab"
     # BHPS log real gross labour income, 1992-2008 (median £25k mean £28.7k)
     g_t = [9.65 + 0.024*t + 0.019*t^2/100 - 0.014*t^3/1000 for t = 1:tW]
-    μₐ = .0;
-    μᵦ = 0.009;
-    var_α = 0.036;
-    var_β = 0.00032;
+    μₐ = .0
+    μᵦ = 0.009
+    var_α = 0.036
+    var_β = 0.00032
     corr_αβ = -0.51
-    cov_αβ = corr_αβ*sqrt(var_β*var_α);
-    var_η = 0.106;
-    var_ɛ = 0.08;
+    cov_αβ = corr_αβ*sqrt(var_β*var_α)
+    var_η = 0.106
+    var_ɛ = 0.08
     ρ = 0.719
   elseif profile == "bhps_netlab"
     # BHPS log real net labour income, 1992-2008 (median £19k, mean £21.6k)
     g_t = [9.41 + 0.019*t + 0.029*t^2/100 - 0.014*t^3/1000 for t = 1:tW]
-    μₐ = .0;
-    μᵦ = 0.009;
-    var_α = 0.032;
-    var_β = 0.00019;
+    μₐ = .0
+    μᵦ = 0.009
+    var_α = 0.032
+    var_β = 0.00019
     corr_αβ = -0.59
-    cov_αβ = corr_αβ*sqrt(var_β*var_α);
-    var_η = 0.073;
-    var_ɛ = 0.07;
+    cov_αβ = corr_αβ*sqrt(var_β*var_α)
+    var_η = 0.073
+    var_ɛ = 0.07
     ρ = 0.808
   elseif profile == "bhps_netinc"
     # BHPS log real net houseold income, 1992-2008 (median £22.6k, mean £26k)

@@ -291,7 +291,7 @@ function gini(y::Array{Float64,1})
 end
 
 ################################################################################
-winfriedcompare(w_t, W1_prime, W1_young, W1_middle, W1_old)
+
 function winfriedcompare{T<:AbstractFloat}(w_t::Array{T,2}, prime::Array{T,1},
   young::Array{T,1}, middle::Array{T,1}, old::Array{T,1})
 
