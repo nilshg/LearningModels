@@ -9,10 +9,10 @@ agents = 100           # Number of agents sharing an alpha/beta combination
 bs = 1000              # Different alpha/beta combinations in the population;
 
 # Preference Parameters
-δ = 0.97              # Discount factor (Note: 1/beta = 1.035)
+δ = 0.96               # Discount factor (Note: 1/beta = 1.035)
 γ = 0.8                # Strenght of habits (0 = no habits)
 λ = 0.8                # Persistence of habits (lambda=0 --> no persistence)
-σ = 1.4                # Coefficient of relative risk aversion
+σ = 1.08               # Coefficient of relative risk aversion
 
 # Paremeters for belief calculation
 fpu = 0.65             # Proportion of variance of beta that is known
@@ -45,11 +45,11 @@ epspoints = 2          # Grid points for RIP transitory shock
 power = 3.5            # Wealth Grid Curvature
 
 # Utility function
-function u_h(c::Float64, h::Float64, γ=γ, σ=σ)
+function u(c::Float64, h::Float64, γ::Float64, σ::Float64)
     ((c/(h^γ))^(1-σ))/(1-σ)
 end
 
-function u(c::Float64, σ=σ)
+function u(c::Float64, σ::Float64)
   if c > 0.00001
      ut = c^(1-σ)/(1-σ)
    else
