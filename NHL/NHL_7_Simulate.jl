@@ -2,6 +2,17 @@
 ################################### SIMULATION #################################
 ################################################################################
 
+function get_percentiles(w::Array{Float64,2})
+  prct = zeros(90,4)
+  for i = 1:90
+    prct[i,1] = percentile(mean(w[:,6:15],2)[:], i)
+    prct[i,2] = percentile(mean(w[:,16:25],2)[:], i)
+    prct[i,3] = percentile(mean(w[:,26:35],2)[:], i)
+    prct[i,4] = percentile(mean(w[:,6:35],2)[:], i)
+  end
+  return prct
+end
+
 function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,1},
   yit::Array{T,2}, s_f_i::Array{T,3}, pension::Array{T,1}, r::T, δ::T, σ::T,
@@ -13,7 +24,11 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   w_t = similar(c_t); wp_t = similar(c_t)
 
   # Initial wealth
-  w_0 = 0.; w_t[:, 1] = w_0
+  #w_0 = 0.; w_t[:, 1] = w_0
+  include("C:/Users/tew207/Documents/GitHub/SCFtools/SCF_percentiles.jl")
+  for i = 1:size(w_t,1)
+    w_t[i,1] = sample(w_0_weight[:,1], weights(w_0_weight[:,2]))
+  end
 
   negcons = 0
   for t = 1:tW
@@ -60,5 +75,7 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
       simulate_i(w_t[i, tW+1], pension[i])
   end
 
-  return c_t, w_t, wp_t
+  percentiles = get_percentiles(w_t/mean(yit))
+
+  return c_t, w_t, wp_t, percentiles
 end
