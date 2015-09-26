@@ -52,99 +52,152 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
   if profile == "psid"
     # PSID log real labour income, 1968-1996 (median income at 40: $29703)
     g_t = [8.36 + 0.07*t - 0.15*t^2/100 for t = 1:tW]
-    μₐ = 1.17
-    μᵦ = 0.009
-    var_α = 0.03
-    var_β = 0.00031
-    corr_αβ = -0.3
+    μₐ = 1.17; μᵦ = 0.009
+    var_α = 0.03; var_β = 0.00031; corr_αβ = -0.3
     cov_αβ = corr_αβ*sqrt(var_β*var_α)
-    var_η = 0.013
-    var_ɛ = 0.03
+    var_η = 0.013; var_ɛ = 0.03
     ρ = 0.853
   elseif profile == "psid_68_86"
     # PSID log real labour income, 1968-1996 (median income at 40: $29703)
     g_t = [8.36 + 0.07*t - 0.15*t^2/100 for t = 1:tW]
-    μₐ = 1.17
-    μᵦ = 0.009
-    var_α = 0.11
-    var_β = 0.00001
-    corr_αβ = -0.42
+    μₐ = 1.17; μᵦ = 0.009
+    var_α = 0.11; var_β = 0.00001; corr_αβ = -0.42
     cov_αβ = corr_αβ*sqrt(var_β*var_α)
-    var_η = 0.013
-    var_ɛ = 0.043
+    var_η = 0.013; var_ɛ = 0.043
     ρ = 0.885
   elseif profile == "psid_87_13"
     # PSID log real labour income, 1968-1996 (median income at 40: $29703)
     g_t = [8.36 + 0.07*t - 0.15*t^2/100 for t = 1:tW]
-    μₐ = 1.17
-    μᵦ = 0.009
-    var_α = 0.097
-    var_β = 0.00025
-    corr_αβ = -0.31
+    μₐ = 1.17; μᵦ = 0.009
+    var_α = 0.097; var_β = 0.00025; corr_αβ = -0.31
     cov_αβ = corr_αβ*sqrt(var_β*var_α)
-    var_η = 0.032
-    var_ɛ = 0.085
+    var_η = 0.032; var_ɛ = 0.085
     ρ = 0.854
   elseif profile == "bhps_grosslab"
     # BHPS log real gross labour income, 1992-2008 (median £25k mean £28.7k)
     g_t = [9.65 + 0.024*t + 0.019*t^2/100 - 0.014*t^3/1000 for t = 1:tW]
-    μₐ = .0
-    μᵦ = 0.009
-    var_α = 0.036
-    var_β = 0.00032
-    corr_αβ = -0.51
+    μₐ = .0; μᵦ = 0.009
+    var_α = 0.036; var_β = 0.00032; corr_αβ = -0.51
     cov_αβ = corr_αβ*sqrt(var_β*var_α)
-    var_η = 0.106
-    var_ɛ = 0.08
+    var_η = 0.106; var_ɛ = 0.08
     ρ = 0.719
   elseif profile == "bhps_netlab"
     # BHPS log real net labour income, 1992-2008 (median £19k, mean £21.6k)
     g_t = [9.41 + 0.019*t + 0.029*t^2/100 - 0.014*t^3/1000 for t = 1:tW]
-    μₐ = .0
-    μᵦ = 0.009
-    var_α = 0.032
-    var_β = 0.00019
-    corr_αβ = -0.59
+    μₐ = .0;  μᵦ = 0.009
+    var_α = 0.032; var_β = 0.00019; corr_αβ = -0.59
     cov_αβ = corr_αβ*sqrt(var_β*var_α)
-    var_η = 0.073
-    var_ɛ = 0.07
+    var_η = 0.073; var_ɛ = 0.07
     ρ = 0.808
   elseif profile == "bhps_netinc"
     # BHPS log real net houseold income, 1992-2008 (median £22.6k, mean £26k)
     g_t = [9.49 + 0.026*t - 0.008*t^2/100 - 0.007*t^3/1000 for t = 1:tW]
-    μₐ = .0;
-    μᵦ = 0.009;
-    var_α = 0.052;
-    var_β = 0.00011;
-    corr_αβ = -0.42
+    μₐ = .0; μᵦ = 0.009
+    var_α = 0.052; var_β = 0.00011; corr_αβ = -0.42
     cov_αβ = corr_αβ*sqrt(var_β*var_α);
-    var_η = 0.027;
-    var_ɛ = 0.056;
+    var_η = 0.027; var_ɛ = 0.056
     ρ = 0.857
   elseif profile == "bhps_netincdef"
     # BHP log real net household income, deflated & equivalized, 1992-2008
     # (median £16.9k, mean £19.4k)
     g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
-    μₐ = .0;
-    μᵦ = 0.009;
-    var_α = 0.1;
-    var_β = 0.0;
-    corr_αβ = -1.
-    cov_αβ = corr_αβ*sqrt(var_β*var_α);
-    var_η = 0.039;
-    var_ɛ = 0.042;
+    μₐ = .0; μᵦ = 0.009
+    var_α = 0.1; var_β = 0.0; corr_αβ = -1.
+    cov_αβ = corr_αβ*sqrt(var_β*var_α)
+    var_η = 0.039; var_ɛ = 0.042
     ρ = 0.812
+  elseif profile == "baseline"
+    # PSID Profile
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009
+    var_α = 0.03; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.82
+  elseif profile == "low_beta"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.03; var_β = 0.00015; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.82
+  elseif profile == "high_beta"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.03; var_β = 0.0007; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.82
+  elseif profile == "low_alpha"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.01; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.82
+  elseif profile == "high_alpha"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.1; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.82
+  elseif profile == "low_eta"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.03; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.01; var_ɛ = 0.05;
+    ρ = 0.82
+  elseif profile == "high_eta"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.03; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.1; var_ɛ = 0.05;
+    ρ = 0.82
+  elseif profile == "low_eps"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.03; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.02;
+    ρ = 0.82
+  elseif profile == "high_eps"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.03; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.13;
+    ρ = 0.82
+  elseif profile == "low_rho"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.03; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.71
+  elseif profile == "high_rho"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.03; var_β = 0.00038; corr_αβ = -0.2
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.91
+  elseif profile == "RIP"
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009;
+    var_α = 0.0; var_β = 0.0; corr_αβ = 0.
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.05; var_ɛ = 0.03;
+    ρ = 0.95
   else
     g_t = [0. for t = 1:tW]
-    μₐ = 2.0;
-    μᵦ = 0.009;
-    var_α = 0.005;
-    var_β = 0.00037;
-    corr_αβ = -0.25
-    cov_αβ = corr_αβ*sqrt(var_β*var_α);
-    var_η = 0.029;
-    var_ɛ = 0.047;
-    ρ = 0.82
+    μₐ = 1.17; μᵦ = 0.009
+    var_α = 0.03; var_β = 0.00031; corr_αβ = -0.3
+    cov_αβ = corr_αβ*sqrt(var_β*var_α)
+    var_η = 0.013; var_ɛ = 0.03
+    ρ = 0.853
     profile = "no"
   end
 
@@ -152,19 +205,25 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
   println("Parameters of the income process are:")
   println("ρ=$ρ, var_α=$var_α, var_β=$var_β, var_η=$var_η, var_ɛ=$var_ɛ")
   # Draw some alphas and betas
-  min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
-  ab = MvNormal([μₐ; μᵦ], [var_α cov_αβ; cov_αβ var_β])
-  draw1 = rand(ab, bs)'
-  draw2 = rand(ab, bs)'
-  for i = 1:bs
-    draw1[i,2] < min_β ? draw1[i,2] = min_β + abs(draw1[i,2]-min_β)/50.0 : 0
-    draw2[i,2] < min_β ? draw2[i,2] = min_β + abs(draw2[i,2]-min_β)/50.0 : 0
+  if (var_α>0.) & (var_β > 0.)
+    min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
+    ab = MvNormal([μₐ; μᵦ], [var_α cov_αβ; cov_αβ var_β])
+    draw1 = rand(ab, bs)'
+    draw2 = rand(ab, bs)'
+    for i = 1:bs
+      draw1[i,2] < min_β ? draw1[i,2] = min_β + abs(draw1[i,2]-min_β)/50.0 : 0
+      draw2[i,2] < min_β ? draw2[i,2] = min_β + abs(draw2[i,2]-min_β)/50.0 : 0
+    end
+    α = (draw1[:,1] + draw2[:,1])/2.
+    α = reshape(repmat(α,1,100)', agents*bs)
+    β_u = reshape(repmat(draw1[:, 2],1,100)', agents*bs)
+    β_k = reshape(repmat(draw2[:, 2],1,100)', agents*bs)
+    β = (1-fpu)*β_k + fpu*β_u
+  else
+    α = [μₐ for i = 1:agents*bs]
+    β = [μᵦ for i = 1:agents*bs]
+    β_k = [μᵦ for i = 1:agents*bs]
   end
-  α = (draw1[:,1] + draw2[:,1])/2.
-  α = reshape(repmat(α,1,100)', agents*bs)
-  β_u = reshape(repmat(draw1[:, 2],1,100)', agents*bs)
-  β_k = reshape(repmat(draw2[:, 2],1,100)', agents*bs)
-  β = (1-fpu)*β_k + fpu*β_u
 
   # Draw the income distribution:
   yit = zeros(bs*agents, tW); z = similar(yit)
