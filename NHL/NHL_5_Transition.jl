@@ -46,7 +46,7 @@ function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,1},
       xt = xgrid[x, tW]
 
       (wp[x, a, b, z, tW], v[x, a, b, z, tW]) =
-        bellOpt_TRANS(xt, pension, wmin, valueRETIRE, r, δ)
+        bellOpt_TRANS(xt, pension, wmin, valueRETIRE, r, δ, σ)
 
       c_over_x[x,a,b,z,tW] = (xt - wp[x,a,b,z,tW])/xt
     end

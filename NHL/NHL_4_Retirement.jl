@@ -22,9 +22,9 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
     for t = 1:tR-1
       c_t[t+1] = (r*δ)^(1/σ)*c_t[t]
       x_t[t+1] = (x_t[t] - c_t[t])*r + y
-      sum_u += (δ^t)*u(c_t[t])
+      sum_u += (δ^t)*u(c_t[t], σ)
     end
-    sum_u += (δ^tR)*u(c_t[tR])
+    sum_u += (δ^tR)*u(c_t[tR], σ)
 
     return x_t, sum_u
   end

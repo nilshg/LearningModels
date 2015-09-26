@@ -7,7 +7,7 @@ using ApproXD, Distributions, Optim, FastGaussQuadrature
 ################################################################################
 # Working life, no habits
 function bellOpt{T<:AbstractFloat}(x::T, a::T, b::T, z::T, wmin::T,
-   v_int::Lininterp, yn::Normal, k::Array, ρ::T, r::T, δ::T)
+   v_int::Lininterp, yn::Normal, k::Array, ρ::T, r::T, δ::T, σ::T)
 
   function EVprime(w′::Float64, a=a, b=b, z=z, yn=yn, k=k, v_int=v_int, ρ=ρ)
 
@@ -22,7 +22,7 @@ function bellOpt{T<:AbstractFloat}(x::T, a::T, b::T, z::T, wmin::T,
                                                           for i = 1:length(n)] )
   end
 
-  Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u(x-w′) + δ*EVprime(r*w′) )
+  Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u(x-w′, σ) + δ*EVprime(r*w′) )
 
   optimum = optimize(Blmn, wmin/r, x + abs(wmin/r) + 1.)
   w′ = optimum.minimum
@@ -35,9 +35,9 @@ end
 
 # Transition period, no habits
 function bellOpt_TRANS{T<:AbstractFloat}(x::T, pension::T, wmin::T,
-                                         v_int::Lininterp, r::T, δ::T)
+                                        v_int::Lininterp, r::T, δ::T, σ::T)
 
-  Blmn(w′) = -( u(x-w′) + δ*(getValue(v_int, [r*w′, pension])[1]) )
+  Blmn(w′) = -( u(x-w′, σ) + δ*(getValue(v_int, [r*w′, pension])[1]) )
 
   optimum = optimize(Blmn, wmin/r, x)
   w′ = optimum.minimum

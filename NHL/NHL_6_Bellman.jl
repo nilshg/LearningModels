@@ -25,7 +25,7 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
         yn = Normal(g_t[t] + at + bt*(t+1) + ρ*zt, stdy[t])
 
         (wpnow[x, a, b, z], vnow[x, a, b, z]) =
-          bellOpt(xt, at, bt, zt, wmin, v_interpol, yn, k[:, t], ρ, r, δ)
+          bellOpt(xt, at, bt, zt, wmin, v_interpol, yn, k[:, t], ρ, r, δ, σ)
 
         cxnow[x,a,b,z] = (xt-wpnow[x,a,b,z])/xt
       end
