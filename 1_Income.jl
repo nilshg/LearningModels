@@ -142,6 +142,22 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
     cov_αβ = corr_αβ*sqrt(var_β*var_α);
     var_η = 0.03; var_ɛ = 0.05;
     ρ = 0.82
+  elseif profile == "low_cov"
+    # PSID Profile
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009
+    var_α = 0.03; var_β = 0.00038; corr_αβ = -0.8
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.82
+  elseif profile == "high_cov"
+    # PSID Profile
+    g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
+    μₐ = .0; μᵦ = 0.009
+    var_α = 0.03; var_β = 0.00038; corr_αβ = 0.
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.03; var_ɛ = 0.05;
+    ρ = 0.82
   elseif profile == "low_eta"
     g_t = [9.64 - 0.002*t + 0.027*t^2/100 - 0.004*t^3/1000 for t = 1:tW]
     μₐ = .0; μᵦ = 0.009;
