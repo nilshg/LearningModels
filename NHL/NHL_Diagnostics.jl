@@ -335,28 +335,19 @@ end
 function comp_statics{T<:Float64}(low::Array{T,2}, high::Array{T,2},
   baseline::Array{T,2}, parameter::AbstractString,lowp::T,highp::T,baselinep::T)
   fig, ax = subplots(1,3, figsize = (12,10))
-  ax[1,1][:plot](low[:,1], label = parameter*" = $lowp")
-  ax[1,1][:plot](baseline[:,1], label = parameter*" = $baselinep")
-  ax[1,1][:plot](high[:,1], label = parameter*" = $highp")
+  [ax[i,1][:plot](low[:,i], label = parameter*" = $lowp") for i = 1:3]
+  [ax[i,1][:plot](baseline[:,i], label = parameter*" = $baselinep") for i = 1:3]
+  [ax[i,1][:plot](high[:,i], label = parameter*" = $highp") for i = 1:3]
   ax[1,1][:plot](SCF_young_83[1:90], label = "Data 1983", linestyle = "--")
-  ax[1,1][:set_title]("Age 26 - 35")
-  ax[1,1][:set_ylabel]("Net wealth in units of mean yearly income")
-  ax[1,1][:set_xlabel]("Percentile")
-  ax[2,1][:plot](low[:,2], label = parameter*" = $lowp")
-  ax[2,1][:plot](baseline[:,2], label = parameter*" = $baselinep")
-  ax[2,1][:plot](high[:,2], label = parameter*" = $highp")
+  ax[1,1][:plot](SCF_young_04[1:90], label = "Data 2004", linestyle = "--")
   ax[2,1][:plot](SCF_middle_83[1:90], label = "Data 1983", linestyle = "--")
   ax[2,1][:plot](SCF_middle_04[1:90], label = "Data 2004", linestyle = "--")
-  ax[2,1][:set_title]("Age 36 - 45")
-  ax[2,1][:set_xlabel]("Percentile")
-  ax[3,1][:plot](low[:,3], label = parameter*" = $lowp")
-  ax[3,1][:plot](baseline[:,3], label = parameter*" = $baselinep")
-  ax[3,1][:plot](high[:,3], label = parameter*" = $highp")
   ax[3,1][:plot](SCF_old_83[1:90], label = "Data 1983", linestyle = "--")
   ax[3,1][:plot](SCF_old_04[1:90], label = "Data 2004", linestyle = "--")
-  ax[3,1][:set_title]("Age 46 - 55")
-  ax[3,1][:set_xlabel]("Percentile")
-  [ax[i,1][:legend](loc="best") for i = 1:3]
+  [ax[i,1][:set_title]("Age 46 - 55", fontsize=16) for i = 1:3]
+  [ax[i,1][:legend](loc="best", fontsize=12) for i = 1:3]
+  [ax[i,1][:set_xlabel]("Percentile", fontsize=15) for i=1:3]
+  ax[1,1][:set_ylabel]("Net wealth in units of mean yearly income", fontsize=16)
   fig[:show]()
 
   fig, ax = subplots(figsize = (10,8))
@@ -364,9 +355,9 @@ function comp_statics{T<:Float64}(low::Array{T,2}, high::Array{T,2},
   ax[:plot](baseline[:,4], label = parameter*" = $baselinep")
   ax[:plot](high[:,4], label = parameter*" = $highp")
   ax[:plot](SCF_prime_83[1:90], label = "Data", linestyle = "--")
-  ax[:set_title]("Age 26 - 55")
-  ax[:legend](loc="best")
-  ax[:set_ylabel]("Net wealth in units of mean yearly income")
-  ax[:set_xlabel]("Percentile")
+  ax[:set_title]("Age 26 - 55", fontsize=20)
+  ax[:legend](loc="best", fontsize=14)
+  ax[:set_ylabel]("Net wealth in units of mean yearly income", fontsize=16)
+  ax[:set_xlabel]("Percentile", fontsize=16)
   fig[:show]()
 end
