@@ -207,6 +207,13 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
     cov_αβ = corr_αβ*sqrt(var_β*var_α);
     var_η = 0.05; var_ɛ = 0.03;
     ρ = 0.95
+  elseif profile == "guvenen"
+    g_t = [0.0 for t = 1:tW]
+    μₐ = 2.0; μᵦ = 0.009;
+    var_α = 0.05; var_β = 0.00031; corr_αβ = -0.23
+    cov_αβ = corr_αβ*sqrt(var_β*var_α);
+    var_η = 0.029; var_ɛ = 0.047;
+    ρ = 0.82
   else
     g_t = [0. for t = 1:tW]
     μₐ = 1.17; μᵦ = 0.009
