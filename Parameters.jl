@@ -9,10 +9,10 @@ agents = 100           # Number of agents sharing an alpha/beta combination
 bs = 1000              # Different alpha/beta combinations in the population;
 
 # Preference Parameters
-δ = 0.96               # Discount factor (Note: 1/beta = 1.035)
+δ = 0.955              # Discount factor (Note: 1/beta = 1.035)
 γ = 0.8                # Strenght of habits (0 = no habits)
 λ = 0.8                # Persistence of habits (lambda=0 --> no persistence)
-σ = 1.08               # Coefficient of relative risk aversion
+σ = 2.0                # Coefficient of relative risk aversion
 
 # Paremeters for belief calculation
 fpu = 0.65             # Proportion of variance of beta that is known
