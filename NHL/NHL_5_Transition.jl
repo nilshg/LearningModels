@@ -20,7 +20,7 @@ end
 
 function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,1},
   ygrid_R::Array{T,1}, xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1},
-  zgrid::Array{T,1}, yit::Array{T,2}, g_t::Array{T,1}, r::T, δ::T)
+  zgrid::Array{T,1}, yit::Array{T,2}, g_t::Array{T,1}, r::T, δ::T, σ::T)
 
   tW = size(xgrid,2)
   wp = Array(Float64,
