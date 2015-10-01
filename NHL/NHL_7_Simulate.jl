@@ -75,7 +75,8 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
       simulate_i(w_t[i, tW+1], pension[i])
   end
 
-  percentiles = get_percentiles(w_t/mean(yit))
+  avgy = mean(yit); w_t /= avgy; c_t /= avgy
+  percentiles = get_percentiles(w_t)
 
   return c_t, w_t, wp_t, percentiles
 end
