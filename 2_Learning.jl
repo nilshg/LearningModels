@@ -34,10 +34,18 @@ end
 
 function learning{T<:AbstractFloat}(α::Array{T,1}, β_k::Array{T,1},
   yit::Array{T,2}, ρ::T, var_α::T,var_β::T,cov_αβ::T,var_η::T,var_ɛ::T,
-  g_t::Array{T,1}, fpu::T)
+  g_t::Array{T,1}, fpu::T, wrong = false)
 
   @printf "Calculate agent's beliefs\n"
   tW = size(yit,2); s_f_i = Array(Float64, (3, size(yit,1),tW))
+
+  if wrong
+    β_k -= (β.>percentile(β, 80))*0.01
+    β_k -= (β.<=percentile(β, 80)).*(β.>percentile(β, 60))*0.005
+    β_k += (β.<=percentile(β, 40)).*(β.>percentile(β, 20))*0.005
+    β_k += (β.<=percentile(β, 20))*0.001
+  end
+
   # Initial belief is the known part of β
   for i = 1:agents*bs
     s_f_i[:, i, 1] = [α[i]; β_k[i]; 0.0]
