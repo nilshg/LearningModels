@@ -43,23 +43,17 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array{Float64,1},
 
   # BELIEF GRIDS #
   if const_bel
-    agrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, 2:tW]),
-                             maximum(s_f_i[1, :, :]), apoints))
-    bgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, :]),
-                             maximum(s_f_i[2, :, :]), bpoints))
-    zgrid = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, :]),
-                             maximum(s_f_i[3, :, :]), zpoints))
+    agrid = collect(linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints))
+    bgrid = collect(linspace(minimum(s_f_i[2, :, :]), maximum(s_f_i[2, :, :]), bpoints))
+    zgrid = collect(linspace(minimum(s_f_i[3, :, :]), maximum(s_f_i[3, :, :]), zpoints))
   else
     agrid = Array(Float64,(apoints,tW))
     bgrid = Array(Float64,(bpoints,tW))
     zgrid = Array(Float64,(zpoints,tW))
     for t = 1:tW
-      agrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[1, :, t]),
-                             maximum(s_f_i[1, :, t]), apoints))
-      bgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[2, :, t]),
-                             maximum(s_f_i[2, :, t]), bpoints))
-      zgrid[:, t] = convert(Array{Float64,1}, linspace(minimum(s_f_i[3, :, t]),
-                             maximum(s_f_i[3, :, t]), zpoints))
+      agrid[:, t] = collect(linspace(minimum(s_f_i[1, :, t]), maximum(s_f_i[1, :, t]), apoints))
+      bgrid[:, t] = collect(linspace(minimum(s_f_i[2, :, t]), maximum(s_f_i[2, :, t]), bpoints))
+      zgrid[:, t] = collect(linspace(minimum(s_f_i[3, :, t]), maximum(s_f_i[3, :, t]), zpoints))
     end
   end
 
@@ -75,8 +69,7 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array{Float64,1},
   end
   wgrid_R = wgridexp_R.^power + wminR
 
-  ygrid_R = convert(Array, linspace(0.8*minimum(pension),
-                      maximum(pension), ypoints_R))
+  ygrid_R = collect(linspace(0.8*minimum(pension), maximum(pension), ypoints_R))
 
   println("\tC-i-h grid: $(round([xgrid[1,1] xgrid[end,1]],2)) in period 1, "*
     "$(round([xgrid[1,end] xgrid[end,end]],2)) in period 40")
@@ -108,9 +101,9 @@ function grids{T<:Int}(xpoints::T, apoints::T, bpoints::T, zpoints::T,
   end
 
   # BELIEF GRIDS #
-  agrid = convert(Array{Float64,1}, linspace(1.92,2.09, apoints))
-  bgrid = convert(Array{Float64,1}, linspace(-0.05,0.08, bpoints))
-  zgrid = convert(Array{Float64,1}, linspace(-0.86,1.04, zpoints))
+  agrid = collect(linspace(1.92,2.09, apoints))
+  bgrid = collect(linspace(-0.05,0.08, bpoints))
+  zgrid = collect(linspace(-0.86,1.04, zpoints))
 
   # RETIREMENT GRIDS #
   guvgrid_R_org = readdlm(path*"wealthR.dat")'
@@ -127,7 +120,7 @@ function grids{T<:Int}(xpoints::T, apoints::T, bpoints::T, zpoints::T,
     wgrid_R[:, t] = wgridexp[:, t].^2 + guvgrid_R[1,t]
   end
 
-  ygrid_R = convert(Array{Float64,1}, linspace(4.,15., ypoints_R))
+  ygrid_R = collect(linspace(4.,15., ypoints_R))
 
   println("\tC-i-h grid: $(round([xgrid[1,1] xgrid[end,1]],2)) in period 1, "*
     "$(round([xgrid[1,end] xgrid[end,end]],2)) in period 40")
