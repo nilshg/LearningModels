@@ -34,7 +34,7 @@ function plotv(v::Array{Float64, 5}, wg::Array, ag::Array, bg::Array, zg::Array,
                     cmap=ColorMap("jet"), alpha=0.5, linewidth=0.25)
   ax[:set_xlabel]("Wealth Level", fontsize=14)
   ax[:set_zlabel]("Value", fontsize=14)
-  plt[:show]()
+  fig[:show]()
 end
 
 ################################################################################
@@ -53,7 +53,7 @@ function plotv(v::Array{Float64, 3}, wg::Array{Float64,2}, yg::Array{Float64,1},
   ax[:set_ylabel]("Pension Level", fontsize=14)
   ax[:set_zlabel]("Value", fontsize=14)
   title(heading)
-  plt[:show]()
+  fig[:show]()
 end
 
 ################################################################################
@@ -90,7 +90,25 @@ function plotdistributions(w_t::Array{Float64, 2}, pds::Array,
     ax[:legend](loc="best")
   end
   fig[:suptitle]("Wealth Distributions"*title)
-  plt[:show]()
+  fig[:show]()
+end
+
+################################################################################
+
+function distribution_compare(low, mid, high, parameter, pl, pm, ph, title)
+
+  pds = [5,15,25,35]
+
+  fig, axes = PyPlot.subplots(2, 2, sharey=true)
+  for (i,ax) in enumerate(reshape(axes,4,1))
+    ax[:hist](low[:, pds[i]], bins = 100, label = parameter*"=$pl", alpha=0.5)
+    ax[:hist](mid[:, pds[i]], bins = 100, label = parameter*"=$pm", alpha=0.5)
+    ax[:hist](high[:, pds[i]], bins = 100, label = parameter*"=$ph", alpha=0.5)
+    ax[:set_title]("Period "*string(pds[i])*" (age "*string(pds[i]+20)*")")
+    ax[:legend](loc="best")
+  end
+  fig[:suptitle]("Wealth Distributions, "*title)
+  fig[:show]()
 end
 
 ################################################################################
@@ -109,7 +127,7 @@ function plotdistributions(yit::Array{Float64, 2}, pension::Array, pds::Array)
   ax[2,2][:hist](pension, bins = 100)
   ax[2,2][:set_title]("Pension Income")
   fig[:suptitle]("Income Distributions")
-  plt[:show]()
+  fig[:show]()
 end
 
 ################################################################################
@@ -129,17 +147,17 @@ function plothistory(i::Int64, c_t::Array{Float64, 2}, w_t::Array{Float64, 2},
   ax[:axvline](tW, linestyle = "--", color = "black")
   ax[:legend](loc="best")
   fig[:suptitle]("Simulation History for Agent "*string(i))
-  plt[:show]()
+  fig[:show]()
 end
 
 ################################################################################
 ## Simulation Results ##
 
 function constrained_negative(w::Array{Float64,2}, xgrid::Array{Float64,2},
-                              wgrid_R::Array{Float64,2})
+                              wgrid_R::Array{Float64,1})
 
   cnstr = zeros(Int64, size(w,2)); neg_cons = similar(cnstr)
-  wmin = [xgrid[1, :] wgrid_R[1, :]]
+  wmin = [xgrid[1, :] [wgrid_R for i = 1:30]]
 
   for t = 1:size(w,2)
     t < length(wmin) ? cnstr[t] = sum(abs(w_t[:,t] - wmin[t+1]/r) .< 1e-3) : 0
@@ -182,7 +200,7 @@ function crosssec_stats(c::Array{Float64,2}, w::Array{Float64,2}, y::Array,
     ax[2,1][:legend](loc = "best")
     ax[1,1][:set_title]("Means and Medians")
     ax[2,1][:set_title]("Variances")
-    plt[:show]()
+    fig[:show]()
   end
 
   return med_c, med_w, mean_w, var_c, var_w, var_y
@@ -231,7 +249,7 @@ function plot_beliefs_realizations()
   ax[2,1][:plot](ymaxactual, label = "Highest actual income")
   ax[1,1][:legend](loc="best")
   ax[2,1][:legend](loc="best")
-  plt[:show]()
+  fig[:show]()
 end
 
 ################################################################################
@@ -279,7 +297,7 @@ function plot2Dconfunc(c_x::Array{Float64,5}, t::Int64, wgrid::Array, a::Int64,
   ax[2,2][:legend](loc = "best")
   fig[:suptitle]("c/x, period "*string(t))
   fig[:text](0.01, 0.01, figtext)
-  plt[:show]()
+  fig[:show]()
 end
 
 ################################################################################
@@ -344,7 +362,9 @@ function comp_statics{T<:Float64}(low::Array{T,2}, high::Array{T,2},
   ax[2,1][:plot](SCF_middle_04[1:90], label = "Data 2004", linestyle = "--")
   ax[3,1][:plot](SCF_old_83[1:90], label = "Data 1983", linestyle = "--")
   ax[3,1][:plot](SCF_old_04[1:90], label = "Data 2004", linestyle = "--")
-  [ax[i,1][:set_title]("Age 46 - 55", fontsize=16) for i = 1:3]
+  ax[1,1][:set_title]("Age 26 - 35", fontsize=16)
+  ax[2,1][:set_title]("Age 36 - 45", fontsize=16)
+  ax[3,1][:set_title]("Age 46 - 55", fontsize=16)
   [ax[i,1][:legend](loc="best", fontsize=12) for i = 1:3]
   [ax[i,1][:set_xlabel]("Percentile", fontsize=15) for i=1:3]
   ax[1,1][:set_ylabel]("Net wealth in units of mean yearly income", fontsize=16)
