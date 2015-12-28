@@ -2,6 +2,8 @@
 ############################## BELIEF FORMATION ################################
 ################################################################################
 
+using StatsBase
+
 function learning(user::AbstractString)
 
   @printf "Import Guvenen's learning results\n"
