@@ -1,27 +1,22 @@
 nprocs()==CPU_CORES || addprocs(CPU_CORES-1)
-import ApproXD, Distributions, Optim, PyPlot, PyCall, FastGaussQuadrature
+import Distributions, FastGaussQuadrature, Interpolations, Optim, PyPlot, PyCall, StatsBase
 @everywhere begin
-  path=("C:/Users/tew207/Documents/GitHub/LearningModels/")
-  include(path*"NHL/NHL_Optimizations.jl")
-  include(path*"NHL/NHL_Interpolations.jl")
-  include(path*"Parameters.jl")
-  include(path*"1_Income.jl")
-  include(path*"2_Learning.jl")
-  include(path*"NHL/NHL_3_Grid.jl")
-  include(path*"NHL/NHL_4_Retirement.jl")
-  include(path*"NHL/NHL_5_Transition.jl")
-  include(path*"NHL/NHL_6_Bellman.jl")
-  include(path*"NHL/NHL_7_Simulate.jl")
+  p=("C:/Users/tew207/Documents/GitHub/LearningModels/")
+  include(p*"NHL/NHL_Optimizations.jl"); include(p*"NHL/NHL_Interpolations.jl")
+  include(p*"Parameters.jl"); include(p*"1_Income.jl")
+  include(p*"2_Learning.jl"); include(p*"NHL/NHL_3_Grid.jl")
+  include(p*"NHL/NHL_4_Retirement.jl"); include(p*"NHL/NHL_5_Transition.jl")
+  include(p*"NHL/NHL_6_Bellman.jl"); include(p*"NHL/NHL_7_Simulate.jl")
 end
 include(path*"NHL/NHL_Diagnostics.jl")
 
 # 1. Draw Income Distribution
 yit, pension, α, β, β_k, g_t, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ =
-  incomeDistribution(agents, bs, tW, profile="")
+  incomeDistribution(agents, bs, tW, profile="baseline")
 
 # 2. Construct individual specific belief histories
 s_f_i, stdy, k = learning(α, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ,
-                              g_t, fpu)
+                          g_t, fpu, true)
 
 # 3. Construct Grids
 xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R = grids(s_f_i, stdy, xpoints,
@@ -31,17 +26,17 @@ xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R = grids(s_f_i, stdy, xpoints,
 # 4. Solve Retirement Problem
 v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR)
 
-# 5. Solve Terminal Period Problem instead of 4. and 5.
-v, wp, c_over_x = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid,
-                                    bgrid, zgrid, yit, g_t, r, δ)
+# 5. Solve Transition Period
+v, wp, c_over_x = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
+                                              zgrid, yit, g_t, r, δ, σ)
 
 # 6. Solve working life problem
-v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
-                                            stdy, k, r, δ, ρ, c_over_x, g_t)
+@time v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
+                                    stdy, k, r, δ, ρ, c_over_x, g_t, σ)
 
 # 7. Simulate wealth distribution
-c_t, w_t, wp_t = sim(wp, xgrid, agrid, bgrid,  zgrid, wgrid_R, yit, s_f_i,
-                                                        pension, r, δ, σ, tR)
+c_t, w_t, wp_t, pct = sim(wp, xgrid, agrid, bgrid, zgrid, wgrid_R, yit, s_f_i,
+                                                  pension, r, δ, σ, tR)
 
-w_t /= mean(yit)
 include("C:/Users/tew207/Documents/GitHub/SCFtools/SCF_percentiles.jl")
+winfriedcompare(w_t, SCF_prime_83, SCF_young_83, SCF_middle_83, SCF_old_83)

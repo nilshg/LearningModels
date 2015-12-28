@@ -2,19 +2,19 @@
 ########## NHL_OPTIMIZATIONS.JL - solve value function optimization ############
 ################################################################################
 
-using ApproXD, Distributions, Optim, FastGaussQuadrature
+using Distributions, FastGaussQuadrature, Interpolations, Optim
 
 ################################################################################
 # Working life, no habits
 function bellOpt{T<:AbstractFloat}(x::T, a::T, b::T, z::T, wmin::T,
-   v_int::Lininterp, yn::Normal, k::Array, ρ::T, r::T, δ::T, σ::T)
+   v_int::Interpolations.GriddedInterpolation, yn::Normal, k::Array, ρ::T,
+   r::T, δ::T, σ::T)
 
   function EVprime(w′::Float64, a=a, b=b, z=z, yn=yn, k=k, v_int=v_int, ρ=ρ)
 
     function EVp(y::Float64, w′=w′, v_int=v_int, yn=yn, a=a, b=b, z=z, ρ=ρ)
       dy = y - mean(yn)
-      (getValue(v_int,
-        [w′+exp(y), a+k[1]*dy, b+k[2]*dy, ρ*z+k[3]*dy])[1])
+      v_int[w′+exp(y), a+k[1]*dy, b+k[2]*dy, ρ*z+k[3]*dy]
     end
 
     (n, wgt) = gausshermite(10)
@@ -35,9 +35,9 @@ end
 
 # Transition period, no habits
 function bellOpt_TRANS{T<:AbstractFloat}(x::T, pension::T, wmin::T,
-                                        v_int::Lininterp, r::T, δ::T, σ::T)
+                  v_int::Interpolations.GriddedInterpolation, r::T, δ::T, σ::T)
 
-  Blmn(w′) = -( u(x-w′, σ) + δ*(getValue(v_int, [r*w′, pension])[1]) )
+  Blmn(w′) = -( u(x-w′, σ) + δ*v_int[r*w′, pension] )
 
   optimum = Optim.optimize(Blmn, wmin/r, x)
   w′ = optimum.minimum

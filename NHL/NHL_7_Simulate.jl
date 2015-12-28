@@ -41,7 +41,7 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
       (at, bt, zt) = s_f_i[:, i, t]
       xt = wt + yt
 
-      wp_t[i, t] = getValue(wp_int, [xt, at, bt, zt])[1]
+      wp_t[i, t] = wp_int[xt, at, bt, zt]
       c_t[i, t] = xt - wp_t[i, t]
       w_t[i, t+1] = r*wp_t[i, t]
 

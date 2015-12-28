@@ -7,7 +7,7 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
   stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, ρ::T, c_over_x::Array{T,5},
   g_t::Array{T,1}, σ::T)
 
-  println("Solving for decision rules on $(prod(size(v)[1:4])) points")
+  println("Solving for decision rules on $(prod(size(v)[1:4])) points on $(nprocs()) cores")
 
   wpnow = SharedArray(Float64, size(v)[1:4], pids=procs());
   vnow = SharedArray(Float64, size(v)[1:4], pids=procs());
