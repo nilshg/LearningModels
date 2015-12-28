@@ -20,10 +20,8 @@ end
 
 function solveTransition{T<:AbstractFloat}(v_R::Array{T,4}, wgrid_R::Array{T,2},
   hgrid_R::Array{T,2}, ygrid_R::Array{T,1}, xgrid::Array{T,2}, hgrid::Array{T,2},
-  agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, ymedian::T, r::T,
-  δ::T, λ::T)
+  agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, r::T, δ::T, λ::T)
 
-  @printf "5. Solving the problem for the last period of work\n"
   tW = size(xgrid,2)
   wp = Array(Float64, size(xgrid,1), size(hgrid,1), size(agrid,1),
              size(bgrid,1), size(zgrid,1), tW)
@@ -42,7 +40,7 @@ function solveTransition{T<:AbstractFloat}(v_R::Array{T,4}, wgrid_R::Array{T,2},
   for a = 1:size(agrid,1), b = 1:size(bgrid,1), z = 1:size(zgrid,1)
     at = agrid[a]; bt = bgrid[a]; zt = zgrid[z]
     yt = exp(at + bt*tW + zt)
-    pension = get_pension(yt,k_0,k_1,ymedian)
+    pension = get_pension(yt,k_0,k_1,avgy)
 
     for x = 1:size(xgrid,1), h = 1:size(hgrid,1)
       xt = xgrid[x, tW]; ht = hgrid[h, tW]

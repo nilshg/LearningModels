@@ -5,7 +5,6 @@
 function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
   hgrid_R::Array{T,2}, ygrid_R::Array{T,1}, r::T, δ::T, λ::T)
 
-  @printf "4. Solving the retirement problem\n"
   tR = size(wgrid_R,2)
   v_R = SharedArray(Float64,
     (size(wgrid_R,1), size(hgrid_R,1), size(ygrid_R,1), tR), pids = procs())
@@ -16,7 +15,7 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
     wt = wgrid_R[w, tR]; ht = hgrid_R[h, tR]
     yt = ygrid_R[y]
     xt = wt + yt
-    v_R[w, h, y, tR] = u_h(xt, ht)
+    v_R[w, h, y, tR] = u(xt, ht)
     wp_R[w, h, y, tR] = 0.0
   end
 
@@ -27,8 +26,8 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
     yt = ygrid_R[y]
     xt = wt + yt
 
-    Blmn(wp::Float64) = -(u_h(xt - wp/r, ht)
-                          + δ*u_h(wp+yt, (1-λ)*h + λ*(xt-wp/r)))
+    Blmn(wp::Float64) = -(u(xt - wp/r, ht)
+                          + δ*u(wp+yt, (1-λ)*h + λ*(xt-wp/r)))
 
     optimum = optimize(Blmn, wmin, xt-0.01)
 
@@ -37,7 +36,7 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
   end
 
   mv = checkmonotonicity(sdata(v_R[:,:,:,tR-1]))
-  println("\tMonotonicity violations: [w,h,y],t=$(mv), $(tR-1)")
+  println("\tMonotonicity violations: [w,h,y]=$(mv), t=$(tR-1)")
 
   for t = (tR-2):-1:1
     # INTERPOLATION
@@ -55,12 +54,10 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,2},
         (wp_R[w, h, y, t], v_R[w, h, y, t]) =
           bellOpt_R(wt, ht, yt, wmin, v_R_interpol, r, δ, λ)
 
-        isnan(v_R[w, h, y, t]) ? nan_counter += 1 : 0
-        wp_R[w, h, y, t] > wt + yt ? neg_c_counter += 1 : 0
       end
     end
     mv = checkmonotonicity(sdata(v_R[:,:,:,t]))
-    println("\tMonotonicity violations: [w,h,y],t=$(mv), $t")
+    println("\tMonotonicity violations: [w,h,y]=$(mv), t=$t")
   end
 
   return sdata(v_R), sdata(wp_R)

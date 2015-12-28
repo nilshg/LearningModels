@@ -7,11 +7,11 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,6}, wp::Array{T,6},
   zgrid::Array{T,1}, stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, λ::T, ρ::T,
   c_over_x::Array{T,6})
 
-  @printf "6. Recursively solve for optimal decision rules\n"
-  @printf "\tSolving the problem on %d points\n" length(v[:,:,:,:,:,end])
+  println("Solving for decision rules on $(prod(size(v)[1:4])) points on $(nprocs()) cores")
 
-  wpnow = SharedArray(Float64, size(v)[1:5], pids=procs()); vnow=similar(wpnow)
-  cxnow = similar(wpnow)
+  wpnow = SharedArray(Float64, size(v)[1:5], pids=procs())
+  vnow = SharedArray(Float64, size(v)[1:5], pids=procs())
+  cxnow = SharedArray(Float64, size(v)[1:5], pids=procs())
 
   for t = (size(xgrid,2)-1):-1:1
     # INTERPOLATION
@@ -25,10 +25,10 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,6}, wp::Array{T,6},
       for h = 1:size(hgrid,1), a = 1:size(agrid,1), b = 1:size(bgrid,1)
         for z = 1:size(zgrid,1)
           ht = hgrid[h, t]; at = agrid[a]; bt = bgrid[b]; zt = zgrid[z]
-          yln = LogNormal(at + bt*(t+1) + ρ*zt, stdy[t])
+          yn = Normal(at + bt*(t+1) + ρ*zt, stdy[t])
 
           (wpnow[x,h,a,b,z], vnow[x,h,a,b,z]) =
-            bellOpt(xt,ht,at,bt,zt,wmin,v_interpol,yln,k[:,t],ρ,r,δ,λ)
+            bellOpt(xt, ht, at, bt, zt, wmin, v_interpol, yn, k[:,t], ρ, r, δ,λ)
 
           cxnow[x,h,a,b,z] = (xt-wpnow[x,h,a,b,z])/xt
         end

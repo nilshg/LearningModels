@@ -1,29 +1,26 @@
 nprocs() == CPU_CORES || addprocs(CPU_CORES-1)
-import ApproXD, Grid, Distributions, Optim, QuantEcon, PyPlot, PyCall
+import Distributions, FastGaussQuadrature, Interpolations, Optim, PyPlot, PyCall, StatsBase
 @everywhere begin
-  path=("C:/Users/tew207/Documents/GitHub/LearningModels/")
-  include(path*"Optimizations.jl")
-  include(path*"Interpolations.jl")
-  include(path*"Parameters.jl")
-  include(path*"1_Income.jl")
-  include(path*"2_Learning.jl")
-  include(path*"HL/HL_3_Grid.jl")
-  include(path*"HL/HL_4_Retirement.jl")
-  include(path*"HL/HL_5_Transition.jl")
-  include(path*"HL/HL_6_Bellman.jl")
-  include(path*"HL/HL_7_Simulate.jl")
-  include(path*"Chk_Monot.jl")
+  p=("C:/Users/tew207/Documents/GitHub/LearningModels/")
+  include(p*"HL/HL_Interpolations.jl"); include(p*"HL/HL_Optimizations.jl");
+  include(p*"Parameters.jl"); include(p*"1_Income.jl")
+  include(p*"2_Learning.jl"); include(p*"HL/HL_3_Grid.jl")
+  include(p*"HL/HL_4_Retirement.jl"); include(p*"HL/HL_5_Transition.jl")
+  include(p*"HL/HL_6_Bellman.jl"); include(p*"HL/HL_7_Simulate.jl")
+  include(p*"Chk_Monot.jl")
 end
 
 # 1. Draw Income Distribution
-(yit, ymedian, pension) = incomeDistribution("tew207")
+yit, pension, α, β, β_k, g_t, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ =
+  incomeDistribution(agents, bs, tW, profile="baseline")
 
 # 2. Construct individual specific belief histories
-(s_f_i, stdy, k) = learning("tew207")
+s_f_i, stdy, k = learning(α, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ,
+                          g_t, fpu, true)
 
 # 3. Construct Grids
 (xgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R, ygrid_R) =
-    grids(s_f_i, stdy, wpoints, hpoints, apoints, bpoints, zpoints,
+    grids(s_f_i, stdy, xpoints, hpoints, apoints, bpoints, zpoints,
            wpoints_R, hpoints_R, ypoints_R, wmaxR, power, r, tR, true)
 
 # 4. Solve Retirement Problem
@@ -32,7 +29,7 @@ end
 # 5. Solve Transition Problem
 (v, wp, c_over_x) =
   solveTransition(v_R, wgrid_R, hgrid_R, ygrid_R, xgrid, hgrid, agrid, bgrid,
-                  zgrid, ymedian, r, δ, λ)
+                  zgrid, r, δ, λ)
 
 # 6. Solve Working Life Problem
 (v, wp, c_over_x) = solveWorkingLife(v, wp, xgrid, hgrid, agrid, bgrid, zgrid,
@@ -41,3 +38,6 @@ end
 # 7. Simulate Economy
 (c_t, h_t, w_t, wp_t) = sim(wp, xgrid, hgrid, agrid, bgrid, zgrid,
                   wgrid_R, hgrid_R, ygrid_R, yit, s_f_i, wp_R, pension, r, λ)
+
+include("C:/Users/tew207/Documents/GitHub/SCFtools/SCF_percentiles.jl")
+winfriedcompare(w_t, SCF_prime_83, SCF_young_83, SCF_middle_83, SCF_old_83)
