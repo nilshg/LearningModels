@@ -47,7 +47,7 @@ function sim{T<:AbstractFloat}(wp::Array{T,6}, xgrid::Array{T,2},
       wt = w_t[i, t]; ht = h_t[i, t]
       xt = wt + pension[i]
 
-      wp_t[i, t] = getValue(wp_int, [xt, ht, pension[i]])[1]
+      wp_t[i, t] = wp_int[xt, ht, pension[i]]
       c_t[i, t] = xt - wp_t[i, t]
       c_t[i, t] < 0.0 ? negcons += 1 : 0
 
