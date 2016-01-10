@@ -5,7 +5,7 @@
 function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
   xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1},
   stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, ρ::T, c_over_x::Array{T,5},
-  g_t::Array{T,1}, σ::T)
+  g_t::Array{T,1}, σ::T, ξ::T)
 
   println("Solving for decision rules on $(prod(size(v)[1:4])) points on $(nprocs()) cores")
 
@@ -25,7 +25,7 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
         yn = Normal(g_t[t+1] + at + bt*(t+1) + ρ*zt, stdy[t])
 
         (wpnow[x, a, b, z], vnow[x, a, b, z]) =
-          bellOpt(xt, at, bt, zt, wmin, v_interpol, yn, k[:, t], ρ, r, δ, σ)
+          bellOpt(xt, at, bt, zt, wmin, v_interpol, yn, k[:, t], ρ, r, δ, σ, ξ)
 
         cxnow[x,a,b,z] = (xt-wpnow[x,a,b,z])/xt
       end

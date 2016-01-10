@@ -40,4 +40,4 @@ s_f_i, stdy, k = learning(α, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η, v
                   wgrid_R, hgrid_R, ygrid_R, yit, s_f_i, wp_R, pension, r, λ)
 
 include("C:/Users/tew207/Documents/GitHub/SCFtools/SCF_percentiles.jl")
-winfriedcompare(w_t, SCF_prime_83, SCF_young_83, SCF_middle_83, SCF_old_83)
+winfriedcompare(w_t./mean(yit), SCF_prime_83, SCF_young_83, SCF_middle_83, SCF_old_83)

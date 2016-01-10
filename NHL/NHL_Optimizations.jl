@@ -8,18 +8,19 @@ using Distributions, FastGaussQuadrature, Interpolations, Optim
 # Working life, no habits
 function bellOpt{T<:AbstractFloat}(x::T, a::T, b::T, z::T, wmin::T,
    v_int::Interpolations.GriddedInterpolation, yn::Normal, k::Array, ρ::T,
-   r::T, δ::T, σ::T)
+   r::T, δ::T, σ::T, ξ::T)
 
-  function EVprime(w′::Float64, a=a, b=b, z=z, yn=yn, k=k, v_int=v_int, ρ=ρ)
+  function EVprime(w′::Float64, a=a, b=b, z=z, yn=yn, k=k, v_int=v_int, ρ=ρ, ξ=ξ)
 
-    function EVp(y::Float64, w′=w′, v_int=v_int, yn=yn, a=a, b=b, z=z, ρ=ρ)
+    function EVp(y::Float64, w′=w′, v_int=v_int, yn=yn, a=a, b=b, z=z, ρ=ρ, ξ=ξ)
       dy = y - mean(yn)
       v_int[w′+exp(y), a+k[1]*dy, b+k[2]*dy, ρ*z+k[3]*dy]
     end
 
     (n, wgt) = gausshermite(10)
-    π^(-0.5)*sum( [wgt[i]*EVp(sqrt(2)*std(yn)*n[i] + mean(yn))
+    evy = π^(-0.5)*sum( [wgt[i]*EVp(sqrt(2)*std(yn)*n[i] + mean(yn))
                                                           for i = 1:length(n)] )
+    (1.0-ξ)*evy + ξ*v_int[w′, a, b, ρ*z]
   end
 
   Blmn(w′::Float64, x=x, r=r, δ=δ) = -( u(x-w′, σ) + δ*EVprime(r*w′) )
