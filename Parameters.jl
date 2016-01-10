@@ -29,22 +29,23 @@ br = 40                # Period of structural break (has to be <T)
 var_η_RIP = 0.015      # σ²(η) (std = 0.122)
 var_ɛ_RIP = 0.061      # σ²(ɛ) (std = 0.247)
 ρ_RIP = 0.988          # AR(1) persistence
+ξ = 0.00               # Probability of zero income shock
 
 # Parameters for grid construction
-xpoints = 50           # Cash-in-hand grid points (working life)
-wpoints_R = 160        # Wealth grid points (retirement)
+xpoints = 40           # Cash-in-hand grid points (working life)
+wpoints_R = 90         # Wealth grid points (retirement)
 hpoints = 6            # Habit grid points (working life)
-hpoints_R = 35         # Habit grid points (retirement)
-ypoints_R = 150        # Pension points
+hpoints_R = 15         # Habit grid points (retirement)
+ypoints_R = 80         # Pension points
 wmaxR = 1000.0         # Maximum retirement wealth
 apoints = 3            # Grid points for beliefs about α
-bpoints = 15           # Grid points for beliefs about β
+bpoints = 11           # Grid points for beliefs about β
 zpoints = 7            # Grid points for beliefs about z
 zpoints_RIP = 32       # Grid points for RIP persistent shock
 epspoints = 2          # Grid points for RIP transitory shock
 power = 3.5            # Wealth Grid Curvature
 
-# Utility function
+# Utility functions
 function u(c::Float64, h::Float64, γ::Float64, σ::Float64)
     ((c/(h^γ))^(1-σ))/(1-σ)
 end
@@ -56,3 +57,15 @@ function u(c::Float64, σ::Float64)
      ut = -10000. - 100*c^2.
    end
 end
+
+# Bequest motive
+υ = (-1/0.544)
+function b(w::Float64, υ::Float64)
+  υ==0.0 ? 0.0 :57726.^υ*w
+end
+
+# Probability of death
+ ψ = hcat([.01368 .01493 .01628 .01767 .01911 .02059 .02216 .02389 .02585],
+          [.02806 .03052 .03315 .03593 .03882 .04184 .04507 .04867  .05274],
+          [.05742 .06277 .06882 .07552 .08278 .09041 .09842 .10725 .11712],
+          [.12717 .13708 .147281])
