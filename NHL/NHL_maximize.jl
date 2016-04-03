@@ -25,7 +25,7 @@ close(f)
 
 # 1. Draw Income Distribution
 yit, pension, α, β, β_k, g_t, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ =
-  incomeDistribution(agents, bs, tW, profile="baseline")
+  incomeDistribution(agents, bs, tW, profile="guvenen")
 
 # 2. Construct individual specific belief histories
 s_f_i, stdy, k = learning(α, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ,
@@ -46,10 +46,7 @@ function objective(δσ::Array{Float64,1}, grad::Array, wgrid_R=wgrid_R,
   σ = δσ[2]
   υ = δσ[3]
 
-  println("Now trying δ=$(round(δ,3)), σ=$(round(σ,3)), and υ = $(round(υ,3))")
-  f = open("progress.txt","a")
-  write(f, "Now trying δ=$(round(δ,3)), σ=$(round(σ,3)), and υ = $(round(υ,3))\n")
-  close(f)
+  println("Now trying δ=$(round(δ,3)), σ=$(round(σ,3)), and υ = $(round(υ,15))")
 
   v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR, υ)
 
@@ -66,6 +63,7 @@ function objective(δσ::Array{Float64,1}, grad::Array, wgrid_R=wgrid_R,
   obj = (dif'*dif)[1]
   println("Value of objective function: $obj")
   f = open("progress.txt","a")
+  write(f, "Now trying δ=$(round(δ,3)), σ=$(round(σ,3)), and υ = $(round(υ,15)) (υ^(-1/σ)= $(round(υ^(-1/σ)))); ")
   write(f, "Value of objective function: $obj \n")
   close(f)
 
@@ -73,22 +71,22 @@ function objective(δσ::Array{Float64,1}, grad::Array, wgrid_R=wgrid_R,
 end
 
 opt = Opt(:GN_CRS2_LM, 3)
-lower_bounds!(opt, [0.91, 0.1, -2.5])
-upper_bounds!(opt, [0.99, 3.0, -0.1])
+lower_bounds!(opt, [0.91, 0.1, 0.0])
+upper_bounds!(opt, [0.99, 3.0, 1e-8])
 min_objective!(opt, objective)
 ftol_rel!(opt, 0.001)
-init = [0.956 + 0.01*randn(), 2.0 + rand(), -1.5 + rand()]
+init = [0.956 + 0.01*randn(), 2.0 + rand(), 57726.^(-1/0.544)]
 (minf, minx, ret) = NLopt.optimize(opt, init)
 f = open("progress.txt","a")
 write(f,"Found minimum for baseline profile! Calculating standard errors...\n")
 close(f)
 stderr = jacobian(minx[1], minx[2], minx[3])
 println("Found minimum for baseline profile at $minf, δ is $(minx[1]) ($(stderr[1])), σ is $(minx[2]) ($(stderr[2])), υ is $(minx[3]) ($(stderr[3]))")
-f = open("progress.txt","a")
+f = open("results.txt","a")
 write(f, "Found minimum without profile at $minf, δ is $(minx[1]) ($(stderr[1])), σ is $(minx[2]) ($(stderr[2])), υ is $(minx[3]) ($(stderr[3]))\n")
 close(f)
 
-for prof in ["psid","bhps_grosslab","bhps_netlab", "bhps_netinc"]
+for prof in ["RIP", "psid","bhps_grosslab","bhps_netlab", "bhps_netinc"]
   f = open("progress.txt","a")
   write(f, "Now calculating for $prof\n")
   close(f)
@@ -102,11 +100,11 @@ for prof in ["psid","bhps_grosslab","bhps_netlab", "bhps_netinc"]
     apoints, bpoints, zpoints, wpoints_R, ypoints_R, power, r, tR, g_t,
     pension, true)
   opt = Opt(:GN_CRS2_LM, 3)
-  lower_bounds!(opt, [0.91, 0.1, -2.5])
-  upper_bounds!(opt, [0.99, 3.0, -0.1])
+  lower_bounds!(opt, [0.91, 0.1, 0.0])
+  upper_bounds!(opt, [0.99, 3.0, 1e-8])
   min_objective!(opt, objective)
   ftol_rel!(opt, 0.001)
-  init = [0.956 + 0.01*randn(), 2.0 + rand(), -1.5 + rand()]
+  init = [0.956 + 0.01*randn(), 2.0 + rand(), 57726.^(-1/0.544)]
   (minf, minx, ret) = NLopt.optimize(opt, init)
   f = open("progress.txt","a")
   write(f,"Found minimum for $prof profile! Calculating standard errors...\n")
