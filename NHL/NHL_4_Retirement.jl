@@ -59,7 +59,7 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
   end
 
   @everywhere function consdec(xt::Float64, σ::Float64, r::Float64, υ::Float64)
-    obj(c::Float64, xt=xt, σ=σ, r=r, υ=υ) = -(u(c,σ) + b(r*(xt-c), υ))
+    obj(c::Float64, xt=xt, σ=σ, r=r, υ=υ) = -(u(c,σ) + bq(r*(xt-c), υ))
     opt = Optim.optimize(obj, 0.1, xt)
     return -opt.f_minimum, opt.minimum
   end
@@ -72,8 +72,8 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
 
   # Compute the period tR-1 solution exactly:
   @everywhere function bellOptRet_exact(xt, σ, r, ψ, wmin, υ)
-    obj_p(c::Float64, xt=xt, σ=σ, r=r, υ=υ) = -(u(c,σ) + b(r*(xt-c), υ))
-    Blmn(wp::Float64, xt=xt, r=r, ψ=ψ) = -( (1-ψ[tR-1])*u(xt-wp,σ)+ψ[tR-1]*b(wp,υ)
+    obj_p(c::Float64, xt=xt, σ=σ, r=r, υ=υ) = -(u(c,σ) + bq(r*(xt-c), υ))
+    Blmn(wp::Float64, xt=xt, r=r, ψ=ψ) = -( (1-ψ[tR-1])*u(xt-wp,σ)+ψ[tR-1]*bq(wp,υ)
                           + δ*(-Optim.optimize(obj_p,0.1,r*wp).f_minimum))
     optimum = optimize(Blmn, wmin, xt-0.01)
     return -(optimum.f_minimum), optimum.minimum
@@ -90,7 +90,7 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
   # Remainder with Interpolation
   @everywhere function bellOptRet(vint, xt, y, σ, r, ψ, wmin, υ)
     function Blmn(wp::Float64, vint=vint, xt=xt, r=r, ψ=ψ, υ=υ)
-      -( (1-ψ[tR-1])*u(xt-wp,σ)+ψ[tR-1]*b(wp, υ) + δ*vint[r*wp, y])
+      -( (1-ψ[tR-1])*u(xt-wp,σ)+ψ[tR-1]*bq(wp, υ) + δ*vint[r*wp, y])
     end
     optimum = optimize(Blmn, wmin, xt-0.01)
     return -(optimum.f_minimum), optimum.minimum

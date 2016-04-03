@@ -60,7 +60,7 @@ end
 
 # Bequest motive
 υ = (-1/0.544)
-function b(w::Float64, υ::Float64)
+function bq(w::Float64, υ::Float64)
   υ==0.0 ? 0.0 :57726.^υ*w
 end
 
