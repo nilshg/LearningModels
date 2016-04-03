@@ -42,8 +42,8 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array{Float64,1},
   end
 
   # BELIEF GRIDS #
-  (std(s_f_i[1,:,:]) > 0.01) || (apoints = 2)
-  (std(s_f_i[2,:,:]) > 0.01) || (bpoints = 2)
+  (std(s_f_i[1,:,:]) > 0.01) || (apoints = 3)
+  (std(s_f_i[2,:,:]) > 0.01) || (bpoints = 3)
 
   if const_bel
     agrid = collect(linspace(minimum(s_f_i[1, :, 2:tW]), maximum(s_f_i[1, :, :]), apoints))
@@ -58,6 +58,11 @@ function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array{Float64,1},
       bgrid[:, t] = collect(linspace(minimum(s_f_i[2, :, t]), maximum(s_f_i[2, :, t]), bpoints))
       zgrid[:, t] = collect(linspace(minimum(s_f_i[3, :, t]), maximum(s_f_i[3, :, t]), zpoints))
     end
+  end
+
+  if std(s_f_i[1,:,:]) < 0.01
+    agrid = collect(linspace(minimum(s_f_i[1, :, 2:tW])-0.001, maximum(s_f_i[1, :, :])+0.001, apoints))
+    bgrid = collect(linspace(minimum(s_f_i[2, :, :])-0.001, maximum(s_f_i[2, :, :])+0.001, bpoints))
   end
 
   # RETIREMENT GRIDS #
