@@ -2,20 +2,17 @@
 ############################## BELLMAN RECURSION ###############################
 ################################################################################
 
-function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
+function solveWorkingLife{T<:AbstractFloat}(v::Array{T,4}, wp::Array{T,5},
   xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1},
-  stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, ρ::T, c_over_x::Array{T,5},
-  g_t::Array{T,1}, σ::T, ξ::T)
-
-  println("Solving for decision rules on $(prod(size(v)[1:4])) points on $(nprocs()) cores")
+  stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, ρ::T, g_t::Array{T,1},
+  σ::T, ξ::T)
 
   wpnow = SharedArray(Float64, size(v)[1:4], pids=procs());
   vnow = SharedArray(Float64, size(v)[1:4], pids=procs());
-  cxnow = SharedArray(Float64, size(v)[1:4], pids=procs());
 
   for t = (size(xgrid,2)-1):-1:1
     # INTERPOLATION
-    v_interpol = interpolateV(v[:,:,:,:,t+1], xgrid[:,t+1], agrid, bgrid, zgrid)
+    v_interpol = interpolateV(v, xgrid[:,t+1], agrid, bgrid, zgrid)
 
     # MAXIMIZATION
     wmin = xgrid[1, t+1]
@@ -27,11 +24,9 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,5}, wp::Array{T,5},
         (wpnow[x, a, b, z], vnow[x, a, b, z]) =
           bellOpt(xt, at, bt, zt, wmin, v_interpol, yn, k[:, t], ρ, r, δ, σ, ξ)
 
-        cxnow[x,a,b,z] = (xt-wpnow[x,a,b,z])/xt
       end
     end
-    wp[:,:,:,:,t] = sdata(wpnow); v[:,:,:,:,t] = sdata(vnow)
-    c_over_x[:,:,:,:,t] = sdata(cxnow)
+    wp[:,:,:,:,t] = sdata(wpnow); v = sdata(vnow)
   end
-  return v, wp, c_over_x
+  return v, wp
 end
