@@ -1,11 +1,11 @@
 ################################################################################
-############################# GRID CONStRUCTION ################################
+############################# GRID CONSTRUCTION ################################
 ################################################################################
 
-function grids{T<:Int}(s_f_i::Array{Float64,3}, stdy::Array{Float64,1},
+function grids{T<:Integer}(s_f_i::Array{Float64,3}, stdy::Array{Float64,1},
   xpoints::T, apoints::T, bpoints::T, zpoints::T, wpoints_R::T, ypoints_R::T,
-  power::Float64, r::Float64, tR::T, g_t::Array{Float64,1},
-  pension::Array{Float64,1}, const_bel::Bool)
+  power::Float64, r::Float64, g_t::Array{Float64,1}, pension::Array{Float64,1},
+  const_bel::Bool)
 
   println("Construct Grids")
   tW = size(s_f_i,3)

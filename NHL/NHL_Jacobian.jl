@@ -2,9 +2,9 @@ using StatsBase
 
 function jacobian{T<:AbstractFloat}(dopt::T, sopt::T, uopt::T, wgrid_R=wgrid_R, ygrid_R=ygrid_R,
   r=r, tR=tR, xgrid=xgrid, agrid=agrid, bgrid=bgrid, zgrid=zgrid, yit=yit, g_t=g_t,
-  stdy=stdy, k=k, ρ=ρ, s_f_i=s_f_i, pension=pension)
+  stdy=stdy, k=k, ρ=ρ, s_f_i=s_f_i, pension=pension, power=power)
 
-  v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR, υ)
+  v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR, υ, power)
   v, wp, c_over_x = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid,
                                       bgrid, zgrid, yit, g_t, r, δ, σ)
   v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,

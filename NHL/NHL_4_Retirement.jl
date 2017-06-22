@@ -40,13 +40,13 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
 end
 
 function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
-  ygrid_R::Array{T,1}, r::T, δ::T, σ::T, tR::Int64, υ::T)
+  ygrid_R::Array{T,1}, r::T, δ::T, σ::T, tR::Int64, υ::T, power::T)
 
   v_R = SharedArray{Float64}(size(wgrid_R,1), size(ygrid_R,1), tR)
   wp_R = SharedArray{Float64}(size(wgrid_R,1), size(ygrid_R,1), tR)
 
   wretgrid = Array{Float64}(length(wgrid_R), tR)
-  wgridexp = Array{Float64}length(wgrid_R)
+  wgridexp = Array{Float64}(length(wgrid_R))
   wdistexp = wgrid_R[end]^(1/power)
   winc = wdistexp/(length(wgrid_R)-1)
   for i = 1:length(wgrid_R)

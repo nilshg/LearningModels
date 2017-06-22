@@ -4,39 +4,9 @@
 
 using StatsBase
 
-function learning(user::AbstractString)
-
-  @printf "Import Guvenen's learning results\n"
-  # Import beliefs
-  path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
-  s_f_guv_org = readdlm(path*"/SNext_in.dat")
-  s_f_i = Array{Float64}(3, 100000, 40)
-  for t = 1:40
-    for i = 1:100000
-      s_f_i[:, i, t] = s_f_guv_org[i, 3*t-2:3*t]
-    end
-  end
-
-  # Import P matrix
-  p_f = reshape(readdlm(path*"/Pnow.dat")', 3,3,40)
-
-  # Parameters variances, standard deviation of income
-  k = Array{Float64}(3, 40)
-  stdy = zeros(40)
-  @inbounds for t = 1:40
-    ht = [1; t; 1]; pt = p_f[:, :, t]
-    k[:, t] = pt*ht.*(ht'*pt*ht + 0.047).^(-1.0)
-    stdy[t] = sqrt(ht'*p_f[:, :, t]*ht + 0.047)[1]
-  end
-
-  return s_f_i, stdy, k, p_f
-end
-
-################################################################################
-
-function learning{T<:AbstractFloat}(α::Array{T,1}, β_k::Array{T,1},
-  yit::Array{T,2}, ρ::T, var_α::T,var_β::T,cov_αβ::T,var_η::T,var_ɛ::T,
-  g_t::Array{T,1}, fpu::T, wrong = false)
+function learning{T<:AbstractFloat}(α::Array{T,1}, β::Array{T,1},
+  β_k::Array{T,1}, yit::Array{T,2}, ρ::T, var_α::T,var_β::T,cov_αβ::T,var_η::T,
+  var_ɛ::T, g_t::Array{T,1}, fpu::T, wrong = false)
 
   @printf "Calculate agent's beliefs\n"
   tW = size(yit,2); s_f_i = Array{Float64}(3, size(yit,1),tW)
@@ -49,7 +19,7 @@ function learning{T<:AbstractFloat}(α::Array{T,1}, β_k::Array{T,1},
   end
 
   # Initial belief is the known part of β
-  for i = 1:agents*bs
+  for i = 1:length(β)
     s_f_i[:, i, 1] = [α[i]; β_k[i]; 0.0]
   end
 

@@ -46,7 +46,7 @@ end
 
 ################################################################################
 
-function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
+function incomeDistribution{T<:Integer}(agents::T, bs::T, tW::T; profile="none")
 
   # Life cycle profiles
   if profile == "psid"
@@ -208,14 +208,14 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
     var_η = 0.05; var_ɛ = 0.03;
     ρ = 0.95
   elseif profile == "guvenen"
-    g_t = [0.0 for t = 1:tW]
+    g_t = zeros(tW)
     μₐ = 2.0; μᵦ = 0.009;
     var_α = 0.005; var_β = 0.00038; corr_αβ = -0.23
     cov_αβ = corr_αβ*sqrt(var_β*var_α);
     var_η = 0.029; var_ɛ = 0.047;
     ρ = 0.82
   else
-    g_t = [0. for t = 1:tW]
+    g_t = zeros(tW)
     μₐ = 1.17; μᵦ = 0.009
     var_α = 0.03; var_β = 0.00031; corr_αβ = -0.3
     cov_αβ = corr_αβ*sqrt(var_β*var_α)
@@ -228,7 +228,7 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
   println("Parameters of the income process are:")
   println("ρ=$ρ, var_α=$var_α, var_β=$var_β, var_η=$var_η, var_ɛ=$var_ɛ")
   # Draw some alphas and betas
-  if (var_α>0.) & (var_β > 0.)
+  if (var_α>0.) && (var_β > 0.)
     min_β = max(-0.05, μᵦ-2.5*sqrt(var_β))
     ab = MvNormal([μₐ; μᵦ], [var_α cov_αβ; cov_αβ var_β])
     draw1 = rand(ab, bs)'
@@ -243,9 +243,9 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
     β_k = reshape(repmat(draw2[:, 2],1,100)', agents*bs)
     β = (1-fpu)*β_k + fpu*β_u
   else
-    α = [μₐ for i = 1:agents*bs]
-    β = [μᵦ for i = 1:agents*bs]
-    β_k = [μᵦ for i = 1:agents*bs]
+    α = μₐ*ones(agents*bs)
+    β = μᵦ*ones(agents*bs)
+    β_k = μᵦ*ones(agents*bs)
   end
 
   # Draw the income distribution:
