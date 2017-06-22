@@ -1,7 +1,7 @@
 nprocs()==CPU_CORES || addprocs(CPU_CORES-1)
 import Distributions, FastGaussQuadrature, Interpolations, Optim, StatsBase, NLopt
 @everywhere begin
-  path=("/home/tew207/")
+  path=("C:/Users/nils/Documents/GitHub/LearningModels/")
   include(path*"NHL/NHL_Optimizations.jl")
   include(path*"NHL/NHL_Interpolations.jl")
   include(path*"Parameters.jl")
@@ -14,7 +14,6 @@ import Distributions, FastGaussQuadrature, Interpolations, Optim, StatsBase, NLo
   include(path*"NHL/NHL_7_Simulate.jl")
   include(path*"SCF_percentiles.jl")
 end
-
 start = now()
 f = open("progress.txt","a")
 write(f, "\n\nSession started $start\n")
@@ -25,7 +24,7 @@ close(f)
 
 # 1. Draw Income Distribution
 yit, pension, α, β, β_k, g_t, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ =
-  incomeDistribution(agents, bs, tW, profile="guvenen")
+  incomeDistribution(agents, bs, tW, profile="RIP")
 
 # 2. Construct individual specific belief histories
 s_f_i, stdy, k = learning(α, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ,
@@ -50,11 +49,11 @@ function objective(δσ::Array{Float64,1}, grad::Array, wgrid_R=wgrid_R,
 
   v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR, υ)
 
-  v, wp, c_over_x = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
-                                                zgrid, yit, g_t, r, δ, σ)
+  v, wp = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
+                                              zgrid, yit, g_t, r, δ, σ)
 
-  v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
-                                      stdy, k, r, δ, ρ, c_over_x, g_t, σ, 0.0)
+  v, wp = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
+                                      stdy, k, r, δ, ρ, g_t, σ, 0.0)
 
   c_t, w_t, wp_t, pct = sim(wp, wp_R, xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R,
                             yit, s_f_i, pension, r, δ, σ, tR)

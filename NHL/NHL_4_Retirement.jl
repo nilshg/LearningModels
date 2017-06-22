@@ -14,7 +14,7 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
   end
 
   function simul{T<:AbstractFloat}(w::T, y::T, δ::T, σ::T, r::T, tR::Int64)
-    c_t = Array(Float64, tR); x_t = similar(c_t); sum_u = 0.0
+    c_t = Array{Float64}(tR); x_t = similar(c_t); sum_u = 0.0
 
     c_t[1] = get_c_1(r, δ, w, y, σ, tR)[1]
     x_t[1] = w + y
@@ -29,8 +29,8 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
     return x_t, sum_u
   end
 
-  wp_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), tR))
-  v_R = Array(Float64, (size(wgrid_R,1), size(ygrid_R,1), 1))
+  wp_R = Array{Float64}(size(wgrid_R,1), size(ygrid_R,1), tR)
+  v_R = Array{Float64}(size(wgrid_R,1), size(ygrid_R,1), 1)
 
   for w = 1:size(wgrid_R,1), y = 1:size(ygrid_R,1)
     wt = wgrid_R[w]; yt = ygrid_R[y]
@@ -42,11 +42,11 @@ end
 function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
   ygrid_R::Array{T,1}, r::T, δ::T, σ::T, tR::Int64, υ::T)
 
-  v_R = SharedArray(Float64, (size(wgrid_R,1), size(ygrid_R,1), tR))
-  wp_R = SharedArray(Float64, (size(wgrid_R,1), size(ygrid_R,1), tR))
+  v_R = SharedArray{Float64}(size(wgrid_R,1), size(ygrid_R,1), tR)
+  wp_R = SharedArray{Float64}(size(wgrid_R,1), size(ygrid_R,1), tR)
 
-  wretgrid = Array(Float64, (length(wgrid_R), tR))
-  wgridexp = Array(Float64, length(wgrid_R))
+  wretgrid = Array{Float64}(length(wgrid_R), tR)
+  wgridexp = Array{Float64}length(wgrid_R)
   wdistexp = wgrid_R[end]^(1/power)
   winc = wdistexp/(length(wgrid_R)-1)
   for i = 1:length(wgrid_R)
@@ -61,7 +61,7 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
   @everywhere function consdec(xt::Float64, σ::Float64, r::Float64, υ::Float64)
     obj(c::Float64, xt=xt, σ=σ, r=r, υ=υ) = -(u(c,σ) + bq(r*(xt-c), υ))
     opt = Optim.optimize(obj, 0.1, xt)
-    return -opt.f_minimum, opt.minimum
+    return -opt.minimum, opt.minimizer
   end
 
   # Value of last period of retirement
@@ -74,9 +74,9 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
   @everywhere function bellOptRet_exact(xt, σ, r, ψ, wmin, υ)
     obj_p(c::Float64, xt=xt, σ=σ, r=r, υ=υ) = -(u(c,σ) + bq(r*(xt-c), υ))
     Blmn(wp::Float64, xt=xt, r=r, ψ=ψ) = -( (1-ψ[tR-1])*u(xt-wp,σ)+ψ[tR-1]*bq(wp,υ)
-                          + δ*(-Optim.optimize(obj_p,0.1,r*wp).f_minimum))
-    optimum = optimize(Blmn, wmin, xt-0.01)
-    return -(optimum.f_minimum), optimum.minimum
+                          + δ*(-Optim.optimize(obj_p,0.1,r*wp).minimum))
+    optimum = Optim.optimize(Blmn, wmin, xt-0.01)
+    return -(optimum.minimum), optimum.minimizer
   end
 
   wmin = wretgrid[1, tR]
@@ -92,8 +92,8 @@ function solveRetirement{T<:AbstractFloat}(wgrid_R::Array{T,1},
     function Blmn(wp::Float64, vint=vint, xt=xt, r=r, ψ=ψ, υ=υ)
       -( (1-ψ[tR-1])*u(xt-wp,σ)+ψ[tR-1]*bq(wp, υ) + δ*vint[r*wp, y])
     end
-    optimum = optimize(Blmn, wmin, xt-0.01)
-    return -(optimum.f_minimum), optimum.minimum
+    optimum = Optim.optimize(Blmn, wmin, xt-0.01)
+    return -(optimum.minimum), optimum.minimizer
   end
 
   for t = tR-2:-1:1

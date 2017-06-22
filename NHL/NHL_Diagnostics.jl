@@ -310,7 +310,7 @@ end
 
 ################################################################################
 
-function winfriedcompare{T<:AbstractFloat}(w_t::Array{T,2}, prime::Array{T,1},
+function compare_wealth_dist{T<:AbstractFloat}(w_t::Array{T,2}, prime::Array{T,1},
   young::Array{T,1}, middle::Array{T,1}, old::Array{T,1})
 
   agep = zeros(90,3); primep = zeros(90)

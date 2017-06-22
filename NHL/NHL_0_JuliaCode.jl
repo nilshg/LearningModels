@@ -1,7 +1,7 @@
-nprocs()==CPU_CORES || addprocs(CPU_CORES-1)
+nprocs()==Sys.CPU_CORES || addprocs(Sys.CPU_CORES-1)
 import Distributions, FastGaussQuadrature, Interpolations, Optim, PyPlot, PyCall, StatsBase
 @everywhere begin
-  p=("C:/Users/tew207/Documents/GitHub/LearningModels/")
+  p=("C:/Users/nils/Documents/GitHub/LearningModels/")
   include(p*"NHL/NHL_Optimizations.jl"); include(p*"NHL/NHL_Interpolations.jl")
   include(p*"Parameters.jl"); include(p*"1_Income.jl")
   include(p*"2_Learning.jl"); include(p*"NHL/NHL_3_Grid.jl")
@@ -27,46 +27,28 @@ xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R = grids(s_f_i, stdy, xpoints,
 v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR)
 
 # 5. Solve Transition Period
-v, wp, c_over_x = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
-                                              zgrid, yit, g_t, r, δ, σ)
+v, wp, = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid, zgrid,
+                          yit, g_t, r, δ, σ)
 
 # 6. Solve working life problem
-@time v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
-                                    stdy, k, r, δ, ρ, c_over_x, g_t, σ, ξ)
+@time v, wp = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid, stdy, k, r, δ,
+                                ρ, g_t, σ, ξ)
 
 # 7. Simulate wealth distribution
 c_t, w_t, wp_t, pct = sim(wp, xgrid, agrid, bgrid, zgrid, wgrid_R,
-                          yit, s_f_i, pension, r, δ, σ, tR)
+                          yit, s_f_i, pension, r, δ, σ, tR, p)
 
-include("C:/Users/tew207/Documents/GitHub/SCFtools/SCF_percentiles.jl")
-winfriedcompare(w_t, SCF_prime_83, SCF_young_83, SCF_middle_83, SCF_old_83)
-
-υ_2 = 0.0
-v_R_2, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR, υ_2)
-v, wp, c_over_x = solveTransition(v_R_2, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
-                                              zgrid, yit, g_t, r, δ, σ)
-@time v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
-                                    stdy, k, r, δ, ρ, c_over_x, g_t, σ, ξ)
-c_t2, w_t2, wp_t2, pct2 = sim(wp, wp_R, xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R,
-                          yit, s_f_i, pension, r, δ, σ, tR)
-
-υ_3 = υ
-v_R_2, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR, υ_3)
-v, wp, c_over_x = solveTransition(v_R_2, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
-                                              zgrid, yit, g_t, r, δ, σ)
-@time v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
-                                    stdy, k, r, δ, ρ, c_over_x, g_t, σ, ξ)
-c_t3, w_t3, wp_t3, pct3 = sim(wp, wp_R, xgrid, agrid, bgrid, zgrid, wgrid_R, ygrid_R,
-                          yit, s_f_i, pension, r, δ, σ, tR)
+compare_wealth_dist(w_t,
+    vec(SCF_prime_83), vec(SCF_young_83), vec(SCF_middle_83), vec(SCF_old_83))
 
 ξ_1 = 0.005
 v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR)
 # 5. Solve Transition Period
-v, wp, c_over_x = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
+v, wp = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
                                               zgrid, yit, g_t, r, δ, σ)
 # 6. Solve working life problem
-@time v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
-                                    stdy, k, r, δ, ρ, c_over_x, g_t, σ, ξ_1)
+@time v, wp = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
+                                    stdy, k, r, δ, ρ, g_t, σ, ξ_1)
 # 7. Simulate wealth distribution
 c_t, w_t, wp_t, pct2 = sim(wp, xgrid, agrid, bgrid, zgrid, wgrid_R,
                           yit, s_f_i, pension, r, δ, σ, tR)
@@ -74,11 +56,11 @@ c_t, w_t, wp_t, pct2 = sim(wp, xgrid, agrid, bgrid, zgrid, wgrid_R,
 ξ_2 = 0.01
 v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR)
 # 5. Solve Transition Period
-v, wp, c_over_x = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
+v, wp = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
                                               zgrid, yit, g_t, r, δ, σ)
 # 6. Solve working life problem
-@time v, wp, c_over_x = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
-                                    stdy, k, r, δ, ρ, c_over_x, g_t, σ, ξ_2)
+@time v, wp = solveWorkingLife(v, wp, xgrid, agrid, bgrid, zgrid,
+                                    stdy, k, r, δ, ρ, g_t, σ, ξ_2)
 # 7. Simulate wealth distribution
 c_t, w_t, wp_t, pct3 = sim(wp, xgrid, agrid, bgrid, zgrid, wgrid_R,
                           yit, s_f_i, pension, r, δ, σ, tR)

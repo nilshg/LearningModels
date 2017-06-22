@@ -282,7 +282,7 @@ function incomeDistribution{T<:Int}(agents::T, bs::T, tW::Int64; profile="none")
       return rratio*avgy
   end
 
-  pension = Array(Float64, size(yit,1))
+  pension = Array{Float64}(size(yit,1))
   ybar = mean(yit)
   for i = 1:size(yit, 1)
     pension[i] = get_pension(yit[i, 40], γ_0, γ_1, ybar)

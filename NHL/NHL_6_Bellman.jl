@@ -7,8 +7,8 @@ function solveWorkingLife{T<:AbstractFloat}(v::Array{T,4}, wp::Array{T,5},
   stdy::Array{T,1}, k::Array{T,2}, r::T, δ::T, ρ::T, g_t::Array{T,1},
   σ::T, ξ::T)
 
-  wpnow = SharedArray(Float64, size(v)[1:4], pids=procs());
-  vnow = SharedArray(Float64, size(v)[1:4], pids=procs());
+  wpnow = SharedArray{Float64}(size(v)[1:4], pids=procs());
+  vnow = SharedArray{Float64}(size(v)[1:4], pids=procs());
 
   for t = (size(xgrid,2)-1):-1:1
     # INTERPOLATION

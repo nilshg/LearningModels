@@ -16,16 +16,18 @@ end
 function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,1},
   yit::Array{T,2}, s_f_i::Array{T,3}, pension::Array{T,1}, r::T, δ::T, σ::T,
-  tR::Int64)
+  tR::Int64, p::AbstractString)
 
   @printf "Simulate Consumption and Wealth Distribution\n"
   tW = size(yit,2);
-  c_t = Array(Float64, (size(yit,1), tW+tR))
+  c_t = Array{Float64}(size(yit,1), tW+tR)
   w_t = similar(c_t); wp_t = similar(c_t)
 
   # Initial wealth
   #w_0 = 0.; w_t[:, 1] = w_0
-  include("C:/Users/tew207/Documents/GitHub/SCFtools/SCF_percentiles.jl")
+  include(p*"SCF_1983_age_distribution.jl")
+  include(p*"SCF_percentiles.jl")
+
   for i = 1:size(w_t,1)
     w_t[i,1] = sample(w_0_weight[:,1], weights(w_0_weight[:,2]))
   end
@@ -59,7 +61,7 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   end
 
   function simulate_i{T<:AbstractFloat}(x::T, y::T, δ=δ, σ=σ, r=r, tR=tR)
-    c_R_i = Array(Float64, tR); x_t = similar(c_R_i)
+    c_R_i = Array{Float64}(tR); x_t = similar(c_R_i)
     c_R_i[1] = get_c_1(r, δ, x, y, σ, tR)[1]
     x_t[1] = x + y
 
@@ -83,18 +85,19 @@ end
 
 function sim{T<:AbstractFloat}(wp::Array{T,5}, wp_R::Array{T,3}, xgrid::Array{T,2},
   agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,1},
-  ygrid_R::Array{T,1},
-  yit::Array{T,2}, s_f_i::Array{T,3}, pension::Array{T,1}, r::T, δ::T, σ::T,
-  tR::Int64)
+  ygrid_R::Array{T,1}, yit::Array{T,2}, s_f_i::Array{T,3}, pension::Array{T,1},
+  r::T, δ::T, σ::T, tR::Int64, p::AbstractString)
 
   @printf "Simulate Consumption and Wealth Distribution\n"
   tW = size(yit,2);
-  c_t = Array(Float64, (size(yit,1), tW+tR))
+  c_t = Array{Float64}(size(yit,1), tW+tR)
   w_t = similar(c_t); wp_t = similar(c_t)
 
   # Initial wealth
   #w_0 = 0.; w_t[:, 1] = w_0
-  include("C:/Users/tew207/Documents/GitHub/SCFtools/SCF_percentiles.jl")
+  include(p*"SCF_1983_age_distribution.jl")
+  include(p*"SCF_percentiles.jl")
+
   for i = 1:size(w_t,1)
     w_t[i,1] = sample(w_0_weight[:,1], weights(w_0_weight[:,2]))
   end
