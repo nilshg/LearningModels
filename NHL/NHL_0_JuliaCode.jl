@@ -1,6 +1,6 @@
 using Distributed
 nprocs()==Sys.CPU_THREADS || addprocs(Sys.CPU_THREADS-1)
-import Distributions, FastGaussQuadrature, Interpolations, Optim, PyPlot, PyCall, StatsBase
+import Distributions, FastGaussQuadrature, Interpolations, Optim, Plots, StatsBase
 using SpecialFunctions
 @everywhere begin
   p=("C:/Users/nils/Documents/GitHub/LearningModels/")
@@ -40,7 +40,7 @@ v, wp, = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid, zgrid,
 c_t, w_t, wp_t, pct = sim(wp, xgrid, agrid, bgrid, zgrid, wgrid_R,
                           yit, s_f_i, pension, r, δ, σ, tR, p)
 
-compare_wealth_dist(w_t,
+a, b, = compare_wealth_dist(w_t,
     vec(SCF_prime_83), vec(SCF_young_83), vec(SCF_middle_83), vec(SCF_old_83))
 
 ξ_1 = 0.005
@@ -53,7 +53,7 @@ v, wp = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
                                     stdy, k, r, δ, ρ, g_t, σ, ξ_1)
 # 7. Simulate wealth distribution
 c_t, w_t, wp_t, pct2 = sim(wp, xgrid, agrid, bgrid, zgrid, wgrid_R,
-                          yit, s_f_i, pension, r, δ, σ, tR)
+                          yit, s_f_i, pension, r, δ, σ, tR, p)
 
 ξ_2 = 0.01
 v_R, wp_R = solveRetirement(wgrid_R, ygrid_R, r, δ, σ, tR, υ, power)
@@ -65,6 +65,6 @@ v, wp = solveTransition(v_R, wgrid_R, ygrid_R, xgrid, agrid, bgrid,
                                     stdy, k, r, δ, ρ, g_t, σ, ξ_2)
 # 7. Simulate wealth distribution
 c_t, w_t, wp_t, pct3 = sim(wp, xgrid, agrid, bgrid, zgrid, wgrid_R,
-                          yit, s_f_i, pension, r, δ, σ, tR)
+                          yit, s_f_i, pension, r, δ, σ, tR, p)
 
 comp_statics(pct, pct2, pct3, "ξ", 0.0, ξ_1, ξ_2)
