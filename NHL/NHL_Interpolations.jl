@@ -6,8 +6,8 @@ using Interpolations
 
 ################################################################################
 
-function interpolateV{T<:AbstractFloat}(v::Array{T,4}, xgrid::Array{T,1},
-            agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1})
+function interpolateV(v::Array{T,4}, xgrid::Array{T,1}, agrid::Array{T,1},
+  bgrid::Array{T,1}, zgrid::Array{T,1}) where T<:AbstractFloat
 
   return interpolate((xgrid, agrid, bgrid, zgrid), v, Gridded(Linear()))
 end
@@ -22,8 +22,8 @@ end
 
 ################################################################################
 
-function get_lins{T<:AbstractFloat}(v::Array{T,4}, xgrid::Array{T,1},
-  agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1})
+function get_lins(v::Array{T,4}, xgrid::Array{T,1},
+  agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}) where T<:AbstractFloat
 
   lin_int = Array(Lininterp, length(xgrid))
   for x = 1:length(xgrid)

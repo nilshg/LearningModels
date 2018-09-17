@@ -6,9 +6,9 @@ using Distributions, FastGaussQuadrature, Interpolations, Optim
 
 ################################################################################
 # Working life, no habits
-function bellOpt{T<:AbstractFloat}(x::T, a::T, b::T, z::T, wmin::T,
+function bellOpt(x::T, a::T, b::T, z::T, wmin::T,
    v_int::Interpolations.GriddedInterpolation, yn::Normal, k::Array, ρ::T,
-   r::T, δ::T, σ::T, ξ::T)
+   r::T, δ::T, σ::T, ξ::T) where T <: AbstractFloat
 
   function EVprime(w′::Float64, a=a, b=b, z=z, yn=yn, k=k, v_int=v_int, ρ=ρ, ξ=ξ)
 
@@ -35,8 +35,8 @@ end
 ################################################################################
 
 # Transition period, no habits
-function bellOpt_TRANS{T<:AbstractFloat}(x::T, pension::T, wmin::T,
-                  v_int::Interpolations.GriddedInterpolation, r::T, δ::T, σ::T)
+function bellOpt_TRANS(x::T, pension::T, wmin::T,
+            v_int::Interpolations.GriddedInterpolation, r::T, δ::T, σ::T) where T <: AbstractFloat
 
   Blmn(w′) = -( u(x-w′, σ) + δ*v_int[r*w′, pension] )
 

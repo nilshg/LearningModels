@@ -1,7 +1,7 @@
-nprocs() == CPU_CORES || addprocs(CPU_CORES-1)
-import Distributions, FastGaussQuadrature, Interpolations, Optim, PyPlot, PyCall, StatsBase
+nprocs() == Sys.CPU_CORES || addprocs(Sys.CPU_CORES-1)
 @everywhere begin
-  p=("C:/Users/tew207/Documents/GitHub/LearningModels/")
+  import Distributions, FastGaussQuadrature, Interpolations, Optim, Plots, StatsBase
+  p=("C:/Users/nils/Documents/GitHub/LearningModels/")
   include(p*"HL/HL_Interpolations.jl"); include(p*"HL/HL_Optimizations.jl");
   include(p*"Parameters.jl"); include(p*"1_Income.jl")
   include(p*"2_Learning.jl"); include(p*"HL/HL_3_Grid.jl")
@@ -15,11 +15,11 @@ yit, pension, α, β, β_k, g_t, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ =
   incomeDistribution(agents, bs, tW, profile="baseline")
 
 # 2. Construct individual specific belief histories
-s_f_i, stdy, k = learning(α, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ,
+s_f_i, stdy, k = learning(α, β, β_k, yit, ρ, var_α, var_β, cov_αβ, var_η, var_ɛ,
                           g_t, fpu, true)
 
 # 3. Construct Grids
-(xgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R, ygrid_R) =
+xgrid, hgrid, agrid, bgrid, zgrid, wgrid_R, hgrid_R, ygrid_R =
     grids(s_f_i, stdy, xpoints, hpoints, apoints, bpoints, zpoints,
            wpoints_R, hpoints_R, ypoints_R, wmaxR, power, r, tR, true)
 

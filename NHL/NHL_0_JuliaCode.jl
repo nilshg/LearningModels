@@ -1,5 +1,7 @@
-nprocs()==Sys.CPU_CORES || addprocs(Sys.CPU_CORES-1)
+using Distributed
+nprocs()==Sys.CPU_THREADS || addprocs(Sys.CPU_THREADS-1)
 import Distributions, FastGaussQuadrature, Interpolations, Optim, PyPlot, PyCall, StatsBase
+using SpecialFunctions
 @everywhere begin
   p=("C:/Users/nils/Documents/GitHub/LearningModels/")
   include(p*"NHL/NHL_Optimizations.jl"); include(p*"NHL/NHL_Interpolations.jl")

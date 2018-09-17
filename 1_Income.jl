@@ -2,23 +2,23 @@
 ########################### INCOME DISTRIBUTION ################################
 ################################################################################
 
-using Distributions
+using Distributions, StatsBase, Statistics
 
 ################################################################################
 
 function incomeDistribution(user::AbstractString)
 
-  @printf "Import Guvenen's income distribution\n"
+  println("Import Guvenen's income distribution")
   path="C:/Users/"*user*"/Dropbox/QMUL/PhD/Code/Guvenen FORTRAN Code/"
   yit = readdlm(path*"LaborReal.dat")
   println("\tMedian income in period 40 is $(median(yit[:, end]))")
 
   # Retirement benefits
-  ybar_i = mean(yit, 2)[:]
-  (γ_0, γ_1) = linreg(yit[:, 40], ybar_i)
+  ybar_i = mean(yit, dims=2)
+  linreg2(x, y) = hcat(fill!(similar(x), 1), x) \ y
+  (γ_0, γ_1) = linreg2(yit[:, 40], ybar_i)
 
-  function get_pension(y::Float64, k_0::Float64, k_1::Float64,
-                       avgy::Float64)
+  function get_pension(y::T, k_0::T, k_1::T, avgy::T) where T <: AbstractFloat
       ytilde = (k_0 + k_1*y)/avgy
       rratio = 0.0
 
@@ -46,7 +46,7 @@ end
 
 ################################################################################
 
-function incomeDistribution{T<:Integer}(agents::T, bs::T, tW::T; profile="none")
+function incomeDistribution(agents::T, bs::T, tW::T; profile="none") where T <: Integer
 
   # Life cycle profiles
   if profile == "psid"
@@ -238,9 +238,9 @@ function incomeDistribution{T<:Integer}(agents::T, bs::T, tW::T; profile="none")
       draw2[i,2] < min_β ? draw2[i,2] = min_β + abs(draw2[i,2]-min_β)/50.0 : 0
     end
     α = (draw1[:,1] + draw2[:,1])/2.
-    α = reshape(repmat(α,1,100)', agents*bs)
-    β_u = reshape(repmat(draw1[:, 2],1,100)', agents*bs)
-    β_k = reshape(repmat(draw2[:, 2],1,100)', agents*bs)
+    α = reshape(repeat(α,1,100)', agents*bs)
+    β_u = reshape(repeat(draw1[:, 2],1,100)', agents*bs)
+    β_k = reshape(repeat(draw2[:, 2],1,100)', agents*bs)
     β = (1-fpu)*β_k + fpu*β_u
   else
     α = μₐ*ones(agents*bs)
@@ -259,13 +259,14 @@ function incomeDistribution{T<:Integer}(agents::T, bs::T, tW::T; profile="none")
 
   # Median income in last period for calculation of retirement benefitss
   println("\tMedian and mean income in period 40 are "*
-                    "$(round(median(yit[:, end]),2)) and "*
-                    "$(round(mean(yit[:, end]),2))")
+                    "$(round(median(yit[:, end]); digits = 2)) and "*
+                    "$(round(mean(yit[:, end]); digits = 2))")
 
-  ybar_i = mean(yit, 2)[:]
-  (γ_0, γ_1) = linreg(yit[:, 40], ybar_i)
+  ybar_i = mean(yit, dims = 2)
+  linreg2(x, y) = hcat(fill!(similar(x), 1), x) \ y
+  (γ_0, γ_1) = linreg2(yit[:, 40], ybar_i)
 
-  function get_pension{T<:AbstractFloat}(y::T, k_0::T, k_1::T, avgy::T)
+  function get_pension(y::T, k_0::T, k_1::T, avgy::T) where T<:AbstractFloat
       ytilde = (k_0 + k_1*y)/avgy
       rratio = 0.0
 
@@ -282,7 +283,7 @@ function incomeDistribution{T<:Integer}(agents::T, bs::T, tW::T; profile="none")
       return rratio*avgy
   end
 
-  pension = Array{Float64}(size(yit,1))
+  pension = Array{Float64}(undef, size(yit,1))
   ybar = mean(yit)
   for i = 1:size(yit, 1)
     pension[i] = get_pension(yit[i, 40], γ_0, γ_1, ybar)
@@ -293,10 +294,10 @@ end
 
 ################################################################################
 
-function incomeDistribution{T<:AbstractFloat}(α::T, β::T, var_η_RIP::T,
-  var_ɛ_RIP::T, zpoints_RIP::Int64, epspoints::Int64, tW::Int64)
+function incomeDistribution(α::T, β::T, var_η_RIP::T, var_ɛ_RIP::T,
+  zpoints_RIP::Int64, epspoints::Int64, tW::Int64) where T<:AbstractFloat
 
-  @printf "1. Drawing an RIP-consistent income distribution\n"
+  println("1. Drawing an RIP-consistent income distribution")
   println("\tσ²(η) = $var_η_RIP,  σ²(ɛ) =  $var_ɛ_RIP")
 
   zdisc = [-(1/2)*(zpoints_RIP-1)*sqrt(var_η_RIP)+(i-1)*sqrt(var_η_RIP)

@@ -4,12 +4,11 @@
 
 using StatsBase
 
-function learning{T<:AbstractFloat}(α::Array{T,1}, β::Array{T,1},
-  β_k::Array{T,1}, yit::Array{T,2}, ρ::T, var_α::T,var_β::T,cov_αβ::T,var_η::T,
-  var_ɛ::T, g_t::Array{T,1}, fpu::T, wrong = false)
+function learning(α, β, β_k, yit, ρ, var_α,var_β,cov_αβ,var_η, var_ɛ, g_t,
+  fpu, wrong = false)
 
-  @printf "Calculate agent's beliefs\n"
-  tW = size(yit,2); s_f_i = Array{Float64}(3, size(yit,1),tW)
+  println("Calculate agent's beliefs")
+  tW = size(yit,2); s_f_i = Array{Float64}(undef, 3, size(yit)...)
 
   if wrong
     β_k -= (β.>percentile(β, 80))*0.01
@@ -25,13 +24,13 @@ function learning{T<:AbstractFloat}(α::Array{T,1}, β::Array{T,1},
 
   f = [1. 0. 0.; 0. 1. 0.; 0. 0. ρ]
   q = [0. 0. 0.; 0. 0. 0.; 0. 0. var_η]
-  p_f = Array{Float64}(3, 3, tW)
+  p_f = Array{Float64}(undef, 3, 3, tW)
   p_f[:,:,1] = [       var_α       sqrt(1-fpu)*cov_αβ       0.0;
                 sqrt(1-fpu)*cov_αβ   (1-fpu)*var_β          0.0;
                         0.0                 0.0        var_η/(1-ρ^2.)]
 
   # Evolution of Var-Cov-Matrix
-  stdy = Array{Float64}(tW); k = Array{Float64}(3, tW)
+  stdy = Array{Float64}(undef, tW); k = Array{Float64}(undef, 3, tW)
   for t = 1:tW
     ht = [1; t; 1]
     pt = p_f[:, :, t]

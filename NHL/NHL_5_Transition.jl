@@ -2,7 +2,7 @@
 #########################    TRANSITION PROBLEM      ###########################
 ################################################################################
 
-function get_pension{T<:AbstractFloat}(y::T, k_0::T, k_1::T, avgy::T)
+function get_pension(y, k_0, k_1, avgy)
   ytilde = (k_0 + k_1*y)/avgy
 
   rratio = 0.0
@@ -18,17 +18,19 @@ function get_pension{T<:AbstractFloat}(y::T, k_0::T, k_1::T, avgy::T)
   return rratio*avgy
 end
 
-function solveTransition{T<:AbstractFloat}(v_R::Array{T,3}, wgrid_R::Array{T,1},
-  ygrid_R::Array{T,1}, xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1},
-  zgrid::Array{T,1}, yit::Array{T,2}, g_t::Array{T,1}, r::T, δ::T, σ::T)
+
+function solveTransition(v_R::Array{T,3}, wgrid_R::Array{T,1}, ygrid_R::Array{T,1},
+  xgrid::Array{T,2}, agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1},
+  yit::Array{T,2}, g_t::Array{T,1}, r::T, δ::T, σ::T) where T<:AbstractFloat
 
   tW = size(xgrid,2)
-  wp = Array{Float64}(size(xgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW)
-  v = Array{Float64}(size(xgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1))
+  wp = Array{Float64}(undef, size(xgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1), tW)
+  v = Array{Float64}(undef, size(xgrid,1), size(agrid,1), size(bgrid,1), size(zgrid,1))
 
   # Predicting pension from last period income
-  ybari = mean(yit, 2)[:]
-  (k_0, k_1) = linreg(yit[:, tW], ybari)
+  ybari = mean(yit, dims=2)
+  linreg2(x, y) = hcat(fill!(similar(x), 1), x) \ y
+  (k_0, k_1) = linreg2(yit[:, tW], ybari)
   avgy = mean(yit)
 
   # INTERPOLATION

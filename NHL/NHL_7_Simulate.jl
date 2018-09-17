@@ -1,26 +1,27 @@
 ################################################################################
 ################################### SIMULATION #################################
 ################################################################################
+using Distributions
 
 function get_percentiles(w::Array{Float64,2})
   prct = zeros(90,4)
   for i = 1:90
-    prct[i,1] = percentile(mean(w[:,6:15],2)[:], i)
-    prct[i,2] = percentile(mean(w[:,16:25],2)[:], i)
-    prct[i,3] = percentile(mean(w[:,26:35],2)[:], i)
-    prct[i,4] = percentile(mean(w[:,6:35],2)[:], i)
+    prct[i,1] = percentile(mean(w[:,6:15], dims = 2)[:], i)
+    prct[i,2] = percentile(mean(w[:,16:25], dims = 2)[:], i)
+    prct[i,3] = percentile(mean(w[:,26:35], dims = 2)[:], i)
+    prct[i,4] = percentile(mean(w[:,6:35], dims = 2)[:], i)
   end
   return prct
 end
 
-function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
-  agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,1},
+function sim(wp::Array{T,5}, xgrid::Array{T,2}, agrid::Array{T,1},
+  bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,1},
   yit::Array{T,2}, s_f_i::Array{T,3}, pension::Array{T,1}, r::T, δ::T, σ::T,
-  tR::Int64, p::AbstractString)
+  tR::Int64, p::AbstractString) where T<:AbstractFloat
 
-  @printf "Simulate Consumption and Wealth Distribution\n"
+  println("Simulate Consumption and Wealth Distribution")
   tW = size(yit,2);
-  c_t = Array{Float64}(size(yit,1), tW+tR)
+  c_t = Array{Float64}(undef, size(yit,1), tW+tR)
   w_t = similar(c_t); wp_t = similar(c_t)
 
   # Initial wealth
@@ -52,7 +53,7 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   end
   negcons == 0 || println("\t$negcons negative consumption choices!")
 
-  function get_c_1{T<:AbstractFloat}(r::T, δ::T, x::T, y::T, σ::T, tR::Int64)
+  function get_c_1(r, δ, x, y, σ, tR::Int64)
     numerator = 1 - 1/r*(r*δ)^(1/σ)
     denominator = 1 - (1/r*(r*δ)^(1/σ))^tR
     margprop = numerator/denominator
@@ -60,8 +61,8 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
     return margprop * pdvresources
   end
 
-  function simulate_i{T<:AbstractFloat}(x::T, y::T, δ=δ, σ=σ, r=r, tR=tR)
-    c_R_i = Array{Float64}(tR); x_t = similar(c_R_i)
+  function simulate_i(x, y, δ=δ, σ=σ, r=r, tR=tR)
+    c_R_i = Array{Float64}(undef, tR); x_t = similar(c_R_i)
     c_R_i[1] = get_c_1(r, δ, x, y, σ, tR)[1]
     x_t[1] = x + y
 
@@ -83,12 +84,12 @@ function sim{T<:AbstractFloat}(wp::Array{T,5}, xgrid::Array{T,2},
   return c_t, w_t, wp_t, percentiles
 end
 
-function sim{T<:AbstractFloat}(wp::Array{T,5}, wp_R::Array{T,3}, xgrid::Array{T,2},
+function sim(wp::Array{T,5}, wp_R::Array{T,3}, xgrid::Array{T,2},
   agrid::Array{T,1}, bgrid::Array{T,1}, zgrid::Array{T,1}, wgrid_R::Array{T,1},
   ygrid_R::Array{T,1}, yit::Array{T,2}, s_f_i::Array{T,3}, pension::Array{T,1},
-  r::T, δ::T, σ::T, tR::Int64, p::AbstractString)
+  r::T, δ::T, σ::T, tR::Int64, p::AbstractString) where T<:AbstractFloat
 
-  @printf "Simulate Consumption and Wealth Distribution\n"
+  println("Simulate Consumption and Wealth Distribution")
   tW = size(yit,2);
   c_t = Array{Float64}(size(yit,1), tW+tR)
   w_t = similar(c_t); wp_t = similar(c_t)

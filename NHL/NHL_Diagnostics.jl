@@ -3,7 +3,6 @@
 ################################################################################
 
 using PyCall, PyPlot, StatsBase
-@pyimport seaborn as sns
 
 ################################################################################
 
@@ -310,8 +309,8 @@ end
 
 ################################################################################
 
-function compare_wealth_dist{T<:AbstractFloat}(w_t::Array{T,2}, prime::Array{T,1},
-  young::Array{T,1}, middle::Array{T,1}, old::Array{T,1})
+function compare_wealth_dist(w_t::Array{T,2}, prime::Array{T,1},
+  young::Array{T,1}, middle::Array{T,1}, old::Array{T,1}) where T<:AbstractFloat
 
   agep = zeros(90,3); primep = zeros(90)
   for i = 1:90
@@ -350,8 +349,8 @@ end
 
 ################################################################################
 
-function comp_statics{T<:Float64}(low::Array{T,2}, high::Array{T,2},
-  baseline::Array{T,2}, parameter::AbstractString,lowp::T,highp::T,baselinep::T)
+function comp_statics(low::Array{T,2}, high::Array{T,2}, baseline::Array{T,2},
+  parameter::AbstractString,lowp::T,highp::T,baselinep::T) where T<:Float64
   fig, ax = subplots(1,3, figsize = (12,10))
   [ax[i,1][:plot](low[:,i], label = parameter*" = $lowp") for i = 1:3]
   [ax[i,1][:plot](baseline[:,i], label = parameter*" = $baselinep") for i = 1:3]

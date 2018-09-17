@@ -59,7 +59,7 @@ function u(c::Float64, σ::Float64)
 end
 
 # Bequest motive
-υ = 57726.^(-1/0.544)
+υ = 57726 .^ (-1/0.544)
 function bq(w::Float64, υ::Float64)
   υ==0.0 ? 0.0 : υ * w
 end
